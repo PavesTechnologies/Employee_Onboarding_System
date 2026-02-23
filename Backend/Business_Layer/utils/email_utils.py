@@ -308,7 +308,7 @@ def send_joining_email(
             smtp.starttls()
             smtp.login(EMAIL_USER, EMAIL_PASSWORD)
             smtp.send_message(msg)
-        print(f"✅ Joining email sent to {to_email}")
+        print(f"Joining email sent to {to_email}")
     except Exception as e:
         print(f"❌ Failed to send joining email: {e}")
         
