@@ -218,7 +218,7 @@ class OfferLetterService:
         offers = await self.dao.get_offer_by_uuid(user_uuid)
         if not offers:
             return None
-        return dict(offers)
+        return offers
    
     async def update_offer_by_uuid(self, user_uuid: str, request_data: OfferCreateRequest, current_user_id: int):
         try:

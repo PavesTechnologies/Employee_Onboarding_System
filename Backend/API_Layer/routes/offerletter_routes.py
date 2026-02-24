@@ -165,23 +165,7 @@ async def get_offer_by_uuid(
         offer = await offer_service.get_offer_by_uuid(user_uuid)
         if not offer:
             raise HTTPException(status_code=404, detail="Offer letter not found")
-        cc_raw = offer.get("cc_emails", "")
-        return {
-            "user_uuid": offer.user_uuid,
-            "first_name": offer.first_name,
-            "last_name": offer.last_name,
-            "mail": offer.mail,
-            "country_code": offer.country_code,
-            "contact_number": offer.contact_number,
-            "designation": offer.designation,
-            "employee_type": offer.employee_type,
-            "package": offer.package,
-            "currency": offer.currency,
-            "created_by": offer.created_by,
-            "status": offer.status,
-            "cc_emails": cc_raw
-        }
-
+        return offer
     except HTTPException:
         raise
     except Exception as e:

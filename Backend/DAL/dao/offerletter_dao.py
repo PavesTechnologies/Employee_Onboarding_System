@@ -125,7 +125,7 @@ class OfferLetterDAO:
 
         print("⏱ DAO total:", time.perf_counter() - start)
 
-        return [dict(row._mapping) for row in rows]
+        return rows
 
     
 
@@ -160,7 +160,7 @@ class OfferLetterDAO:
         row = result.mappings().first()
         print("⏱ DAO total:", time.perf_counter() - start)
 
-        return dict(row) if row else None
+        return row if row else None
 
 
     
