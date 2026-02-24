@@ -125,7 +125,7 @@ class OfferLetterDAO:
 
         print("⏱ DAO total:", time.perf_counter() - start)
 
-        return [row._mapping for row in rows]
+        return [dict(row._mapping) for row in rows]
 
     
 
