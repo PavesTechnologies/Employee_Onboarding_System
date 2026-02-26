@@ -3,7 +3,7 @@
 from Backend.DAL.utils.database import get_read_db
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from ...API_Layer.interfaces.offerletter_interfaces import(
+from Backend.API_Layer.interfaces.offerletter_interfaces import(
     DeleteOfferResponse,
     OfferCreateRequest, 
     OfferCreateResponse, 
@@ -14,13 +14,13 @@ from ...API_Layer.interfaces.offerletter_interfaces import(
     BulkSendOfferLettersRequest,
     BulkSendOfferLettersResult,
 )
-from ...Business_Layer.services.offerletter_services import OfferLetterService
-from ...DAL.utils.dependencies import get_db
+from Backend.Business_Layer.services.offerletter_services import OfferLetterService
+from Backend.DAL.utils.dependencies import get_db
 import pandas as pd
 from io import BytesIO
-from ...config import env_loader
+from Backend.config import env_loader
 import requests
-from ..utils.role_based import require_roles
+from Backend.API_Layer.utils.role_based import require_roles
 
 router = APIRouter()
 
