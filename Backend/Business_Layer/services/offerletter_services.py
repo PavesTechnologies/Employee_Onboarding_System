@@ -50,6 +50,7 @@ class OfferLetterService:
             designation = validate_designation(request_data.designation)
             package = validate_package(request_data.package)
             currency = validate_currency(request_data.currency)
+            
             # --- DUPLICATE CHECK ---
             existing_offer = await self.dao.get_offer_by_email(mail)
             if existing_offer:
