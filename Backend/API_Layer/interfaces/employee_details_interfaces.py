@@ -71,25 +71,32 @@ class AddressType(str, Enum):
 class CreateAddressRequest(BaseModel):
     user_uuid: str
     address_type: AddressType
-    address_line1: str = Field(..., min_length=3)
-    address_line2: Optional[str] = None
-    city: Optional[str] = None
+    address_line1: str = Field(..., min_length=3, max_length=100)
+    address_line2: str = Field(..., min_length=3, max_length=100)
+    city: str = Field(..., min_length=2, max_length=50)
     district_or_ward: Optional[str] = None
-    state_or_region: Optional[str] = None
-    postal_code: Optional[str] = None
+    state_or_region: str = Field(..., min_length=2, max_length=50)
+    postal_code: str = Field(..., min_length=6, max_length=6, pattern=r"^\d{6}$")  
     country_uuid: str
 
-    # Basic city validation
+    # Prevent empty strings
+    @validator("address_line1","address_line2", "city", "state_or_region")
+    def validate_not_empty(cls, v):
+        if not v.strip():
+            raise ValueError("Field cannot be empty")
+        return v
+
+    # City validation
     @validator("city")
     def validate_city(cls, v):
-        if v and not re.match(r"^[A-Za-z\s\-'.]+$", v):
+        if not re.match(r"^[A-Za-z\s\-'.]+$", v):
             raise ValueError("City name contains invalid characters")
         return v
 
-    # Basic state validation
+    # State validation
     @validator("state_or_region")
     def validate_state(cls, v):
-        if v and not re.match(r"^[A-Za-z\s\-'.]+$", v):
+        if not re.match(r"^[A-Za-z\s\-'.]+$", v):
             raise ValueError("State/Region contains invalid characters")
         return v
 
