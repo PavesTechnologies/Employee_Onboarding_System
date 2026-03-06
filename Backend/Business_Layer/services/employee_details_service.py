@@ -137,7 +137,19 @@ class AddressService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
           
-        
+    async def update_address(self, uuid, request_data):
+        try:
+            existing = await self.dao.get_address_by_address_uuid(uuid)
+            if not existing:
+                raise HTTPException(status_code=404, detail="Address Not Found")
+            result = await self.dao.update_address(uuid, request_data)
+            return result
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+            
     async def delete_address(self, uuid):
         try:
             existing = await self.dao.get_address_by_address_uuid(uuid)
