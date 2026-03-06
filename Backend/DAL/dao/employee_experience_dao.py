@@ -32,6 +32,18 @@ class EmployeeExperienceDAO:
         result = await self.db.execute(select(EmployeeExperience))
         return result.scalars().all()
 
+    async def get_current_job(self, employee_uuid: str, exclude_uuid: str | None = None):
+        query = select(EmployeeExperience).where(
+            EmployeeExperience.employee_uuid == employee_uuid,
+            EmployeeExperience.is_current == True
+        )
+
+        if exclude_uuid:
+            query = query.where(EmployeeExperience.experience_uuid != exclude_uuid)
+
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+
     # ----------------------------------------------------
     # CREATE
     # ----------------------------------------------------
@@ -54,7 +66,7 @@ class EmployeeExperienceDAO:
             start_date=request_data.start_date,
             end_date=request_data.end_date,
             is_current=request_data.is_current,
-            remarks=request_data.remarks,
+            notice_period_days=request_data.notice_period_days,
 
             exp_certificate_path=exp_certificate_path,
             payslip_path=payslip_path,
@@ -69,7 +81,7 @@ class EmployeeExperienceDAO:
 
         self.db.add(new_exp)
         await self.db.commit()
-        # await self.db.refresh(new_exp)
+        await self.db.refresh(new_exp)
 
         return {
             "experience_uuid": experience_uuid,
@@ -87,7 +99,7 @@ class EmployeeExperienceDAO:
         start_date,
         end_date,
         is_current,
-        remarks,
+        notice_period_days,
         paths,
     ):
         experience.company_name = company_name
@@ -96,7 +108,10 @@ class EmployeeExperienceDAO:
         experience.start_date = start_date
         experience.end_date = end_date
         experience.is_current = is_current
-        experience.remarks = remarks
+        if is_current:
+            experience.notice_period_days = notice_period_days
+        else:
+            experience.notice_period_days = None
 
         # 🔹 Updated file paths
         experience.exp_certificate_path = paths["exp_certificate_path"]
@@ -115,7 +130,7 @@ class EmployeeExperienceDAO:
         }
 
     
-        # ----------------------------------------------------
+    # ----------------------------------------------------
     # DELETE
     # ----------------------------------------------------
 

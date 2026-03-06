@@ -34,6 +34,35 @@ class EmployeeExperienceService:
     ):
         start_total = time.perf_counter()
 
+        # Prevent future start date
+        if request_data.start_date > date.today():
+            raise HTTPException(400, "Start date cannot be in the future")
+
+        # Prevent invalid end date
+        if request_data.end_date and request_data.end_date < request_data.start_date:
+            raise HTTPException(400, "End date cannot be before start date")
+
+        # Prevent multiple current jobs
+        if request_data.is_current:
+            existing_current = await self.dao.get_current_job(request_data.employee_uuid)
+
+            if existing_current:
+                raise HTTPException(400, "Employee already has a current job")
+        # If current job then end_date should not exist
+        if request_data.is_current and request_data.end_date:
+            raise HTTPException(400, "Current job cannot have an end date")
+
+        # Handle notice period rules
+        if request_data.is_current:
+            if request_data.notice_period_days is None:
+                raise HTTPException(400, "Notice period required for current job")
+        else:
+            request_data.notice_period_days = None
+
+        # if is_current:
+        #     experience.notice_period_days = notice_period_days
+        # else:
+        #     experience.notice_period_days = None
         # 1️⃣ Validation
         rules = EMPLOYMENT_DOCUMENT_RULES[request_data.employment_type.value]
 
@@ -137,8 +166,8 @@ class EmployeeExperienceService:
         employment_type: EmploymentType,
         start_date: date,
         end_date: date | None,
-        is_current: int,
-        remarks: str | None,
+        is_current: bool,
+        notice_period_days: int | None,
         doc_types: list[str],
         files: list[UploadFile] | None,
     ):
@@ -191,7 +220,7 @@ class EmployeeExperienceService:
             start_date,
             end_date,
             is_current,
-            remarks,
+            notice_period_days,
             paths,
         )
 

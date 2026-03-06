@@ -66,9 +66,8 @@ class ExperienceCreateRequest(BaseModel):
     end_date: Optional[date] = None
     role_title: Optional[str] = Field(None, max_length=100)
     employment_type: EmploymentType
-    is_current: Optional[int] = Field(0, ge=0, le=1)
-    remarks: Optional[str] = Field(None, max_length=255)
-   
+    is_current: bool = False
+    notice_period_days: Optional[int] = Field(None, ge=0, le=120)
 
     # -------- VALIDATORS --------
 
@@ -78,7 +77,7 @@ class ExperienceCreateRequest(BaseModel):
             raise ValueError("Company name contains invalid characters")
         return v.strip()
 
-    @validator("remarks", "role_title", pre=True)
+    @validator("role_title", pre=True)
     def sanitize_text_fields(cls, v):
         return clean_text(v)
 
@@ -89,8 +88,8 @@ class ExperienceUpdateRequest(BaseModel):
     end_date: Optional[date] = None
     role_title: Optional[str] = Field(None, max_length=100)
     employment_type: Optional[EmploymentType] = None
-    is_current: Optional[int] = Field(None, ge=0, le=1)
-    remarks: Optional[str] = Field(None, max_length=255)
+    is_current: Optional[bool] = None
+    notice_period_days: Optional[int] = Field(None, ge=0, le=120)
 
     # -------- VALIDATORS --------
 
@@ -100,7 +99,7 @@ class ExperienceUpdateRequest(BaseModel):
             raise ValueError("Company name contains invalid characters")
         return v.strip() if v else v
 
-    @validator("remarks", "role_title", pre=True)
+    @validator("role_title", pre=True)
     def sanitize_text_fields(cls, v):
         return clean_text(v)
 
@@ -124,8 +123,8 @@ class ExperienceResponse(BaseModel):
     employment_type: str
     start_date: date
     end_date: date | None
-    is_current: int
-    remarks: str | None
+    is_current: bool
+    notice_period_days: int | None
 
     exp_certificate_path: str | None
     payslip_path: str | None
@@ -150,7 +149,7 @@ class ExperienceUpdate(BaseModel):
     employment_type: EmploymentType
     start_date: date
     end_date: date | None
-    is_current: int
+    is_current: bool
     exp_certificate_path: str | None = None
     internship_certificate_path: str | None = None
     payslip_path: str | None = None
@@ -159,6 +158,6 @@ class ExperienceUpdate(BaseModel):
     certificate_status: str | None = None
     verified_by: str | None = None
     verified_at: datetime | None = None
-    remarks: str | None
+   # remarks: str | None
     
 

@@ -2,7 +2,7 @@ from typing import Any, Optional
 import datetime
 from sqlalchemy import ForeignKey
 
-from sqlalchemy import BigInteger, CHAR, Date, DateTime, Enum, ForeignKeyConstraint, Index, Integer, JSON, String, TIMESTAMP, Text, text
+from sqlalchemy import BigInteger, CHAR, Date, DateTime, Enum, ForeignKeyConstraint, Index, Integer, JSON, String, TIMESTAMP, Text, Boolean, text
 from sqlalchemy.dialects.mysql import ENUM, TINYINT, YEAR
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -329,7 +329,7 @@ class EmployeeExperience(Base):
     role_title: Mapped[Optional[str]] = mapped_column(String(100))
     employment_type: Mapped[Optional[str]] = mapped_column(Enum('Full-Time', 'Part-Time', 'Intern', 'Contract', 'Freelance'))
     end_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
-    is_current: Mapped[Optional[int]] = mapped_column(TINYINT(1), server_default=text("'0'"))
+    is_current: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text("'0'"))
     exp_certificate_path: Mapped[Optional[str]] = mapped_column(String(255))
     internship_certificate_path: Mapped[Optional[str]] = mapped_column(String(255))
     payslip_path: Mapped[Optional[str]] = mapped_column(String(255))
@@ -338,7 +338,8 @@ class EmployeeExperience(Base):
     uploaded_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     verified_by: Mapped[Optional[str]] = mapped_column(CHAR(36))
     verified_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
-    remarks: Mapped[Optional[str]] = mapped_column(String(255))
+    notice_period_days: Mapped[Optional[int]] = mapped_column(Integer)
+   # remarks: Mapped[Optional[str]] = mapped_column(String(255))
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
 
