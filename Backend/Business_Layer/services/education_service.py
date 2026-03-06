@@ -1,4 +1,4 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.dao.education_dao import EducationDocDAO
 from ...DAL.dao.master_dao import CountryDAO, EducationDAO
@@ -7,6 +7,7 @@ from ...DAL.utils.storage_utils import S3StorageService
 from ..utils.validation_utils import validate_alphabets_only, validate_document_name, validate_numeric_value
 from ..utils.uuid_generator import generate_uuid7
 import time
+import asyncio
 class EducationDocService:
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -144,18 +145,25 @@ class EducationDocService:
             raise HTTPException(status_code=500, detail=str(e))
 
     async def update_employee_education_document(self, document_uuid, request_data, file):
+        start_service = time.perf_counter()
+        
         # 1️⃣ check document exists
+        start_exists = time.perf_counter()
         existing = await self.dao.get_document_by_uuid(document_uuid)
         if not existing:
             raise HTTPException(status_code=404, detail="Education document not found")
+        print("⏱ Check document exists:", time.perf_counter() - start_exists)
 
         # 2️⃣ validate
+        
         validate_alphabets_only(request_data["institution_name"])
         validate_alphabets_only(request_data["specialization"])
         validate_numeric_value(str(request_data["percentage_cgpa"]))
 
         # 3️⃣ upload file only if provided
+        
         file_path = existing.file_path
+        start_upload = time.perf_counter()
         if file:
             blob_upload_service = S3StorageService()
             folder = "education_documents"
@@ -165,12 +173,17 @@ class EducationDocService:
                 original_filename=file.filename,
                 employee_uuid=existing.user_uuid
             )
-
+            print("⏱ S3 upload:", time.perf_counter() - start_upload)
+            
         # 4️⃣ update DB
+        start_db = time.perf_counter()
         await self.dao.update_employee_education_document(
             document_uuid, request_data, file_path
         )
-
+        print("⏱ Update DB in service:", time.perf_counter() - start_db)
+        
+        # 5️⃣ total time
+        print("🚀 TOTAL SERVICE TIME:", time.perf_counter() - start_service)
         return file_path
     
     # get all employee educational documents #
@@ -223,6 +236,33 @@ class EducationDocService:
         print("⏱ mapping DAO:", time.perf_counter() - t2)
 
         return result
+
+    async def create_degree_master(self, request_data):
+        try:
+            result = await self.dao.create_degree_master(request_data)
+            return result
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    async def get_degree_master(self):
+        try:
+           
+            result = await self.dao.get_degree_master()
+            return result
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    async def get_degree_master_by_education_uuid(self, education_uuid):
+        try:
+            result = await self.dao.get_degree_master_by_education_uuid(education_uuid)
+            return result
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
             
         

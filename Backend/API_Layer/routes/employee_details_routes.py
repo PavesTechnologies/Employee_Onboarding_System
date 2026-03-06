@@ -1,4 +1,5 @@
 # Backend/API_Layer/routes/employee_details_routes.py
+from time import perf_counter
 from fastapi import APIRouter, Depends, HTTPException, Request, Form, File, UploadFile
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +10,8 @@ from ..interfaces.employee_details_interfaces import (PersonalDetails, DeleteEmp
 from ...Business_Layer.services.employee_details_service import EmployeeDetailsService, AddressService, EmployeeIdentityService
 from datetime import date
 from ..utils.role_based import require_roles
-
+import time
+from time import perf_counter
 router = APIRouter()
 
 
@@ -39,10 +41,13 @@ async def get_personal_details_by_user_uuid(personal_uuid: str, db: AsyncSession
 @router.put("/{personal_uuid}", response_model = PersonalDetailsResponse)
 async def update_personal_details(personal_uuid: str, request_data: UpdatePersonalRequest, db: AsyncSession = Depends(get_db)):
     try:
+        start = perf_counter()
         employee_service = EmployeeDetailsService(db)
         result = await employee_service.update_personal_details(personal_uuid, request_data)
+        end = perf_counter()
+        print("Total API time:", end - start)
         return PersonalDetailsResponse(
-            personal_uuid = result.personal_uuid,
+            personal_uuid = result["personal_uuid"],
             message = "Personal Details Updated Successfully"
         )
     except HTTPException as he:

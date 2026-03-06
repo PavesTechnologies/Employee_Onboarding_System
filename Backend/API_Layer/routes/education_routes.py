@@ -1,5 +1,7 @@
 import time
+from time import perf_counter
 from tracemalloc import start
+from typing import Optional
 import uuid
 from Backend.API_Layer.interfaces.identity_interfaces import CountryIdentityDropdownResponse
 from Backend.Business_Layer.utils.uuid_generator import generate_uuid7
@@ -9,7 +11,7 @@ from ...Business_Layer.services.education_service import EducationDocService
 from ...DAL.utils.dependencies import get_db
 from ...DAL.utils.storage_utils import S3StorageService
 from ...API_Layer.interfaces.education_interfaces import (CountryEducationMappingResponse, CreateEducDocRequest, EducDocResponse, EmployeEduDoc,DeleteEmpEducResponse,
-                                                          EducDocDetails, UploadFileResponse, EmployeEduDocDetails)
+                                                          EducDocDetails, UploadFileResponse, EmployeEduDocDetails, DegreeMasterResponse, DegreeMasterRequest)
 from ..utils.role_based import require_roles
 start = time.perf_counter()
 router = APIRouter()
@@ -90,8 +92,13 @@ async def create_employee_education_document(
     mapping_uuid: str = Form(...),
     user_uuid: str = Form(...),
     institution_name: str = Form(...),
+    institute_location: str = Form(...),
+    degree_uuid: str = Form(...),
     specialization: str = Form(...),
+    education_mode: str = Form(...),
+    start_year : int = Form(...),
     year_of_passing: int = Form(...),
+    delay_reason: Optional[str] = Form(None),
     percentage_cgpa: str = Form(...),
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db)):
@@ -103,8 +110,13 @@ async def create_employee_education_document(
             "mapping_uuid": mapping_uuid,   
             "user_uuid": user_uuid,
             "institution_name": institution_name,
+            "institute_location": institute_location,
+            "degree_uuid": degree_uuid,
             "specialization": specialization,
+            "education_mode": education_mode,
+            "start_year": start_year,
             "year_of_passing": year_of_passing,
+            "delay_reason": delay_reason,
             "percentage_cgpa": percentage_cgpa
         }
 
@@ -124,27 +136,39 @@ async def update_employee_education_document(
     document_uuid: str,
     mapping_uuid: str = Form(...),
     institution_name: str = Form(...),
+    institute_location: str = Form(...),
+    degree_uuid: str = Form(...),
     specialization: str = Form(...),
+    education_mode: str = Form(...),
+    start_year : int = Form(...),
     year_of_passing: int = Form(...),
+    delay_reason: Optional[str] = Form(None),
     percentage_cgpa: str = Form(...),
     file: UploadFile | None = File(None),   # 👈 optional
     db: AsyncSession = Depends(get_db)
 ):
     try:
+        start_time = time.perf_counter()
         education_service = EducationDocService(db)
 
         request_data = {
             "mapping_uuid": mapping_uuid,
             "institution_name": institution_name,
+            "institute_location": institute_location,
+            "degree_uuid": degree_uuid,
             "specialization": specialization,
+            "education_mode": education_mode,
+            "start_year": start_year,
             "year_of_passing": year_of_passing,
+            "delay_reason": delay_reason,
             "percentage_cgpa": percentage_cgpa,
         }
 
         file_path = await education_service.update_employee_education_document(
             document_uuid, request_data, file
         )
-
+        end_time = time.perf_counter()
+        print(f"Time taken to update employee education document: {end_time - start_time}")
         return UploadFileResponse(
             document_uuid=document_uuid,
             file_path=file_path,
@@ -207,6 +231,41 @@ async def get_education_identity_mappings_by_country_uuid(country_uuid: str, db:
         result = await education_service.get_education_identity_mappings_by_country_uuid(country_uuid)
         print("⏱ FULL REQUEST:", time.perf_counter() - start)
 
+        return result
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# create a degree master and generate a uuid for degree master
+@router.post("/degree-master", response_model=DegreeMasterResponse)
+async def create_degree_master(request_data:DegreeMasterRequest, db: AsyncSession = Depends(get_db)):
+    try:
+        education_service = EducationDocService(db)
+        result = await education_service.create_degree_master(request_data)
+        return result
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/degree-master",response_model=list[DegreeMasterResponse])
+async def get_degree_master(db: AsyncSession = Depends(get_db)):
+    try:
+        education_service = EducationDocService(db)
+        result = await education_service.get_degree_master()
+        return result
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/degree-master/{education_uuid}",response_model=list[DegreeMasterResponse])
+async def get_degree_master_by_education_uuid(education_uuid: str, db: AsyncSession = Depends(get_db)):
+    try:
+        education_service = EducationDocService(db)
+        result = await education_service.get_degree_master_by_education_uuid(education_uuid)
         return result
     except HTTPException as he:
         raise he

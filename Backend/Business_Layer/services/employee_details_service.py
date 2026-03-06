@@ -8,6 +8,8 @@ from ..utils.validation_utils import validate_date_of_birth, validate_blood_grou
 from ..utils.uuid_generator import generate_uuid7
 from ..utils.postal_code_validator import validate_postal_code
 from ...DAL.utils.storage_utils import S3StorageService
+import time
+from time import perf_counter
 class EmployeeDetailsService:
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -35,21 +37,60 @@ class EmployeeDetailsService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-    async def update_personal_details(self, uuid, request_data):
+    
+
+    
+
+    async def update_personal_details(self, uuid: str, request_data):
         try:
-            existing = await self.dao.get_personal_details_by_uuid(uuid)
-            if not existing:
+            api_start = perf_counter()
+
+            # 1️⃣ Get personal record
+            start = perf_counter()
+            personal = await self.dao.get_personal_details_by_uuid(uuid)
+            print("Time taken to get personal details:", perf_counter() - start)
+
+            if not personal:
                 raise HTTPException(status_code=404, detail="Personal Details Not Found")
+
+            # 2️⃣ Validate fields
+            start = perf_counter()
             validate_blood_group(request_data.blood_group)
             validate_date_of_birth(request_data.date_of_birth)
-            existing = await self.countrydao.get_country_by_uuid(request_data.nationality_country_uuid)
-            if not existing:
+            print("Validation time:", perf_counter() - start)
+
+            # 3️⃣ Validate nationality country
+            start = perf_counter()
+            nationality = await self.countrydao.get_country_by_uuid(
+                request_data.nationality_country_uuid
+            )
+            print("Nationality check time:", perf_counter() - start)
+
+            if not nationality:
                 raise ValueError("Nationality Country Not Found")
-            existing = await self.countrydao.get_country_by_uuid(request_data.residence_country_uuid)
-            if not existing:
+
+            # 4️⃣ Validate residence country
+            start = perf_counter()
+            residence = await self.countrydao.get_country_by_uuid(
+                request_data.residence_country_uuid
+            )
+            print("Residence check time:", perf_counter() - start)
+
+            if not residence:
                 raise ValueError("Residence Country Not Found")
+
+            # 5️⃣ Update personal details
+            start = perf_counter()
             result = await self.dao.update_personal_details(uuid, request_data)
+            print("Update query time:", perf_counter() - start)
+
+            if not result:
+                raise HTTPException(status_code=404, detail="Personal Details Not Found")
+
+            print("Total API time:", perf_counter() - api_start)
+
             return result
+
         except HTTPException as he:
             raise he
         except Exception as e:
@@ -96,7 +137,19 @@ class AddressService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
           
-        
+    async def update_address(self, uuid, request_data):
+        try:
+            existing = await self.dao.get_address_by_address_uuid(uuid)
+            if not existing:
+                raise HTTPException(status_code=404, detail="Address Not Found")
+            result = await self.dao.update_address(uuid, request_data)
+            return result
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+            
     async def delete_address(self, uuid):
         try:
             existing = await self.dao.get_address_by_address_uuid(uuid)

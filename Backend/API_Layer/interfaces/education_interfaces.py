@@ -42,8 +42,13 @@ class EmployeEduDocDetails(BaseModel):
     mapping_uuid: str
     user_uuid: str
     institution_name: str 
+    institute_location: str
+    degree_uuid: str
     specialization: str
+    education_mode: str
+    start_year: int 
     year_of_passing: int
+    delay_reason: Optional[str] = None
     percentage_cgpa: Optional[str] = None
     
 
@@ -61,4 +66,15 @@ class CountryEducationMappingResponse(BaseModel):
     education_name: str
     document_name: str
     is_mandatory: bool
+
+class DegreeMasterResponse(BaseModel):
+    degree_uuid: str
+    degree_name: str
+    education_uuid: str
+    education_name: str
+class DegreeMasterRequest(BaseModel):
+    
+    degree_name: str
+    education_uuid: str
+    
 

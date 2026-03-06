@@ -1,7 +1,11 @@
 # Backend/DAL/dao/education_dao.py
+from sqlalchemy.orm import noload
 from sqlalchemy import select, update, exists
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from ...DAL.models.models import EducationDocumentType, EducationLevel, EmployeeEducationDocument, CountryEducationDocumentMapping
+from ...DAL.models.models import EducationDocumentType, EducationLevel, EmployeeEducationDocument, CountryEducationDocumentMapping, DegreeMaster
+from ...Business_Layer.utils.uuid_generator import generate_uuid7
+from ...API_Layer.interfaces.education_interfaces import DegreeMasterRequest
 import time
 class EducationDocDAO:
     def __init__(self, db: AsyncSession):
@@ -48,7 +52,7 @@ class EducationDocDAO:
         return result.all()
         
     async def get_education_document_by_uuid(self, uuid):
-        result = await self.db.execute(select(EducationDocumentType).where(EducationDocumentType.document_uuid == uuid))
+        result = await self.db.execute(select(EducationDocumentType).where(EducationDocumentType.education_document_uuid == uuid))
         return result.scalar_one_or_none()
     
     async def update_education_document(self, uuid, request_data):
@@ -95,8 +99,13 @@ class EducationDocDAO:
             mapping_uuid = request_data["mapping_uuid"],
             user_uuid = request_data["user_uuid"],
             institution_name = request_data["institution_name"],
+            institute_location = request_data["institute_location"],
+            degree_uuid = request_data["degree_uuid"],
             specialization = request_data["specialization"],
-            year_of_passing = request_data["year_of_passing"],
+            education_mode = request_data["education_mode"],
+            start_year = request_data["start_year"],
+             year_of_passing = request_data["year_of_passing"],
+            delay_reason = request_data["delay_reason"],
             percentage_cgpa = request_data["percentage_cgpa"],
             file_path = file_path
         )
@@ -104,37 +113,65 @@ class EducationDocDAO:
         await self.db.commit()
         # await self.db.refresh(new_edu_doc)
         return new_edu_doc
-    
+   
+
     async def update_employee_education_document(self, document_uuid, request_data, file_path):
+        start_total = time.perf_counter()
+
+        update_values = {
+        "mapping_uuid": request_data["mapping_uuid"],
+        "institution_name": request_data["institution_name"],
+        "institute_location": request_data["institute_location"],
+        "degree_uuid": request_data["degree_uuid"],
+        "specialization": request_data["specialization"],
+        "education_mode": request_data["education_mode"],
+        "start_year": request_data["start_year"],
+        "year_of_passing": request_data["year_of_passing"],
+        "delay_reason": request_data["delay_reason"],
+        "percentage_cgpa": request_data["percentage_cgpa"],
+    }
+
+        if file_path is not None:
+            update_values["file_path"] = file_path
+
+        start_db = time.perf_counter()
+
+        stmt = (
+            update(EmployeeEducationDocument)
+            .where(EmployeeEducationDocument.document_uuid == document_uuid)
+            .values(**update_values)
+            .execution_options(synchronize_session="fetch")
+        )
+
+        result = await self.db.execute(stmt)
+
+        if result.rowcount == 0:
+            return None
+
+        await self.db.commit()
+
+        print("⏱ Update DB:", time.perf_counter() - start_db)
+        print("🚀 TOTAL DAO TIME:", time.perf_counter() - start_total)
+
+        # optional: fetch updated record only if needed
+        stmt = select(EmployeeEducationDocument).where(
+            EmployeeEducationDocument.document_uuid == document_uuid
+        )
+
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()            
+
+    async def get_document_by_uuid(self, document_uuid: str):
         stmt = (
             select(EmployeeEducationDocument)
             .where(EmployeeEducationDocument.document_uuid == document_uuid)
-
-        )
-        result = await self.db.execute(stmt)        
-        edu_doc = result.scalar_one_or_none()
-        if edu_doc is None:
-            return None
-        edu_doc.mapping_uuid = request_data["mapping_uuid"]
-        edu_doc.institution_name = request_data["institution_name"]
-        edu_doc.specialization = request_data["specialization"]
-        edu_doc.year_of_passing = request_data["year_of_passing"]
-        edu_doc.percentage_cgpa = request_data["percentage_cgpa"]
-        if file_path is not None:
-            edu_doc.file_path = file_path
-        await self.db.commit()
-        await self.db.refresh(edu_doc)
-        return edu_doc
-    
-            
-
-    async def get_document_by_uuid(self, document_uuid):
-        result = await self.db.execute(
-            select(EmployeeEducationDocument).where(
-                EmployeeEducationDocument.document_uuid == document_uuid
+            .options(
+            noload("*")
             )
+            .limit(1)
         )
-        return result.scalars().first()
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
 
     async def get_all_employee_education_documents(self):
         print("entering dao ")
@@ -192,3 +229,63 @@ class EducationDocDAO:
         print("⏱ DAO total:", time.perf_counter() - start)
 
         return [row._mapping for row in rows]
+
+    async def create_degree_master(self, request_data: DegreeMasterRequest):
+        new_degree = DegreeMaster(
+            degree_uuid=generate_uuid7(),
+            degree_name=request_data.degree_name,
+            education_uuid=request_data.education_uuid
+        )
+
+        self.db.add(new_degree)
+        await self.db.commit()
+        await self.db.refresh(new_degree)
+
+        # fetch education name
+        stmt = select(EducationLevel.education_name).where(
+            EducationLevel.education_uuid == new_degree.education_uuid
+        )
+        result = await self.db.execute(stmt)
+        education_name = result.scalar_one_or_none()
+
+        return {
+        "degree_uuid": new_degree.degree_uuid,
+        "degree_name": new_degree.degree_name,
+        "education_uuid": new_degree.education_uuid,
+        "education_name": education_name
+    }
+    async def get_degree_master(self ):
+        stmt = (
+            select(
+                DegreeMaster.degree_uuid,
+                DegreeMaster.degree_name,
+                EducationLevel.education_uuid,
+                EducationLevel.education_name,
+            )
+            .join(
+                EducationLevel,
+                DegreeMaster.education_uuid
+                == EducationLevel.education_uuid,
+            )
+        )
+        result = await self.db.execute(stmt)
+        return result.all()
+
+
+    async def get_degree_master_by_education_uuid(self, education_uuid: str):
+        stmt = (
+            select(
+                DegreeMaster.degree_uuid,
+                DegreeMaster.degree_name,
+                EducationLevel.education_uuid,
+                EducationLevel.education_name,
+            )
+            .join(
+                EducationLevel,
+                DegreeMaster.education_uuid
+                == EducationLevel.education_uuid,
+            )
+            .where(EducationLevel.education_uuid == education_uuid)
+        )
+        result = await self.db.execute(stmt)
+        return result.all()
