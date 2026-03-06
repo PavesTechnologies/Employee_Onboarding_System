@@ -52,7 +52,7 @@ class EducationDocDAO:
         return result.all()
         
     async def get_education_document_by_uuid(self, uuid):
-        result = await self.db.execute(select(EducationDocumentType).where(EducationDocumentType.document_uuid == uuid))
+        result = await self.db.execute(select(EducationDocumentType).where(EducationDocumentType.education_document_uuid == uuid))
         return result.scalar_one_or_none()
     
     async def update_education_document(self, uuid, request_data):

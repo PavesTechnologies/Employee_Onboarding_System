@@ -170,7 +170,7 @@ async def delete_education_level(
         raise HTTPException(status_code=500, detail=str(e))
     
 # Education Country Mapping
-@router.post("/{educ-level-uuid}/{educ-doc-uuid}/{country-uuid}", response_model=CountryEductionMapping)
+@router.post("/{educ_level_uuid}/{educ_doc_uuid}/{country_uuid}", response_model=CountryEductionMapping)
 async def create_education_country_mapping(
     educ_level_uuid: str,
     educ_doc_uuid: str,
