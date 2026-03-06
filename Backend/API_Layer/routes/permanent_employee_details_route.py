@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from Backend.API_Layer.interfaces.permenent_employee_details_interfaces import CreatePermanentEmployeeRequest, CreatePermanentEmployeeResponse
+from Backend.API_Layer.interfaces.permenent_employee_details_interfaces import CreatePermanentEmployeeRequest, CreatePermanentEmployeeResponse, UpdatePermanentEmployeeRequest
 from Backend.Business_Layer.services.permanent_employee_details_service import PermanentEmployeeDetailsService
 
 from ...DAL.utils.dependencies import get_db
@@ -53,7 +53,7 @@ async def get_all_employees(
 @router.put("/{employee_uuid}")
 async def update_employee(
     employee_uuid: str,
-    request: CreatePermanentEmployeeRequest,
+    request: UpdatePermanentEmployeeRequest,
     db: AsyncSession = Depends(get_db)
 ):
     try:
@@ -65,4 +65,16 @@ async def update_employee(
             detail=str(e)
         )
             
+@router.delete("/{employee_uuid}")
+async def delete_employee(
+    employee_uuid: str,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        return await service.delete_employee(db, employee_uuid)
 
+    except ValueError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e)
+        )

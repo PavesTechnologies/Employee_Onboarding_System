@@ -4,7 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from Backend.API_Layer.interfaces.permenent_employee_details_interfaces import (
     CreatePermanentEmployeeRequest,
-    CreatePermanentEmployeeResponse
+    CreatePermanentEmployeeResponse,
+    UpdatePermanentEmployeeRequest
 )
 
 from Backend.DAL.dao.permanent_employee_details_dao import PermanentEmployeeDetailsDAO
@@ -139,6 +140,7 @@ class PermanentEmployeeDetailsService:
             raise ValueError("Employee not found")
 
         return {
+            "user_uuid": employee.user_uuid,
             "employee_uuid": employee.employee_uuid,
             "employee_id": employee.employee_id,
             "first_name": employee.first_name,
@@ -169,6 +171,7 @@ class PermanentEmployeeDetailsService:
 
         for emp in employees:
             response.append({
+                "user_uuid": emp.user_uuid,
                 "employee_uuid": emp.employee_uuid,
                 "employee_id": emp.employee_id,
                 "first_name": emp.first_name,
@@ -191,39 +194,111 @@ class PermanentEmployeeDetailsService:
 
         return response
     
+    # async def update_employee(
+    #     self,
+    #     db: AsyncSession,
+    #     employee_uuid: str,
+    #     request: UpdatePermanentEmployeeRequest
+    # ):
+
+    #     employee = await self.dao.get_employee_by_uuid(db, employee_uuid)
+
+    #     if not employee:
+    #         raise ValueError("Employee not found")
+
+    #     employee.first_name = request.first_name
+    #     employee.middle_name = request.middle_name
+    #     employee.last_name = request.last_name
+    #     employee.date_of_birth = request.date_of_birth
+    #     employee.contact_number = request.contact_number
+
+    #     employee.department_uuid = request.department_uuid
+    #     employee.designation_uuid = request.designation_uuid
+    #     employee.reporting_manager_uuid = request.reporting_manager_uuid
+
+    #     employee.employment_type = request.employment_type
+    #     employee.joining_date = request.joining_date
+    #     employee.location = request.location
+    #     employee.work_mode = request.work_mode
+    #     employee.employment_status = request.employment_status
+
+    #     employee.blood_group = request.blood_group
+    #     employee.gender = request.gender
+    #     employee.marital_status = request.marital_status
+
+    #     employee.total_experience = request.total_experience
+    #     employee.updated_at = datetime.datetime.utcnow()
+
+    #     employee = await self.dao.update_employee(db, employee)
+
+    #     return {
+    #         "employee_uuid": employee.employee_uuid,
+    #         "employee_id": employee.employee_id,
+    #         "message": "Employee updated successfully"
+    #     }
     async def update_employee(
         self,
         db: AsyncSession,
         employee_uuid: str,
-        request: CreatePermanentEmployeeRequest
-    ):
+        request: UpdatePermanentEmployeeRequest
+        ):
 
         employee = await self.dao.get_employee_by_uuid(db, employee_uuid)
 
         if not employee:
             raise ValueError("Employee not found")
 
-        employee.first_name = request.first_name
-        employee.middle_name = request.middle_name
-        employee.last_name = request.last_name
-        employee.date_of_birth = request.date_of_birth
-        employee.contact_number = request.contact_number
+        if request.first_name is not None:
+            employee.first_name = request.first_name
 
-        employee.department_uuid = request.department_uuid
-        employee.designation_uuid = request.designation_uuid
-        employee.reporting_manager_uuid = request.reporting_manager_uuid
+        if request.middle_name is not None:
+            employee.middle_name = request.middle_name
 
-        employee.employment_type = request.employment_type
-        employee.joining_date = request.joining_date
-        employee.location = request.location
-        employee.work_mode = request.work_mode
-        employee.employment_status = request.employment_status
+        if request.last_name is not None:
+            employee.last_name = request.last_name
 
-        employee.blood_group = request.blood_group
-        employee.gender = request.gender
-        employee.marital_status = request.marital_status
+        if request.date_of_birth is not None:
+            employee.date_of_birth = request.date_of_birth
 
-        employee.total_experience = request.total_experience
+        if request.contact_number is not None:
+            employee.contact_number = request.contact_number
+
+        if request.department_uuid is not None:
+            employee.department_uuid = request.department_uuid
+
+        if request.designation_uuid is not None:
+            employee.designation_uuid = request.designation_uuid
+
+        if request.reporting_manager_uuid is not None:
+            employee.reporting_manager_uuid = request.reporting_manager_uuid
+
+        if request.employment_type is not None:
+            employee.employment_type = request.employment_type
+
+        if request.joining_date is not None:
+            employee.joining_date = request.joining_date
+
+        if request.location is not None:
+            employee.location = request.location
+
+        if request.work_mode is not None:
+            employee.work_mode = request.work_mode
+
+        if request.employment_status is not None:
+            employee.employment_status = request.employment_status
+
+        if request.blood_group is not None:
+            employee.blood_group = request.blood_group
+
+        if request.gender is not None:
+            employee.gender = request.gender
+
+        if request.marital_status is not None:
+            employee.marital_status = request.marital_status
+
+        if request.total_experience is not None:
+            employee.total_experience = request.total_experience
+
         employee.updated_at = datetime.datetime.utcnow()
 
         employee = await self.dao.update_employee(db, employee)
@@ -233,3 +308,14 @@ class PermanentEmployeeDetailsService:
             "employee_id": employee.employee_id,
             "message": "Employee updated successfully"
         }
+    
+    async def delete_employee(self, db: AsyncSession, employee_uuid: str):
+
+        employee = await self.dao.get_employee_by_uuid(db, employee_uuid)
+
+        if not employee:
+            raise ValueError("Employee not found")
+
+        await self.dao.delete_employee(db, employee_uuid)
+
+        return {"message": "Employee deleted successfully"}

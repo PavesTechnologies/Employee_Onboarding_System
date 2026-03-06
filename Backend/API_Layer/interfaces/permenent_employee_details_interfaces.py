@@ -130,30 +130,25 @@ class PermanentEmployeeDetails(BaseModel):
 
 class UpdatePermanentEmployeeRequest(BaseModel):
 
-    first_name: Optional[str]
-    middle_name: Optional[str]
-    last_name: Optional[str]
-    date_of_birth: Optional[date]
-    contact_number: Optional[str]
-    department_uuid: Optional[str]
-    designation_uuid: Optional[str]
-    reporting_manager_uuid: Optional[str]
-    location: Optional[str]
-    employment_type: Optional[EmploymentType]
-    employment_status: Optional[EmploymentStatus]
-    work_mode: Optional[WorkMode]
-    blood_group: Optional[str]
-    gender: Optional[Gender]
-    marital_status: Optional[MaritalStatus]
+    first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    last_name: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    contact_number: Optional[str] = None
 
-    total_experience: Optional[float]
+    department_uuid: Optional[str] = None
+    designation_uuid: Optional[str] = None
+    reporting_manager_uuid: Optional[str] = None
 
+    location: Optional[str] = None
 
-# --------------------------------
-# DELETE RESPONSE
-# --------------------------------
+    employment_type: Optional[EmploymentType] = None
+    joining_date: Optional[date] = None
+    employment_status: Optional[EmploymentStatus] = None
+    work_mode: Optional[WorkMode] = None
 
-class DeletePermanentEmployeeResponse(BaseModel):
+    blood_group: Optional[str] = None
+    gender: Optional[Gender] = None
+    marital_status: Optional[MaritalStatus] = None
 
-    employee_uuid: str
-    message: str
+    total_experience: Optional[float] = None

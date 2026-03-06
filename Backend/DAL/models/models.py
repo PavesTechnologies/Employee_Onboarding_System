@@ -5,6 +5,9 @@ from sqlalchemy import ForeignKey
 from sqlalchemy import BigInteger, CHAR, Date, DateTime, Enum, ForeignKeyConstraint, Index, Integer, JSON, String, TIMESTAMP, Text, text
 from sqlalchemy.dialects.mysql import ENUM, TINYINT, YEAR
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import Column, Integer, String, DateTime
+import uuid
+
 
 
 class Base(DeclarativeBase):
@@ -729,6 +732,12 @@ class Designations(Base):
     designation_name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(255))
 
+    department_uuid: Mapped[str] = mapped_column(
+        CHAR(36),
+        ForeignKey("departments.department_uuid"),
+        nullable=False
+    )
+
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         DateTime,
         server_default=text("CURRENT_TIMESTAMP")
@@ -738,3 +747,5 @@ class Designations(Base):
         DateTime,
         server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     )
+
+

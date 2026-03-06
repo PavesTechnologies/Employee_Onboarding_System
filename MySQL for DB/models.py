@@ -1,9 +1,11 @@
 from typing import Any, Optional
 import datetime
+import uuid
 
-from sqlalchemy import BigInteger, CHAR, Date, DateTime, Enum, ForeignKeyConstraint, Index, Integer, JSON, String, TIMESTAMP, Text, text
+from sqlalchemy import BigInteger, CHAR, Column, Date, DateTime, Enum, ForeignKey, ForeignKeyConstraint, Index, Integer, JSON, String, TIMESTAMP, Text, text
 from sqlalchemy.dialects.mysql import ENUM, TINYINT, YEAR
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
 
 class Base(DeclarativeBase):
     pass
@@ -681,3 +683,56 @@ class EmployeeDetails(Base):
         DateTime,
         server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     )
+class Departments(Base):
+    __tablename__ = "departments"
+
+    __table_args__ = (
+        Index("idx_department_uuid", "department_uuid", unique=True),
+    )
+
+    department_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    department_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
+    department_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(255))
+
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime,
+        server_default=text("CURRENT_TIMESTAMP")
+    )
+
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime,
+        server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    )
+
+class Designations(Base):
+    __tablename__ = "designations"
+
+    __table_args__ = (
+        Index("idx_designation_uuid", "designation_uuid", unique=True),
+    )
+
+    designation_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    designation_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
+    designation_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(255))
+
+    department_uuid: Mapped[str] = mapped_column(
+        CHAR(36),
+        ForeignKey("departments.department_uuid"),
+        nullable=False
+    )
+
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime,
+        server_default=text("CURRENT_TIMESTAMP")
+    )
+
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime,
+        server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    )
+
+
+
+

@@ -69,3 +69,13 @@ class PermanentEmployeeDetailsDAO:
         )
 
         return result.scalars().all()
+    
+    async def delete_employee(self, db: AsyncSession, employee_uuid: str):
+
+        employee = await self.get_employee_by_uuid(db, employee_uuid)
+
+        if not employee:
+            raise ValueError("Employee not found")
+
+        await db.delete(employee)
+        await db.commit()

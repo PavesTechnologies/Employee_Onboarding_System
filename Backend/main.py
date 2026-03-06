@@ -14,6 +14,8 @@ from Backend.API_Layer.routes import offer_acceptance_request_routes
 from Backend.API_Layer.routes import offer_approval_action_routes
 from Backend.corn_jobs.joining_reminder import send_joining_date_reminders
 from Backend.API_Layer.routes import permanent_employee_details_route
+from Backend.API_Layer.routes import departments_routes
+from Backend.API_Layer.routes import designation_routes
 
 
 # from fastapi_cache.backends.redis import RedisBackend
@@ -98,7 +100,8 @@ app.include_router(docusign_token_generation_route.router, prefix="/docusign", t
 app.include_router(redis_cache_routes.router, prefix="/cache", tags=["Redis Cache"])
 app.include_router(hr_bulk_join_router.router, prefix="/hr", tags=["HR Bulk Join"])
 app.include_router(permanent_employee_details_route.router, prefix="/permanent-employee", tags=["Permanent Employees"])
-
+app.include_router(departments_routes.router)
+app.include_router(designation_routes.router)
 
 
 # scheduler = AsyncIOScheduler()
