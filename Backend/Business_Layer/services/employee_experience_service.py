@@ -1,4 +1,3 @@
-import asyncio
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import date, datetime
@@ -64,8 +63,16 @@ class EmployeeExperienceService:
         # else:
         #     experience.notice_period_days = None
         # 1️⃣ Validation
-        rules = EMPLOYMENT_DOCUMENT_RULES[request_data.employment_type.value]
+        employment_type = request_data.employment_type.value
 
+        if employment_type not in EMPLOYMENT_DOCUMENT_RULES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported employment type: {employment_type}"
+            )
+
+        rules = EMPLOYMENT_DOCUMENT_RULES[employment_type]
+        
         if len(doc_types) == 1 and "," in doc_types[0]:
             doc_types = [d.strip() for d in doc_types[0].split(",")]
 
@@ -75,6 +82,28 @@ class EmployeeExperienceService:
 
         if len(doc_types) != len(files):
             raise HTTPException(400, "Each document must have a matching file")
+
+        allowed_types = (".pdf", ".png", ".jpg", ".jpeg")
+
+        for file in files:
+            if not file.filename.lower().endswith(allowed_types):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid file type for {file.filename}. Allowed: PDF, PNG, JPG"
+                )
+
+        max_size = 5 * 1024 * 1024  # 5MB
+
+        for file in files:
+            contents = await file.read()
+
+            if len(contents) > max_size:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"{file.filename} exceeds 5MB size limit"
+                )
+
+            file.file.seek(0)
 
         print("⏱ Validation:", time.perf_counter() - start_total)
 
@@ -176,6 +205,33 @@ class EmployeeExperienceService:
         if not experience:
             raise HTTPException(status_code=404, detail="Experience not found")
 
+        # ADD BELOW experience fetch
+
+        if start_date > date.today():
+            raise HTTPException(
+                status_code=400,
+                detail="Start date cannot be in the future"
+            )
+
+        if end_date and end_date < start_date:
+            raise HTTPException(
+                status_code=400,
+                detail="End date cannot be before start date"
+            )
+
+        if is_current and end_date:
+            raise HTTPException(
+                status_code=400,
+                detail="Current job cannot have end date"
+            )
+
+        if is_current and notice_period_days is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Notice period required for current job"
+            )
+        
+
         # 🔹 Validate docs based on employment type
         rules = EMPLOYMENT_DOCUMENT_RULES[employment_type.value]
 
@@ -192,6 +248,16 @@ class EmployeeExperienceService:
             "internship_certificate_path": experience.internship_certificate_path,
             "contract_aggrement_path": experience.contract_aggrement_path,
         }
+
+        allowed_types = (".pdf", ".png", ".jpg", ".jpeg")
+
+        if files:
+            for file in files:
+                if not file.filename.lower().endswith(allowed_types):
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Invalid file type for {file.filename}"
+                    )
 
         # 🔹 Upload new files if provided
         if files and doc_types:

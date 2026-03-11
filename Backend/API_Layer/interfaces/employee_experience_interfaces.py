@@ -79,8 +79,29 @@ class ExperienceCreateRequest(BaseModel):
 
     @validator("role_title", pre=True)
     def sanitize_text_fields(cls, v):
-        return clean_text(v)
+        v = clean_text(v)
 
+        if v is None or len(v) < 2:
+            raise ValueError("Role title must be at least 2 characters long")
+
+        if len(v) > 100:
+            raise ValueError("Role title must be at most 100 characters long")
+        return v
+
+    @validator("end_date")
+    def validate_dates(cls, end_date, values):
+
+        start_date = values.get("start_date")
+
+        if start_date and end_date:
+
+            if end_date < start_date:
+                raise ValueError("End date cannot be before start date")
+
+            if end_date > date.today():
+                raise ValueError("End date cannot be in the future")
+
+        return end_date
 
 class ExperienceUpdateRequest(BaseModel):
     company_name: Optional[str] = Field(None, min_length=2, max_length=150)

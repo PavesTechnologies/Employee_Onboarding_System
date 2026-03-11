@@ -44,6 +44,15 @@ class EmployeeExperienceDAO:
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
+    async def get_experience_by_company(self, employee_uuid: str, company_name: str):
+        result = await self.db.execute(
+            select(EmployeeExperience).where(
+                EmployeeExperience.employee_uuid == employee_uuid,
+                EmployeeExperience.company_name == company_name
+            )
+        )
+        return result.scalar_one_or_none()
+
     # ----------------------------------------------------
     # CREATE
     # ----------------------------------------------------
@@ -157,6 +166,7 @@ class EmployeeExperienceDAO:
         experience.exp_certificate_path = file_path
         experience.certificate_status = "uploaded"
         experience.uploaded_at = datetime.utcnow()
+        experience.updated_at = datetime.utcnow()
 
         await self.db.commit()
         await self.db.refresh(experience)
@@ -174,6 +184,7 @@ class EmployeeExperienceDAO:
         experience.exp_certificate_path = None
         experience.certificate_status = "pending"
         experience.uploaded_at = None
+        experience.updated_at = datetime.utcnow()
         await self.db.commit()
         await self.db.refresh(experience)
         return experience

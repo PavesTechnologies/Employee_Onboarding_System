@@ -16,6 +16,10 @@ from Backend.corn_jobs.joining_reminder import send_joining_date_reminders
 from Backend.API_Layer.routes import permanent_employee_details_route
 from Backend.API_Layer.routes import departments_routes
 from Backend.API_Layer.routes import designation_routes
+from Backend.API_Layer.routes import employee_pf_routes
+from Backend.API_Layer.routes import employee_bank_routes
+
+
 
 
 # from fastapi_cache.backends.redis import RedisBackend
@@ -90,6 +94,8 @@ app.include_router(offerresponse_routes.router, prefix="/offerresponse", tags=["
 app.include_router(employee_details_routes.router, prefix="/employee-details", tags=["Employee Details"])
 app.include_router(identity_routes.router, prefix="/identity", tags=["Identity Details"])
 app.include_router(employee_experience_routes.router, prefix="/experience", tags=["Employee Experience"])
+app.include_router(employee_pf_routes.router, prefix="/pf", tags=["Employee PF"])
+app.include_router(employee_bank_routes.router, prefix="/bank", tags=["Employee Bank"])
 app.include_router(employee_upload_routes.router, prefix="/employee-upload", tags=["Employee Uploads"])
 app.include_router(otp_routes.router, prefix="/otp", tags=["Otp Verification"])
 app.include_router(token_verification_router.router, prefix="/token-verification", tags=["Token Verification"])
@@ -102,6 +108,7 @@ app.include_router(hr_bulk_join_router.router, prefix="/hr", tags=["HR Bulk Join
 app.include_router(permanent_employee_details_route.router, prefix="/permanent-employee", tags=["Permanent Employees"])
 app.include_router(departments_routes.router)
 app.include_router(designation_routes.router)
+
 
 
 # scheduler = AsyncIOScheduler()

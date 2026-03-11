@@ -25,7 +25,7 @@ router = APIRouter()
 async def create_experience(
     employee_uuid: str = Form(...),
     company_name: str = Form(...),
-    role_title: str | None = Form(None),
+    role_title: str = Form(...),
     employment_type: EmploymentType = Form(...),
     start_date: date = Form(...),
     end_date: date | None = Form(None),
@@ -37,6 +37,21 @@ async def create_experience(
 
     db: AsyncSession = Depends(get_db),
 ):
+
+    # ADD HERE
+    if start_date > date.today():
+        raise HTTPException(
+            status_code=400,
+            detail="Start date cannot be in the future"
+        )
+
+    if end_date and end_date < start_date:
+        raise HTTPException(
+            status_code=400,
+            detail="End date cannot be before start date"
+        )
+
+
     if is_current and end_date:
         raise HTTPException(
             status_code=400,
@@ -54,6 +69,16 @@ async def create_experience(
             status_code=400,
             detail="doc_types and files count must match"
         )
+    
+    # ADD HERE
+    allowed_types = (".pdf", ".png", ".jpg", ".jpeg")
+
+    for file in files:
+        if not file.filename.lower().endswith(allowed_types):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid file type. Only PDF, PNG, JPG allowed"
+            )
 
     request_data = ExperienceCreateRequest(
         employee_uuid=employee_uuid,
@@ -123,14 +148,14 @@ async def update_experience(
     experience_uuid: str,
 
     company_name: str = Form(...),
-    role_title: str | None = Form(None),
+    role_title: str = Form(...),
     employment_type: EmploymentType = Form(...),
     start_date: date = Form(...),
     end_date: date | None = Form(None),
     is_current: bool = Form(False),
     notice_period_days: int | None = Form(None, ge=0, le=120),
 
-    doc_types: List[str] = Form([]),
+    doc_types: List[str]|None = Form([]),
     files: List[UploadFile] | None = File(None),
 
     db: AsyncSession = Depends(get_db),
@@ -152,6 +177,18 @@ async def update_experience(
         raise HTTPException(
             status_code=400,
             detail="doc_types and files count must match"
+        )
+    # ADD HERE
+    if start_date > date.today():
+        raise HTTPException(
+            status_code=400,
+            detail="Start date cannot be in the future"
+        )
+
+    if end_date and end_date < start_date:
+        raise HTTPException(
+            status_code=400,
+            detail="End date cannot be before start date"
         )
 
     service = EmployeeExperienceService(db)

@@ -169,6 +169,9 @@ class OfferLetterDetails(Base):
     employee_pay_slips: Mapped[list['EmployeePaySlips']] = relationship('EmployeePaySlips', back_populates='offer_letter_details', lazy="selectin")
     employee_relieving_letter: Mapped[list['EmployeeRelievingLetter']] = relationship('EmployeeRelievingLetter', back_populates='offer_letter_details', lazy="selectin")
 
+    employee_bank_details: Mapped[list["EmployeeBankDetails"]] = relationship("EmployeeBankDetails",lazy="selectin")
+    employee_pf_details: Mapped[list["EmployeePfDetails"]] = relationship("EmployeePfDetails",lazy="selectin")
+
 
 class Otptable(Base):
     __tablename__ = 'otptable'
@@ -357,6 +360,41 @@ class EmployeeExperience(Base):
     employee_pay_slips: Mapped[list['EmployeePaySlips']] = relationship('EmployeePaySlips', back_populates='employee_experience', lazy="selectin")
     employee_relieving_letter: Mapped[list['EmployeeRelievingLetter']] = relationship('EmployeeRelievingLetter', back_populates='employee_experience', lazy="selectin")
 
+class EmployeeBankDetails(Base):
+    __tablename__ = "employee_bank_details"
+    bank_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    bank_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
+    user_uuid: Mapped[str] = mapped_column(
+        CHAR(36),
+        ForeignKey("offer_letter_details.user_uuid"),
+        nullable=False
+    )
+
+    account_holder_name: Mapped[str] = mapped_column(String(150), nullable=False)
+    bank_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    branch_name: Mapped[Optional[str]] = mapped_column(String(100))
+    account_number: Mapped[str] = mapped_column(String(30), nullable=False)
+    ifsc_code: Mapped[str] = mapped_column(String(15), nullable=False)
+    account_type: Mapped[str] = mapped_column(Enum("Savings", "Current"))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP")
+    )
+
+class EmployeePfDetails(Base):
+    __tablename__ = "employee_pf_details"
+    pf_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    pf_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
+    user_uuid: Mapped[str] = mapped_column(
+        CHAR(36),
+        ForeignKey("offer_letter_details.user_uuid"),
+        nullable=False
+    )
+
+    pf_member: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    uan_number: Mapped[Optional[str]] = mapped_column(String(20))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP")
+    )
 
 class EmployeeReceivables(Base):
     __tablename__ = 'employee_receivables'

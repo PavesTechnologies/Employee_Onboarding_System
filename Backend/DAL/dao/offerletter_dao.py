@@ -9,6 +9,13 @@ class OfferLetterDAO:
     def __init__(self, db: AsyncSession):
         self.db = db  # Store the session for transaction management
 
+    async def get_offer_by_user_uuid(self, user_uuid: str):
+        result = await self.db.execute(
+            select(OfferLetterDetails).where(
+                OfferLetterDetails.user_uuid == user_uuid
+            )
+        )
+        return result.scalar_one_or_none()
     async def create_offer(self, uuid: str, request_data: OfferCreateRequest, current_user_id: int) -> OfferLetterDetails:
         """
         Create a single offer with immediate commit.
