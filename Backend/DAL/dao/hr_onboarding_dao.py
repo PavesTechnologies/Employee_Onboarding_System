@@ -25,6 +25,9 @@ from ...DAL.models.models import (
     OfferApprovalAction,
     RelationMaster,
     DegreeMaster,
+    EmployeeBankDetails,
+    EmployeePfDetails,
+    
 )
 from sqlalchemy.orm import noload
 
@@ -202,19 +205,39 @@ class HrOnboardingDAO:
                     .where(EmployeeExperience.employee_uuid == user_uuid)
                 )
                 return r.scalars().all()
+        async def fetch_bank_details():
+            async with AsyncSessionLocal() as s:
+                r = await s.execute(
+                    select(EmployeeBankDetails)
+                    .options(noload("*"))
+                    .where(EmployeeBankDetails.user_uuid == user_uuid)
+                )
+                return r.scalar_one_or_none()
 
-        address_rows, identity_rows, education_rows, experience_rows = await asyncio.gather(
+
+        async def fetch_pf_details():
+            async with AsyncSessionLocal() as s:
+                r = await s.execute(
+                    select(EmployeePfDetails)
+                    .options(noload("*"))
+                    .where(EmployeePfDetails.user_uuid == user_uuid)
+                )
+                return r.scalar_one_or_none()
+        address_rows, identity_rows, education_rows, experience_rows, bank_row, pf_row = await asyncio.gather(
             fetch_addresses(),
             fetch_identity(),
             fetch_education(),
-            fetch_experience()
-        )
+            fetch_experience(),
+            fetch_bank_details(),
+            fetch_pf_details()
+)
 
         print("Q1–Q4 parallel:", round(time.time() - t, 3), "s")
 
         # ==================================================
         # Q5: LOOKUPS
         # ==================================================
+        
         t = time.time()
         async with AsyncSessionLocal() as s:
 
@@ -447,6 +470,27 @@ class HrOnboardingDAO:
             }
             for e in experience_rows
         ]
+        # -------- Bank Details --------
+        bank_details = None
+        if bank_row:
+            bank_details = {
+                "user_uuid": bank_row.user_uuid,
+                "account_holder_name": bank_row.account_holder_name,
+                "bank_name": bank_row.bank_name,
+                "branch_name": bank_row.branch_name,
+                "account_number": bank_row.account_number,
+                "ifsc_code": bank_row.ifsc_code,
+                "account_type": bank_row.account_type
+            }
+
+# -------- PF Details --------
+        pf_details = None
+        if pf_row:
+            pf_details = {
+                "user_uuid": pf_row.user_uuid,
+                "pf_member": pf_row.pf_member,
+                "uan_number": pf_row.uan_number
+            }
 
         print("BUILD:", round(time.time() - t, 3), "s")
         print("TOTAL DAO:", round(time.time() - TOTAL_START, 3), "s")
@@ -458,6 +502,8 @@ class HrOnboardingDAO:
             "identity_documents": identity_docs,
             "education_documents": education_docs,
             "experience": experience,
+            "bank_details": bank_details,
+            "pf_details": pf_details
         }
 
     async def identity_and_education_document_exists(self, table_name, file_path):
