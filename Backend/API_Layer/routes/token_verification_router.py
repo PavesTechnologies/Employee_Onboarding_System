@@ -27,18 +27,47 @@ async def get_user_uuid_by_token(
     db: AsyncSession = Depends(get_db)
 ):
     service = OnboardingVerifyLinkService(db)
-    user_uuid = await service.get_user_uuid_by_token(raw_token)
 
-    result = await db.execute(
-        text("SELECT 1 FROM offer_letter_details WHERE user_uuid = :user_uuid"),
-        {"user_uuid": user_uuid}
-    )
+    try:
+        print("🔐 Verifying token:", raw_token)
 
-    if not result.first():
-        await db.execute(
-            text("INSERT INTO offer_letter_details (user_uuid) VALUES (:user_uuid)"),
+        # ✅ Step 1: Validate token properly
+        valid_link = await service.dao.get_valid_link_by_token(raw_token)
+
+        if not valid_link:
+            print("❌ Invalid or expired token")
+            raise HTTPException(status_code=400, detail="Invalid or expired token")
+
+        user_uuid = valid_link.user_uuid
+
+        if not user_uuid:
+            print("❌ user_uuid is None")
+            raise HTTPException(status_code=400, detail="Invalid user")
+
+        print("✅ user_uuid:", user_uuid)
+
+        # ✅ Step 2: Safe DB check
+        result = await db.execute(
+            text("SELECT 1 FROM offer_letter_details WHERE user_uuid = :user_uuid"),
             {"user_uuid": user_uuid}
         )
-        await db.commit()
 
-    return user_uuid
+        exists = result.first()
+
+        # ✅ Step 3: Insert if not exists
+        if not exists:
+            await db.execute(
+                text("INSERT INTO offer_letter_details (user_uuid) VALUES (:user_uuid)"),
+                {"user_uuid": user_uuid}
+            )
+            await db.commit()
+            print("✅ Inserted new record")
+
+        return user_uuid
+
+    except HTTPException as http_err:
+        raise http_err
+
+    except Exception as e:
+        print("🔥 FULL ERROR:", str(e))
+        raise HTTPException(status_code=500, detail=str(e))  # 👈 show actual error

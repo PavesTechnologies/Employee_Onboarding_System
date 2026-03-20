@@ -146,6 +146,7 @@ class OfferLetterDetails(Base):
     employee_type: Mapped[str] = mapped_column(Enum('Full-Time', 'Part-Time', 'Intern', 'Contractor', 'Freelance'), nullable=False)
     package: Mapped[str] = mapped_column(String(20), nullable=False)
     currency: Mapped[str] = mapped_column(String(10), nullable=False)
+    job_id: Mapped[str] = mapped_column(String(255), nullable=False)
     created_by: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[Optional[str]] = mapped_column(ENUM('Created', 'Offered', 'Accepted', 'Rejected', 'Submitted', 'Verified', 'Completed'), server_default=text("'Created'"))
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))

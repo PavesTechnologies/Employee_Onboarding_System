@@ -13,6 +13,7 @@ class OfferCreateRequest(BaseModel):
     employee_type: str
     package: str
     currency : str
+    job_id :str
     cc_emails: Optional[List[EmailStr]] = None
 
 
@@ -44,6 +45,7 @@ class OfferLetterDetailsResponse(BaseModel):
     employee_type: str
     package: Optional[str] = None
     currency : Optional[str] = None
+    job_id : Optional[str] = None
     created_by: int
     status : str
     cc_emails: Optional[str] = None

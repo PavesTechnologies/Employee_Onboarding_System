@@ -33,6 +33,7 @@ class OfferLetterDAO:
             employee_type=request_data.employee_type,
             package=request_data.package,
             currency=request_data.currency,
+            job_id=request_data.job_id,
             cc_emails=",".join(request_data.cc_emails) if request_data.cc_emails else None,
         )
         self.db.add(new_offer)
@@ -115,6 +116,7 @@ class OfferLetterDAO:
                 OfferLetterDetails.employee_type,
                 OfferLetterDetails.package,
                 OfferLetterDetails.currency,
+                OfferLetterDetails.job_id,
                 OfferLetterDetails.created_by,
                 OfferLetterDetails.status,
                 OfferLetterDetails.cc_emails
@@ -152,6 +154,7 @@ class OfferLetterDAO:
                 OfferLetterDetails.employee_type,
                 OfferLetterDetails.package,
                 OfferLetterDetails.currency,
+                OfferLetterDetails.job_id,
                 OfferLetterDetails.created_by,
                 OfferLetterDetails.status,
                 OfferLetterDetails.cc_emails
@@ -217,6 +220,7 @@ class OfferLetterDAO:
             employee_type=request_data.employee_type,
             package=request_data.package,
             currency=request_data.currency,
+            job_id=request_data.job_id,
             cc_emails=",".join(request_data.cc_emails) if request_data.cc_emails else None,
         )
     )

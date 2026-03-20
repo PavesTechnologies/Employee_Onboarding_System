@@ -17,8 +17,10 @@ class OnboardingVerifyLinkService:
 
             # ----------------------------
             # 2️⃣ Prepare response
-            if valid_link:
-                return valid_link.user_uuid
+            if not valid_link:
+                raise ValueError("Invalid or expired token")
+
+            return valid_link.user_uuid
         except Exception as e:
             raise ValueError(f"Error verifying token: {str(e)}")
         
