@@ -207,6 +207,7 @@ class Addresses(Base):
     district_or_ward: Mapped[Optional[str]] = mapped_column(String(150))
     state_or_region: Mapped[Optional[str]] = mapped_column(String(150))
     postal_code: Mapped[Optional[str]] = mapped_column(String(20))
+    verification_status: Mapped[Optional[str]] = mapped_column(Enum('Pending', 'Verified', 'Rejected'),default='Pending')
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
 
@@ -432,7 +433,7 @@ class PersonalDetails(Base):
     gender: Mapped[Optional[str]] = mapped_column(Enum('Male', 'Female', 'Other'))
     marital_status: Mapped[Optional[str]] = mapped_column(Enum('Single', 'Married', 'Divorced', 'Widowed'))
     blood_group: Mapped[Optional[str]] = mapped_column(String(5))
-
+    verification_status: Mapped[Optional[str]] = mapped_column(Enum('Pending', 'Verified', 'Rejected'),default='Pending')
     nationality_country_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))
     residence_country_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))
 
@@ -440,6 +441,10 @@ class PersonalDetails(Base):
     emergency_contact_name: Mapped[Optional[str]] = mapped_column(String(100))
     emergency_contact_phone: Mapped[Optional[str]] = mapped_column(String(20))
     emergency_contact_relation_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))
+    status: Mapped[Optional[str]] = mapped_column(
+        Enum('uploaded', 'verified', 'rejected'),
+        server_default=text("'uploaded'")
+    )
 
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         DateTime, server_default=text('CURRENT_TIMESTAMP')
@@ -534,6 +539,7 @@ class EmployeeIdentityDocument(Base):
     identity_file_number: Mapped[Optional[str]] = mapped_column(String(255))
     file_path: Mapped[Optional[str]] = mapped_column(String(255))
     expiry_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
+    verification_status: Mapped[Optional[str]] = mapped_column(Enum('Pending', 'Verified', 'Rejected'),default='Pending')
     status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'pending', 'verified', 'rejected'), server_default=text("'pending'"))
     uploaded_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     verified_by: Mapped[Optional[str]] = mapped_column(CHAR(36))

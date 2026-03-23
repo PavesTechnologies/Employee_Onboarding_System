@@ -463,7 +463,7 @@ class HrOnboardingDAO:
                 "end_date": e.end_date,
                 "is_current": bool(e.is_current),
                 "notice_period_days": e.notice_period_days,
-                "certificate_status": e.certificate_status,
+                "status": e.status,
                 "uploaded_at": e.uploaded_at,
                 "verified_at": e.verified_at,
                 "documents": HrOnboardingDAO.build_experience_documents(e),
@@ -602,3 +602,105 @@ class HrOnboardingDAO:
         stmt = select(EmployeeExperience.employee_uuid).where(EmployeeExperience.employee_uuid == user_uuid)
         result = await self.db.execute(stmt)
         return result.scalars().first()
+
+    async def update_document_status(
+        self,
+        user_uuid: str,
+        document_uuid: str,
+        doc_type: str,
+        status: str,
+        remarks: str,
+        verified_by: int
+    ):
+
+        model_map = {
+            "personal": PersonalDetails,
+            "address": Addresses,
+            "education": EmployeeEducationDocument,
+            "identity": EmployeeIdentityDocument,
+            "experience": EmployeeExperience,
+            "bank": EmployeeBankDetails,
+            "pf": EmployeePfDetails
+        }
+
+        model = model_map.get(doc_type)
+
+        if not model:
+            raise Exception("Invalid document type")
+
+        # =========================
+        # 🔹 PERSONAL / ADDRESS (SECTION LEVEL)
+        # =========================
+        if doc_type in ["personal", "address", "bank", "pf"]:
+
+            if not user_uuid:
+                raise Exception("user_uuid is required")
+
+            result = await self.db.execute(
+                select(model).where(model.user_uuid == user_uuid)
+            )
+
+            doc = result.scalar()
+
+        # =========================
+        # 🔹 EXPERIENCE (SPECIAL CASE)
+        # =========================
+        elif doc_type == "experience":
+
+            if not document_uuid:
+                raise Exception("experience_uuid is required")
+
+            result = await self.db.execute(
+                select(EmployeeExperience).where(
+                    EmployeeExperience.experience_uuid == document_uuid
+                )
+            )
+
+            doc = result.scalar()
+
+            if not doc:
+                raise Exception("Experience not found")
+
+            doc.status = status
+
+            if hasattr(doc, "verified_by"):
+                doc.verified_by = verified_by
+
+            if hasattr(doc, "verified_at"):
+                doc.verified_at = datetime.utcnow()
+
+            await self.db.commit()
+            return
+
+        # =========================
+        # 🔹 DOCUMENT LEVEL (DEFAULT)
+        # =========================
+        else:
+
+            if not document_uuid:
+                raise Exception("document_uuid is required")
+
+            result = await self.db.execute(
+                select(model).where(model.document_uuid == document_uuid)
+            )
+
+            doc = result.scalar()
+
+        # =========================
+        # 🔹 COMMON UPDATE
+        # =========================
+        if not doc:
+            raise Exception("Record not found")
+
+        doc.status = status
+
+        if hasattr(doc, "remarks") and remarks:
+            doc.remarks = remarks
+
+        if hasattr(doc, "verified_by"):
+            doc.verified_by = verified_by
+
+        if hasattr(doc, "verified_at"):
+            doc.verified_at = datetime.utcnow()
+
+        await self.db.commit()
