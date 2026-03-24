@@ -22,6 +22,7 @@ from Backend.API_Layer.routes import departments_routes
 from Backend.API_Layer.routes import designation_routes
 from Backend.API_Layer.routes import employee_pf_routes
 from Backend.API_Layer.routes import employee_bank_routes
+from Backend.API_Layer.routes import dashboard_routes
 
 
 
@@ -112,7 +113,11 @@ app.include_router(hr_bulk_join_router.router, prefix="/hr", tags=["HR Bulk Join
 app.include_router(permanent_employee_details_route.router, prefix="/permanent-employee", tags=["Permanent Employees"])
 app.include_router(departments_routes.router)
 app.include_router(designation_routes.router)
+
 app.include_router(analytics_routes.router, prefix="/api/analytics", tags=["Analytics"])
+
+app.include_router(dashboard_routes.router)
+
 
 
 

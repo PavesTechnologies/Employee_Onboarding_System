@@ -136,3 +136,14 @@ class HrOnboardingService:
             )
         if not updated:
             raise HTTPException(status_code=404, detail="Offer letter not found for the given user UUID")
+
+    async def verify_document(self, payload, current_user_id):
+
+        await self.dao.update_document_status(
+        user_uuid=payload.user_uuid,
+        document_uuid=payload.document_uuid,
+        doc_type=payload.doc_type,
+        status=payload.status,
+        remarks=payload.remarks,
+        verified_by=current_user_id
+    )

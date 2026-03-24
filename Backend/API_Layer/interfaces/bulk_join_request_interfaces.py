@@ -10,5 +10,5 @@ class BulkJoinRequest(BaseModel):
     department: str
     reporting_manager: str
     custom_message: Optional[str] = None
-
+ 
 

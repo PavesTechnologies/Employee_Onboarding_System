@@ -152,7 +152,7 @@ class ExperienceResponse(BaseModel):
     internship_certificate_path: str | None
     contract_aggrement_path: str | None
 
-    certificate_status: str
+    status: str
     uploaded_at: datetime
 
 class GenericMessageResponse(BaseModel):
@@ -176,7 +176,7 @@ class ExperienceUpdate(BaseModel):
     payslip_path: str | None = None
     contract_aggrement_path: str | None = None
 
-    certificate_status: str | None = None
+    status: str | None = None
     verified_by: str | None = None
     verified_at: datetime | None = None
    # remarks: str | None

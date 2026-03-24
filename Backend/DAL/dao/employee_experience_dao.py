@@ -82,7 +82,7 @@ class EmployeeExperienceDAO:
             internship_certificate_path=internship_certificate_path,
             contract_aggrement_path=contract_aggrement_path,
 
-            certificate_status="uploaded",
+            status="uploaded",
             uploaded_at=datetime.utcnow(),
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
@@ -164,7 +164,7 @@ class EmployeeExperienceDAO:
             return None
 
         experience.exp_certificate_path = file_path
-        experience.certificate_status = "uploaded"
+        experience.status = "uploaded"
         experience.uploaded_at = datetime.utcnow()
         experience.updated_at = datetime.utcnow()
 
@@ -182,7 +182,7 @@ class EmployeeExperienceDAO:
             return None
 
         experience.exp_certificate_path = None
-        experience.certificate_status = "pending"
+        experience.status = "uploaded"
         experience.uploaded_at = None
         experience.updated_at = datetime.utcnow()
         await self.db.commit()

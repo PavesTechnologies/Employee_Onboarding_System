@@ -86,18 +86,32 @@ class Departments(Base):
 
 
 class Designations(Base):
-    __tablename__ = 'designations'
+    __tablename__ = "designations"
+
     __table_args__ = (
-        Index('designation_uuid', 'designation_uuid', unique=True),
+        Index("idx_designation_uuid", "designation_uuid", unique=True),
     )
 
     designation_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     designation_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
     designation_name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(255))
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
-    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
 
+    department_uuid: Mapped[str] = mapped_column(
+        CHAR(36),
+        ForeignKey("departments.department_uuid"),
+        nullable=False
+    )
+
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime,
+        server_default=text("CURRENT_TIMESTAMP")
+    )
+
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime,
+        server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    )
     employee_details: Mapped[list['EmployeeDetails']] = relationship('EmployeeDetails', back_populates='designations')
 
 
@@ -181,7 +195,9 @@ class OfferLetterDetails(Base):
     currency: Mapped[str] = mapped_column(String(10), nullable=False)
     job_id: Mapped[str] = mapped_column(String(255), nullable=False)
     created_by: Mapped[int] = mapped_column(Integer, nullable=False)
+
     status: Mapped[Optional[str]] = mapped_column(ENUM('Created', 'Offered', 'Accepted', 'Rejected', 'Submitted', 'Verified', 'Completed','InComplete'), server_default=text("'Created'"))
+
     middle_name: Mapped[Optional[str]] = mapped_column(String(100))
     package: Mapped[Optional[str]] = mapped_column(String(255))
     currency: Mapped[Optional[str]] = mapped_column(String(20))
@@ -275,6 +291,7 @@ class Addresses(Base):
     district_or_ward: Mapped[Optional[str]] = mapped_column(String(150))
     state_or_region: Mapped[Optional[str]] = mapped_column(String(150))
     postal_code: Mapped[Optional[str]] = mapped_column(String(20))
+    status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'verified', 'rejected'), server_default=text("'uploaded'"))
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
 
@@ -447,7 +464,7 @@ class EmployeeExperience(Base):
     internship_certificate_path: Mapped[Optional[str]] = mapped_column(String(255))
     payslip_path: Mapped[Optional[str]] = mapped_column(String(255))
     contract_aggrement_path: Mapped[Optional[str]] = mapped_column(String(255))
-    certificate_status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'pending', 'verified', 'rejected'), server_default=text("'pending'"))
+    status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'verified', 'rejected'),server_default=text("'uploaded'"))
     uploaded_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     verified_by: Mapped[Optional[str]] = mapped_column(CHAR(36))
     verified_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
@@ -476,9 +493,8 @@ class EmployeeBankDetails(Base):
     account_number: Mapped[str] = mapped_column(String(30), nullable=False)
     ifsc_code: Mapped[str] = mapped_column(String(15), nullable=False)
     account_type: Mapped[str] = mapped_column(Enum("Savings", "Current"))
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP")
-    )
+    status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'verified', 'rejected'), server_default=text("'uploaded'"))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
 
 class EmployeePfDetails(Base):
     __tablename__ = "employee_pf_details"
@@ -492,9 +508,8 @@ class EmployeePfDetails(Base):
 
     pf_member: Mapped[bool] = mapped_column(Boolean, nullable=False)
     uan_number: Mapped[Optional[str]] = mapped_column(String(20))
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP")
-    )
+    status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'verified', 'rejected'), server_default=text("'uploaded'"))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
 
 class EmployeeReceivables(Base):
     __tablename__ = 'employee_receivables'
@@ -592,27 +607,18 @@ class PersonalDetails(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     personal_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
     user_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
-
     date_of_birth: Mapped[Optional[datetime.date]] = mapped_column(Date)
     gender: Mapped[Optional[str]] = mapped_column(Enum('Male', 'Female', 'Other'))
     marital_status: Mapped[Optional[str]] = mapped_column(Enum('Single', 'Married', 'Divorced', 'Widowed'))
     blood_group: Mapped[Optional[str]] = mapped_column(String(5))
-
     nationality_country_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))
     residence_country_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))
-
-    # New Emergency Contact Fields
     emergency_contact_name: Mapped[Optional[str]] = mapped_column(String(100))
     emergency_contact_phone: Mapped[Optional[str]] = mapped_column(String(20))
-    emergency_contact_relation_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36), ForeignKey("relation.relation_uuid")
-)
-
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime, server_default=text('CURRENT_TIMESTAMP')
-    )
-    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
-    )
+    emergency_contact_relation_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36), ForeignKey("relation.relation_uuid"))
+    status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'verified', 'rejected'), server_default=text("'uploaded'"))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
 
     countries: Mapped[Optional['Countries']] = relationship(
         'Countries',
@@ -674,41 +680,23 @@ class EmployeeEducationDocument(Base):
     )
 
     employee_education_document_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-
     document_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
     mapping_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
     user_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
-
     institution_name: Mapped[Optional[str]] = mapped_column(String(150))
     institute_location: Mapped[Optional[str]] = mapped_column(String(150))
-
     degree_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))
-
     specialization: Mapped[Optional[str]] = mapped_column(String(150))
-
     education_mode: Mapped[Optional[str]] = mapped_column(
         Enum('Regular', 'Distance', 'Part Time', 'Online')
     )
-
     start_year: Mapped[Optional[Any]] = mapped_column(YEAR)
     year_of_passing: Mapped[Optional[Any]] = mapped_column(YEAR)
-
     percentage_cgpa: Mapped[Optional[str]] = mapped_column(String(10))
-
     delay_reason: Mapped[Optional[str]] = mapped_column(String(255))
-
     file_path: Mapped[Optional[str]] = mapped_column(String(255))
-
-    status: Mapped[Optional[str]] = mapped_column(
-        Enum('uploaded', 'verified', 'rejected'),
-        server_default=text("'uploaded'")
-    )
-
-    uploaded_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime,
-        server_default=text('CURRENT_TIMESTAMP')
-    )
-
+    status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'verified', 'rejected'), server_default=text("'uploaded'"))
+    uploaded_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     verified_by: Mapped[Optional[str]] = mapped_column(CHAR(36))
     verified_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
 
@@ -793,7 +781,7 @@ class EmployeeIdentityDocument(Base):
     identity_file_number: Mapped[Optional[str]] = mapped_column(String(255))
     file_path: Mapped[Optional[str]] = mapped_column(String(255))
     expiry_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
-    status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'pending', 'verified', 'rejected'), server_default=text("'pending'"))
+    status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'verified', 'rejected'), server_default=text("'uploaded'"))
     uploaded_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     verified_by: Mapped[Optional[str]] = mapped_column(CHAR(36))
     verified_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)

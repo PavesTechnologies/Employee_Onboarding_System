@@ -35,11 +35,17 @@ class CountryDAO:
         return result.scalar()
     
     async def get_country_by_uuid(self, country_uuid: str):
-        stmt = select(
-            exists().where(Countries.country_uuid == country_uuid)
+        result = await self.db.execute(
+            select(Countries).where(Countries.country_uuid == country_uuid)
         )
-        result = await self.db.execute(stmt)
-        return result.scalar()
+        return result.scalar_one_or_none()
+
+    # async def get_country_by_uuid(self, country_uuid: str):
+    #     stmt = select(
+    #         exists().where(Countries.country_uuid == country_uuid)
+    #     )
+    #     result = await self.db.execute(stmt)
+    #     return result.scalar()
     
     
     async def update_country(self, country_uuid: str, is_active: bool):
@@ -65,7 +71,7 @@ class CountryDAO:
                 Countries.country_name,
                 Countries.is_active
             )
-            .where(Countries.is_active)   #  added filter
+            .where(Countries.is_active == True)   #  added filter
             .order_by(Countries.country_name)
         )
 
