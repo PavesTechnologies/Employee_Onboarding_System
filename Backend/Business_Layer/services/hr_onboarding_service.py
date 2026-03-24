@@ -57,11 +57,11 @@ class HrOnboardingService:
 
                     # ✅ EMAIL TRIGGER (ONLY ADDITION)
             offer = await self.offer_dao.get_offer_by_uuid(user_uuid)
-            candidate_name = f"{offer.first_name} {offer.last_name}"
+            candidate_name = f"{offer['first_name']} {offer['last_name']}"
 
                 # Candidate email
             send_candidate_onboarding_submitted_email(
-                to_email=offer.mail,
+                to_email=offer['mail'],
                 candidate_name=candidate_name
             ) 
 
@@ -69,7 +69,7 @@ class HrOnboardingService:
             send_hr_onboarding_submitted_email(
                     hr_email=self.HR_EMAIL,
                     candidate_name=candidate_name,
-                    candidate_email=offer.mail,
+                    candidate_email=offer['mail'],
                     submitted_at=datetime.utcnow()
             )
 
