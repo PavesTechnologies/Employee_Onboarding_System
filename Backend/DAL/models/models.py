@@ -181,14 +181,11 @@ class OfferLetterDetails(Base):
     currency: Mapped[str] = mapped_column(String(10), nullable=False)
     job_id: Mapped[str] = mapped_column(String(255), nullable=False)
     created_by: Mapped[int] = mapped_column(Integer, nullable=False)
-<<<<<<< HEAD
     status: Mapped[Optional[str]] = mapped_column(ENUM('Created', 'Offered', 'Accepted', 'Rejected', 'Submitted', 'Verified', 'Completed','InComplete'), server_default=text("'Created'"))
-=======
     middle_name: Mapped[Optional[str]] = mapped_column(String(100))
     package: Mapped[Optional[str]] = mapped_column(String(255))
     currency: Mapped[Optional[str]] = mapped_column(String(20))
     status: Mapped[Optional[str]] = mapped_column(ENUM('Created', 'Offered', 'Accepted', 'Rejected', 'Submitted', 'Verified', 'Completed'), server_default=text("'Created'"))
->>>>>>> 5ebea041404f0b67659814b1b9ee92a0262866c8
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
     file_path: Mapped[Optional[str]] = mapped_column(String(255))
