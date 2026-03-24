@@ -81,6 +81,10 @@ class AuditUtils:
                 "employee-upload/relations": {
                 "table": "relation",
                 "id_field": "relation_uuid"
+            },
+            "education/degree-master": {
+                "table": "degree_master",
+                "id_field": "degree_uuid"
             }
         }
 
