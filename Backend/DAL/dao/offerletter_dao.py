@@ -202,7 +202,8 @@ class OfferLetterDAO:
         "currency": offer.currency,
         "created_by": offer.created_by,
         "status": offer.status,
-        "cc_emails": offer.cc_emails,
+        
+        "cc_mails": offer.cc_emails.split(",") if offer.cc_emails else [],
         "total_ctc": offer.total_ctc,
         "compensation_components": compensation_list
     }
