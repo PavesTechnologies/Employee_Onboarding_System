@@ -195,6 +195,9 @@ class OfferLetterDetails(Base):
     currency: Mapped[str] = mapped_column(String(10), nullable=False)
     job_id: Mapped[str] = mapped_column(String(255), nullable=False)
     created_by: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    status: Mapped[Optional[str]] = mapped_column(ENUM('Created', 'Offered', 'Accepted', 'Rejected', 'Submitted', 'Verified', 'Completed','InComplete'), server_default=text("'Created'"))
+
     middle_name: Mapped[Optional[str]] = mapped_column(String(100))
     package: Mapped[Optional[str]] = mapped_column(String(255))
     currency: Mapped[Optional[str]] = mapped_column(String(20))
