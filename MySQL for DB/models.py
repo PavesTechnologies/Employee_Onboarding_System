@@ -711,33 +711,33 @@
 #         server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
 #     )
 
-# class Designations(Base):
-#     __tablename__ = "designations"
+class Designations(Base):
+    __tablename__ = "designations"
 
-#     __table_args__ = (
-#         Index("idx_designation_uuid", "designation_uuid", unique=True),
-#     )
+    __table_args__ = (
+        Index("idx_designation_uuid", "designation_uuid", unique=True),
+    )
 
-#     designation_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-#     designation_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
-#     designation_name: Mapped[str] = mapped_column(String(100), nullable=False)
-#     description: Mapped[Optional[str]] = mapped_column(String(255))
+    designation_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    designation_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
+    designation_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(255))
 
-#     department_uuid: Mapped[str] = mapped_column(
-#         CHAR(36),
-#         ForeignKey("departments.department_uuid"),
-#         nullable=False
-#     )
+    department_uuid: Mapped[str] = mapped_column(
+        CHAR(36),
+        ForeignKey("departments.department_uuid"),
+        nullable=False
+    )
 
-#     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-#         DateTime,
-#         server_default=text("CURRENT_TIMESTAMP")
-#     )
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime,
+        server_default=text("CURRENT_TIMESTAMP")
+    )
 
-#     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-#         DateTime,
-#         server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
-#     )
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime,
+        server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    )
 
 from typing import Any, Optional
 import datetime
@@ -826,20 +826,20 @@ class Departments(Base):
     employee_details: Mapped[list['EmployeeDetails']] = relationship('EmployeeDetails', back_populates='departments')
 
 
-class Designations(Base):
-    __tablename__ = 'designations'
-    __table_args__ = (
-        Index('designation_uuid', 'designation_uuid', unique=True),
-    )
+# class Designations(Base):
+#     __tablename__ = 'designations'
+#     __table_args__ = (
+#         Index('designation_uuid', 'designation_uuid', unique=True),
+#     )
 
-    designation_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    designation_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
-    designation_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(String(255))
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
-    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
+#     designation_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+#     designation_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
+#     designation_name: Mapped[str] = mapped_column(String(100), nullable=False)
+#     description: Mapped[Optional[str]] = mapped_column(String(255))
+#     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+#     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
 
-    employee_details: Mapped[list['EmployeeDetails']] = relationship('EmployeeDetails', back_populates='designations')
+#     employee_details: Mapped[list['EmployeeDetails']] = relationship('EmployeeDetails', back_populates='designations')
 
 
 class EducationDocumentType(Base):
