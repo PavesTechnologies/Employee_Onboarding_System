@@ -49,6 +49,7 @@ class BulkOfferCreateResponse(BaseModel):
 class OfferLetterDetailsResponse(BaseModel):
     user_uuid: str
     first_name: str
+    middle_name :Optional[str] = None
     last_name: str
     mail: str
     country_code: str
@@ -68,7 +69,7 @@ class OfferLetterDetailsResponse(BaseModel):
 
 
 class Config:
-    from_attributes = True  # important
+    from_attributes = True  
 
 class OfferPendingCandidate(BaseModel):
     user_uuid: str

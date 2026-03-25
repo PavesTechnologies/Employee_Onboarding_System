@@ -119,6 +119,7 @@ class OfferLetterDAO:
             select(
                 OfferLetterDetails.user_uuid,
                 OfferLetterDetails.first_name,
+                OfferLetterDetails.middle_name,   
                 OfferLetterDetails.last_name,
                 OfferLetterDetails.mail,
                 OfferLetterDetails.country_code,
@@ -192,6 +193,7 @@ class OfferLetterDAO:
             
         "user_uuid": offer.user_uuid,
         "first_name": offer.first_name,
+        "middle_name":offer.middle_name,
         "last_name": offer.last_name,
         "mail": offer.mail,
         "country_code": offer.country_code,
