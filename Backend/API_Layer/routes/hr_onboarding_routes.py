@@ -8,7 +8,7 @@ from ...API_Layer.interfaces.hr_onboarding_interfaces import HRVerificationReque
 from ..utils.role_based import require_roles
 from sqlalchemy.future import select
 from Backend.DAL.utils.dependencies import get_db
-from Backend.DAL.models.models import OfferLetterDetails, EmployeeDetails
+from Backend.DAL.models.models import OfferLetterDetails, EmployeeDetails, EmployeeIdentityDocument,EmployeeEducationDocument, EmployeeExperience, IdentityType, CountryIdentityMapping, EducationDocumentType,CountryEducationDocumentMapping
  
 router = APIRouter()
  
@@ -99,117 +99,308 @@ async def verify_document(
     )
  
     return {"message": "Document status updated successfully"}
+
+# @router.get("/employees/documents")
+# async def get_all_employee_documents(
+#     request: Request,
+#     db: AsyncSession = Depends(get_db)
+# ):
  
+#     current_user_id = int(request.state.user.get("user_id"))
+ 
+#     # JOIN OfferLetterDetails + CoreEmployee
+#     employees_query = await db.execute(
+#         select(OfferLetterDetails, EmployeeDetails.employee_id)
+#         .outerjoin(EmployeeDetails, EmployeeDetails.user_uuid == OfferLetterDetails.user_uuid)
+#     )
+ 
+#     employees = employees_query.all()
+ 
+#     service = HrOnboardingService(db)
+ 
+#     results = []
+ 
+#     for emp, employee_id in employees:
+ 
+#         onboarding_data = await service.get_full_onboarding_details(
+#             emp.user_uuid,
+#             current_user_id
+#         )
+ 
+#         if not onboarding_data:
+#             continue
+ 
+#         documents = []
+ 
+#         # Identity Documents
+#         for doc in onboarding_data.get("identity_documents", []):
+#             documents.append({
+#                 "document_name": doc.get("identity_type"),
+#                 "file_path": doc.get("file_path")
+#             })
+ 
+#         # Education Documents
+#         for doc in onboarding_data.get("education_documents", []):
+#             documents.append({
+#                 "document_name": doc.get("document_name") or "Education Document",
+#                 "file_path": doc.get("file_path")
+#             })
+ 
+#         # Experience Documents
+#         for exp in onboarding_data.get("experience", []):
+#             for doc in exp.get("documents", []):
+#                 documents.append({
+#                     "document_name": doc.get("doc_type"),
+#                     "file_path": doc.get("file_path")
+#                 })
+ 
+#         results.append({
+#             "user_uuid": emp.user_uuid,
+#             "emp_id": employee_id,  # ✅ fetched from CoreEmployee
+#             "name": f"{emp.first_name} {emp.last_name}",
+#             "department": emp.designation,
+#             "documents": documents
+#         })
+ 
+#     return results
+ 
+# @router.get("/employee/{user_uuid}/documents")
+# async def get_employee_documents(
+#     user_uuid: str,
+#     request: Request,
+#     db: AsyncSession = Depends(get_db)
+# ):
+ 
+#     current_user_id = int(request.state.user.get("user_id"))
+ 
+#     service = HrOnboardingService(db)
+ 
+#     onboarding_data = await service.get_full_onboarding_details(
+#         user_uuid,
+#         current_user_id
+#     )
+ 
+#     if not onboarding_data:
+#         raise HTTPException(status_code=404, detail="Onboarding data not found")
+ 
+#     documents = []
+ 
+#     # Identity Documents
+#     for doc in onboarding_data.get("identity_documents", []):
+#         documents.append({
+#             "document_name": doc.get("identity_type"),
+#             "file_path": doc.get("file_path")
+#         })
+ 
+#     # Education Documents
+#     for doc in onboarding_data.get("education_documents", []):
+#         documents.append({
+#             "document_name": doc.get("document_name") or "Education Document",
+#             "file_path": doc.get("file_path")
+#         })
+ 
+#     # Experience Documents
+#     for exp in onboarding_data.get("experience", []):
+#         for doc in exp.get("documents", []):
+#             documents.append({
+#                 "document_name": doc.get("doc_type"),
+#                 "file_path": doc.get("file_path")
+#             })
+ 
+#     return {
+#         "user_uuid": user_uuid,
+#         "documents": documents
+#     }
+
+
 @router.get("/employees/documents")
 async def get_all_employee_documents(
     request: Request,
     db: AsyncSession = Depends(get_db)
 ):
- 
-    current_user_id = int(request.state.user.get("user_id"))
- 
-    # JOIN OfferLetterDetails + CoreEmployee
     employees_query = await db.execute(
         select(OfferLetterDetails, EmployeeDetails.employee_id)
-        .outerjoin(EmployeeDetails, EmployeeDetails.user_uuid == OfferLetterDetails.user_uuid)
-    )
- 
-    employees = employees_query.all()
- 
-    service = HrOnboardingService(db)
- 
-    results = []
- 
-    for emp, employee_id in employees:
- 
-        onboarding_data = await service.get_full_onboarding_details(
-            emp.user_uuid,
-            current_user_id
+        .outerjoin(
+            EmployeeDetails,
+            EmployeeDetails.user_uuid == OfferLetterDetails.user_uuid
         )
- 
-        if not onboarding_data:
-            continue
- 
+    )
+
+    employees = employees_query.all()
+    results = []
+
+    for emp, employee_id in employees:
+
         documents = []
- 
-        # Identity Documents
-        for doc in onboarding_data.get("identity_documents", []):
+
+        # =========================
+        # ✅ EDUCATION DOCUMENTS
+        # =========================
+        edu_query = await db.execute(
+            select(
+                EmployeeEducationDocument.file_path,
+                EducationDocumentType.document_name
+            )
+            .join(
+                CountryEducationDocumentMapping,
+                EmployeeEducationDocument.mapping_uuid == CountryEducationDocumentMapping.mapping_uuid
+            )
+            .join(
+                EducationDocumentType,
+                CountryEducationDocumentMapping.education_document_uuid == EducationDocumentType.education_document_uuid
+            )
+            .where(EmployeeEducationDocument.user_uuid == emp.user_uuid)
+        )
+
+        for file_path, doc_type in edu_query.all():
             documents.append({
-                "document_name": doc.get("identity_type"),
-                "file_path": doc.get("file_path")
+                "document_name": "Education Document",
+                "document_type": doc_type,
+                "file_path": file_path
             })
- 
-        # Education Documents
-        for doc in onboarding_data.get("education_documents", []):
+
+
+        # =========================
+        # ✅ IDENTITY DOCUMENTS
+        # =========================
+        identity_query = await db.execute(
+            select(
+                EmployeeIdentityDocument.file_path,
+                IdentityType.identity_type_name
+            )
+            .join(
+                CountryIdentityMapping,
+                EmployeeIdentityDocument.mapping_uuid == CountryIdentityMapping.mapping_uuid
+            )
+            .join(
+                IdentityType,
+                CountryIdentityMapping.identity_type_uuid == IdentityType.identity_type_uuid
+            )
+            .where(EmployeeIdentityDocument.user_uuid == emp.user_uuid)
+        )
+
+        for file_path, doc_type in identity_query.all():
             documents.append({
-                "document_name": doc.get("document_name") or "Education Document",
-                "file_path": doc.get("file_path")
+                "document_name": "Identity Document",
+                "document_type": doc_type,
+                "file_path": file_path
             })
- 
-        # Experience Documents
-        for exp in onboarding_data.get("experience", []):
-            for doc in exp.get("documents", []):
+
+
+        # =========================
+        # ✅ EXPERIENCE DOCUMENTS
+        # =========================
+        exp_query = await db.execute(
+            select(
+                EmployeeExperience.exp_certificate_path,
+                EmployeeExperience.company_name
+            )
+            .where(EmployeeExperience.employee_uuid == emp.user_uuid)
+        )
+
+        for file_path, company in exp_query.all():
+            if file_path:
                 documents.append({
-                    "document_name": doc.get("doc_type"),
-                    "file_path": doc.get("file_path")
+                    "document_name": "Experience Document",
+                    "document_type": company,
+                    "file_path": file_path
                 })
- 
+
+
         results.append({
             "user_uuid": emp.user_uuid,
-            "emp_id": employee_id,  # ✅ fetched from CoreEmployee
+            "emp_id": employee_id,
             "name": f"{emp.first_name} {emp.last_name}",
             "department": emp.designation,
             "documents": documents
         })
- 
+
     return results
- 
 @router.get("/employee/{user_uuid}/documents")
 async def get_employee_documents(
     user_uuid: str,
     request: Request,
     db: AsyncSession = Depends(get_db)
 ):
- 
-    current_user_id = int(request.state.user.get("user_id"))
- 
-    service = HrOnboardingService(db)
- 
-    onboarding_data = await service.get_full_onboarding_details(
-        user_uuid,
-        current_user_id
-    )
- 
-    if not onboarding_data:
-        raise HTTPException(status_code=404, detail="Onboarding data not found")
- 
+
     documents = []
- 
-    # Identity Documents
-    for doc in onboarding_data.get("identity_documents", []):
+
+    # =========================
+    # ✅ EDUCATION DOCUMENTS
+    # =========================
+    edu_query = await db.execute(
+        select(
+            EmployeeEducationDocument.file_path,
+            EducationDocumentType.document_name
+        )
+        .join(
+            CountryEducationDocumentMapping,
+            EmployeeEducationDocument.mapping_uuid == CountryEducationDocumentMapping.mapping_uuid
+        )
+        .join(
+            EducationDocumentType,
+            CountryEducationDocumentMapping.education_document_uuid == EducationDocumentType.education_document_uuid
+        )
+        .where(EmployeeEducationDocument.user_uuid == user_uuid)
+    )
+
+    for file_path, doc_type in edu_query.all():
         documents.append({
-            "document_name": doc.get("identity_type"),
-            "file_path": doc.get("file_path")
+            "document_name": "Education Document",
+            "document_type": doc_type,
+            "file_path": file_path
         })
- 
-    # Education Documents
-    for doc in onboarding_data.get("education_documents", []):
+
+
+    # =========================
+    # ✅ IDENTITY DOCUMENTS
+    # =========================
+    identity_query = await db.execute(
+        select(
+            EmployeeIdentityDocument.file_path,
+            IdentityType.identity_type_name
+        )
+        .join(
+            CountryIdentityMapping,
+            EmployeeIdentityDocument.mapping_uuid == CountryIdentityMapping.mapping_uuid
+        )
+        .join(
+            IdentityType,
+            CountryIdentityMapping.identity_type_uuid == IdentityType.identity_type_uuid
+        )
+        .where(EmployeeIdentityDocument.user_uuid == user_uuid)
+    )
+
+    for file_path, doc_type in identity_query.all():
         documents.append({
-            "document_name": doc.get("document_name") or "Education Document",
-            "file_path": doc.get("file_path")
+            "document_name": "Identity Document",
+            "document_type": doc_type,
+            "file_path": file_path
         })
- 
-    # Experience Documents
-    for exp in onboarding_data.get("experience", []):
-        for doc in exp.get("documents", []):
+
+
+    # =========================
+    # ✅ EXPERIENCE DOCUMENTS
+    # =========================
+    exp_query = await db.execute(
+        select(
+            EmployeeExperience.exp_certificate_path,
+            EmployeeExperience.company_name
+        )
+        .where(EmployeeExperience.employee_uuid == user_uuid)
+    )
+
+    for file_path, company in exp_query.all():
+        if file_path:
             documents.append({
-                "document_name": doc.get("doc_type"),
-                "file_path": doc.get("file_path")
+                "document_name": "Experience Document",
+                "document_type": company,
+                "file_path": file_path
             })
- 
+
+
     return {
         "user_uuid": user_uuid,
         "documents": documents
     }
- 
  
