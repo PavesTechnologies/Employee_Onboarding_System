@@ -373,6 +373,7 @@ class HrOnboardingDAO:
         personal = None
         if personal_row:
             personal = {
+                "personal_uuid": personal_row.personal_uuid,
                 "user_uuid": offer_row.user_uuid,
                 "date_of_birth": personal_row.date_of_birth,
                 "gender": personal_row.gender,
