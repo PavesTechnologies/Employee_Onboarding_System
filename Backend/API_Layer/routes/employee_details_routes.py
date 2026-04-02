@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.utils.dependencies import get_db
 from ..interfaces.employee_details_interfaces import (PersonalDetails, DeleteEmployeeIdentityResponse, PersonalDetailsRequest, PersonalDetailsResponse, PersonalDetails,
                                                       UpdatePersonalRequest, CreateAddressRequest, CreateAddressResponse,
-                                                      AddressDetails, EmployeeIdentityResponse)
-from ...Business_Layer.services.employee_details_service import EmployeeDetailsService, AddressService, EmployeeIdentityService
+                                                      AddressDetails, EmployeeIdentityResponse, SocialLinkRequest, SocialLinkResponse, SocialLinkDetails)
+from ...Business_Layer.services.employee_details_service import EmployeeDetailsService, AddressService, EmployeeIdentityService, EmployeeSocialLinkService
 from datetime import date
 from ..utils.role_based import require_roles
 import time
@@ -134,4 +134,50 @@ async def delete_employee_identity(document_uuid: str, db: AsyncSession = Depend
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/social-links/{user_uuid}", response_model=list[SocialLinkDetails])
+async def get_social_links(user_uuid: str, db: AsyncSession = Depends(get_db)):
+    social_service = EmployeeSocialLinkService(db)
+    return await social_service.get_social_links(user_uuid)
 
+
+@router.post("/social-links", response_model=SocialLinkResponse)
+async def create_social_link(
+    request_data: SocialLinkRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    social_service = EmployeeSocialLinkService(db)
+    result = await social_service.create_social_link(request_data.user_uuid, request_data)
+
+    return SocialLinkResponse(
+        social_link_uuid=result.social_link_uuid,
+        message="Social Link Created Successfully"
+    )
+
+
+@router.put("/social-links/{social_link_uuid}", response_model=SocialLinkResponse)
+async def update_social_link(
+    social_link_uuid: str,
+    request_data: SocialLinkRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    social_service = EmployeeSocialLinkService(db)
+    await social_service.update_social_link(social_link_uuid, request_data)
+
+    return SocialLinkResponse(
+        social_link_uuid=social_link_uuid,
+        message="Social Link Updated Successfully"
+    )
+
+
+@router.delete("/social-links/{social_link_uuid}", response_model=SocialLinkResponse)
+async def delete_social_link(
+    social_link_uuid: str,
+    db: AsyncSession = Depends(get_db)
+):
+    social_service = EmployeeSocialLinkService(db)
+    await social_service.delete_social_link(social_link_uuid)
+
+    return SocialLinkResponse(
+        social_link_uuid=social_link_uuid,
+        message="Social Link Deleted Successfully"
+    )

@@ -1,4 +1,4 @@
-from ..models.models import PersonalDetails, Addresses, EmployeeIdentityDocument
+from ..models.models import PersonalDetails, Addresses, EmployeeIdentityDocument, EmployeeSocialLink
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, exists
 from typing import Optional
@@ -129,5 +129,56 @@ class EmployeeIdentityDAO:
         await self.db.delete(employee_identity)
         await self.db.commit()
         return employee_identity
+
+class EmployeeSocialLinkDAO:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def get_social_links(self, user_uuid):
+        result = await self.db.execute(
+            select(EmployeeSocialLink).where(
+                EmployeeSocialLink.user_uuid == user_uuid
+            )
+        )
+        return result.scalars().all()
+
+    async def get_social_link_by_uuid(self, social_link_uuid):
+        result = await self.db.execute(
+            select(EmployeeSocialLink).where(
+                EmployeeSocialLink.social_link_uuid == social_link_uuid
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def create_social_link(self, social_link_uuid, user_uuid, request_data):
+        social_link = EmployeeSocialLink(
+            social_link_uuid=social_link_uuid,
+            user_uuid=user_uuid,
+            platform_name=request_data.platform_name,
+            url=request_data.url
+        )
+
+        self.db.add(social_link)
+        await self.db.commit()
+        await self.db.refresh(social_link)
+
+        return social_link
+
+    async def update_social_link(self, social_link_uuid, request_data):
+        social_link = await self.get_social_link_by_uuid(social_link_uuid)
+
+        social_link.platform_name = request_data.platform_name
+        social_link.url = request_data.url
+
+        await self.db.commit()
+        await self.db.refresh(social_link)
+
+        return social_link
+
+    async def delete_social_link(self, social_link_uuid):
+        social_link = await self.get_social_link_by_uuid(social_link_uuid)
+
+        await self.db.delete(social_link)
+        await self.db.commit()
     
     
