@@ -12,12 +12,14 @@ class Summary(BaseModel):
 
 class MonthlyJoining(BaseModel):
     week: str
-    count: int
+    completed: int
+    joining: int
 
 
 class WeeklyJoining(BaseModel):
     day: str
-    count: int
+    completed: int
+    joining: int
 
 
 class Candidate(BaseModel):
@@ -35,8 +37,8 @@ class Activity(BaseModel):
 
 
 class DashboardResponse(BaseModel):
-    summary: Summary
+    summary: dict
     monthlyJoinings: List[MonthlyJoining]
     weeklyJoinings: List[WeeklyJoining]
-    joinedCandidates: List[Candidate]
-    activities: List[Activity]
+    joinedCandidates: List[dict]
+    activities: List[dict]
