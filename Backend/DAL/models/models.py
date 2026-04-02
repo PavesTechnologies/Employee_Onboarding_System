@@ -1,4 +1,4 @@
-<<<<<<< Updated upstream
+
 from typing import Any, Optional
 import datetime
 import decimal
@@ -881,7 +881,7 @@ class OfferApprovalAction(Base):
     action_time: Mapped[Optional[datetime.datetime]] = mapped_column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
     request: Mapped['OfferApprovalRequest'] = relationship('OfferApprovalRequest', back_populates='offer_approval_action')
-=======
+
 from typing import Any, Optional  
 import datetime  
 import decimal  
@@ -1845,4 +1845,4 @@ class ExitInterview(Base):
   
     employee_details: Mapped[Optional['EmployeeDetails']] = relationship('EmployeeDetails', back_populates='exit_interview')  
     employee_exit: Mapped[Optional['EmployeeExit']] = relationship('EmployeeExit', back_populates='exit_interview')  
->>>>>>> Stashed changes
+

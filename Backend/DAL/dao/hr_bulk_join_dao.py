@@ -32,10 +32,10 @@ class HrBulkJoinDAO:
             .where(
                 OfferLetterDetails.mail.in_(email_list),
             )
-<<<<<<< Updated upstream
+
             .values(joining_date=joining_date,
                     status="Joining")
-=======
+
             .values(
                 joining_date=joining_date,
                 reporting_manager=payload.reporting_manager,
@@ -44,7 +44,7 @@ class HrBulkJoinDAO:
                 # reporting_time=payload.reporting_time
 
                 )
->>>>>>> Stashed changes
+
         )
 
         result = await self.db.execute(stmt)

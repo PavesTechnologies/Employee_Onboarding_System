@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, Query
+from datetime import date
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from Backend.API_Layer.interfaces.weekly_dashboard_interface import DashboardResponse
@@ -10,7 +12,12 @@ router = APIRouter()
 
 @router.get("/", response_model=DashboardResponse)
 async def dashboard(
-    range: str = Query(..., description="Filter range like THIS_WEEK"),
+    start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
     db: AsyncSession = Depends(get_db)
 ):
-    return await get_dashboard_data(db, range)
+    # ✅ Validation
+    if start_date > end_date:
+        raise HTTPException(status_code=400, detail="start_date cannot be greater than end_date")
+
+    return await get_dashboard_data(db, start_date, end_date)

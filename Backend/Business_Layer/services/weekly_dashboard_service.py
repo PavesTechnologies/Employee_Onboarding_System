@@ -4,9 +4,9 @@ from Backend.DAL.dao.weekly_dashboard_dao import get_dashboard_data_from_db
 from Backend.Business_Layer.utils.date_utils import get_date_range
 from datetime import timedelta
 
-async def get_dashboard_data(db, range_type: str):
+async def get_dashboard_data(db,start_date: date, end_date: date ):
 
-    start_date, end_date = get_date_range(range_type)
+    # start_date, end_date = get_date_range(range_type)
     offers = await get_dashboard_data_from_db(db, start_date, end_date)
 
     today = date.today()
