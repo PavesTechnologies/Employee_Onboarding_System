@@ -38,7 +38,7 @@ class HrBulkJoinDAO:
 
             .values(
                 joining_date=joining_date,
-                reporting_manager=payload.reporting_manager,
+                reporting_time=payload.reporting_time,
                 # location=payload.location,
                 # department=payload.department,
                 # reporting_time=payload.reporting_time
@@ -50,3 +50,32 @@ class HrBulkJoinDAO:
         result = await self.db.execute(stmt)
         await self.db.commit()
         return result.rowcount
+
+
+    async def update_joining_date_for_user(
+        self,
+        user_uuid: str,
+        new_joining_date,
+        reporting_manager
+    ):
+        stmt = (
+            update(OfferLetterDetails)
+            .where(OfferLetterDetails.user_uuid == user_uuid)
+            .values(
+                joining_date=new_joining_date,
+                reporting_manager=reporting_manager,
+                status="Joining"   # reset status
+            )
+        )
+
+        result = await self.db.execute(stmt)
+        await self.db.commit()
+        return result.rowcount
+
+    async def get_user_by_uuid(self, user_uuid: str):
+        query = select(OfferLetterDetails).where(
+        OfferLetterDetails.user_uuid == user_uuid
+        )
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+        

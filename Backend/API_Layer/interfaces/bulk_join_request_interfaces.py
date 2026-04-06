@@ -11,4 +11,11 @@ class BulkJoinRequest(BaseModel):
     reporting_manager: str
     custom_message: Optional[str] = None
  
-
+class ReassignJoiningRequest(BaseModel):
+    user_uuid: str
+    new_joining_date: date
+    reporting_manager: str
+    reporting_time: str
+    location:str
+    department:str
+    comment: str

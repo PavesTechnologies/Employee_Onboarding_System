@@ -54,3 +54,42 @@ class HrBulkJoinService:
             "updated_verified_users": updated_rows,
             "skipped_not_verified": skipped
         }
+
+
+    async def reassign_joining(self, payload, current_user_id: int):
+
+        user = await self.dao.get_user_by_uuid(payload.user_uuid)
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # ✅ Update only required fields
+        await self.dao.update_joining_date_for_user(
+            payload.user_uuid,
+            payload.new_joining_date,
+            payload.reporting_time
+        )
+
+        # ✅ Keep existing values from DB
+        joining_date_str = payload.new_joining_date.strftime("%d %B %Y")
+
+        send_joining_email(
+           to_email=user.mail,
+        name=user.first_name,
+
+        # ✅ updated values
+        joining_date_str=joining_date_str,
+        reporting_time=payload.reporting_time,
+
+        # ✅ fresh frontend values
+        location=payload.location,
+        department=payload.department,
+        reporting_manager=payload.reporting_manager,
+
+        custom_message=payload.comment
+        )
+
+        return {
+            "message": "Joining date reassigned successfully",
+            "user_uuid": payload.user_uuid
+        }
