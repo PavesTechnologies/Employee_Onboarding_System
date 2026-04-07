@@ -5,7 +5,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import os
 from jinja2 import Environment, FileSystemLoader
 
-from Backend.API_Layer.routes import docusign_token_generation_route, employee_experience_routes, hr_bulk_join_router, hr_onboarding_routes, offer_approval_action_routes, otp_routes, redis_cache_routes
+from Backend.API_Layer.routes import docusign_token_generation_route, employee_experience_routes, hr_bulk_join_router, hr_onboarding_routes, offer_approval_action_routes, otp_routes, redis_cache_routes, weekly_dashboard_routes
 from .API_Layer.routes import (master_routes, offerletter_routes, education_routes, offerresponse_routes, employee_details_routes,
                                identity_routes, employee_upload_routes,analytics_routes)
 from .API_Layer.middleware.jwt_middleware import JWTMiddleware
@@ -116,7 +116,6 @@ app.include_router(departments_routes.router)
 app.include_router(designation_routes.router)
 
 app.include_router(analytics_routes.router, prefix="/api/analytics", tags=["Analytics"])
-
 app.include_router(dashboard_routes.router)
 app.include_router(employee_exit_routes.router)
 app.include_router(exit_approval_routes.router)

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.utils.dependencies import get_db
 from ..interfaces.identity_interfaces import(CountryIdentityDropdownResponse, IdentityCreateRequest, IdentityResponse, IdentityDetails,
-                                             CountryIdentityMappingDetails, CountryIdentityMappingRequest, CountryIdentityMappingResponse,
+                                             CountryIdentityMappingDetails, CountryIdentityMappingRequest, CountryIdentityMappingResponse, EmployeeIdentityDocumentUpdateRequest, EmployeeIdentityDocumentUpdateResponse
                                              )
 from ...Business_Layer.services.identity_service import IdentityService
 from ..utils.role_based import require_roles
@@ -159,3 +159,22 @@ async def get_identities_by_country(country_uuid: str, db: AsyncSession = Depend
         raise HTTPException(status_code=500, detail=str(e))
     
 
+@router.put("/employee-document/{document_uuid}", response_model=EmployeeIdentityDocumentUpdateResponse)
+async def update_employee_identity_document(document_uuid: str, request_data: EmployeeIdentityDocumentUpdateRequest, db: AsyncSession = Depends(get_db)):
+    try:
+        identity_service = IdentityService(db)
+
+        await identity_service.update_employee_identity_document(
+            document_uuid,
+            request_data
+        )
+
+        return EmployeeIdentityDocumentUpdateResponse(
+            document_uuid=document_uuid,
+            message="Employee Identity Document Updated Successfully"
+        )
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator
 from typing import Optional
 import re
+from datetime import date
 class IdentityDetails(BaseModel):
     identity_type_uuid: str
     identity_type_name: str
@@ -51,6 +52,17 @@ class CountryIdentityDropdownResponse(BaseModel):
     identity_type_uuid: str
     identity_type_name: str
     is_mandatory: bool
+
+class EmployeeIdentityDocumentUpdateRequest(BaseModel):
+    mapping_uuid: str
+    identity_file_number: str
+    expiry_date: Optional[date] = None
+    file_path: Optional[str] = None
+
+
+class EmployeeIdentityDocumentUpdateResponse(BaseModel):
+    document_uuid: str
+    message: str
 
 
  

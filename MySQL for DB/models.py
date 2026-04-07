@@ -948,6 +948,7 @@ class OfferLetterDetails(Base):
     personal_details: Mapped[list['PersonalDetails']] = relationship('PersonalDetails', back_populates='offer_letter_details')
     employee_education_document: Mapped[list['EmployeeEducationDocument']] = relationship('EmployeeEducationDocument', back_populates='offer_letter_details')
     employee_identity_document: Mapped[list['EmployeeIdentityDocument']] = relationship('EmployeeIdentityDocument', back_populates='offer_letter_details')
+    employee_social_links: Mapped[list['EmployeeSocialLink']] = relationship('EmployeeSocialLink', back_populates='offer_letter_details')
     employee_pay_slips: Mapped[list['EmployeePaySlips']] = relationship('EmployeePaySlips', back_populates='offer_letter_details')
     employee_relieving_letter: Mapped[list['EmployeeRelievingLetter']] = relationship('EmployeeRelievingLetter', back_populates='offer_letter_details')
 
@@ -1517,6 +1518,26 @@ class EmployeeIdentityDocument(Base):
     country_identity_mapping: Mapped['CountryIdentityMapping'] = relationship('CountryIdentityMapping', back_populates='employee_identity_document')
     offer_letter_details: Mapped['OfferLetterDetails'] = relationship('OfferLetterDetails', back_populates='employee_identity_document')
 
+class EmployeeSocialLink(Base):
+    __tablename__ = 'employee_social_links'
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['user_uuid'],
+            ['offer_letter_details.user_uuid'],
+            name='employee_social_links_ibfk_1'
+        ),
+        Index('social_link_uuid', 'social_link_uuid', unique=True),
+        Index('idx_social_link_user', 'user_uuid')
+    )
+
+    social_link_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    social_link_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
+    user_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
+    platform_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    url: Mapped[str] = mapped_column(String(500), nullable=False)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
+    offer_letter_details: Mapped['OfferLetterDetails'] = relationship('OfferLetterDetails', back_populates='employee_social_links')
 
 class EmployeePaySlips(Base):
     __tablename__ = 'employee_pay_slips'

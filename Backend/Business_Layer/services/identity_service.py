@@ -184,3 +184,24 @@ class IdentityService:
             )
 
         return rows
+    async def update_employee_identity_document(self, document_uuid, request_data):
+        try:
+            existing = await self.dao.get_employee_identity_document_by_uuid(
+                document_uuid
+            )
+
+            if not existing:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Employee Identity Document Not Found"
+                )
+
+            return await self.dao.update_employee_identity_document(
+                document_uuid,
+                request_data
+            )
+
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))

@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from ...DAL.dao.employee_details_dao import EmployeeDetailsDAO, AddressDAO, EmployeeIdentityDAO
+from ...DAL.dao.employee_details_dao import EmployeeDetailsDAO, AddressDAO, EmployeeIdentityDAO, EmployeeSocialLinkDAO
 from ...DAL.dao.master_dao import CountryDAO
 from ...DAL.dao.offerletter_dao import OfferLetterDAO
 from ...DAL.dao.identity_dao import IdentityDAO
@@ -180,6 +180,41 @@ class EmployeeIdentityService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
+class EmployeeSocialLinkService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+        self.dao = EmployeeSocialLinkDAO(self.db)
+
+    async def get_social_links(self, user_uuid):
+        return await self.dao.get_social_links(user_uuid)
+
+    async def create_social_link(self, user_uuid, request_data):
+        social_link_uuid = generate_uuid7()
+        return await self.dao.create_social_link(
+            social_link_uuid,
+            user_uuid,
+            request_data
+        )
+
+    async def update_social_link(self, social_link_uuid, request_data):
+        existing = await self.dao.get_social_link_by_uuid(social_link_uuid)
+
+        if not existing:
+            raise HTTPException(status_code=404, detail="Social Link Not Found")
+
+        return await self.dao.update_social_link(
+            social_link_uuid,
+            request_data
+        )
+
+    async def delete_social_link(self, social_link_uuid):
+        existing = await self.dao.get_social_link_by_uuid(social_link_uuid)
+
+        if not existing:
+            raise HTTPException(status_code=404, detail="Social Link Not Found")
+
+        return await self.dao.delete_social_link(social_link_uuid)
     
 
     

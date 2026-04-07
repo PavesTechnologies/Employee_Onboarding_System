@@ -242,4 +242,36 @@ class IdentityDAO:
         result = await self.db.execute(stmt)
         return result.all()
 
-        
+    async def get_employee_identity_document_by_uuid(self, document_uuid):
+        result = await self.db.execute(
+            select(EmployeeIdentityDocument).where(
+                EmployeeIdentityDocument.document_uuid == document_uuid
+            )
+        )
+
+        return result.scalar_one_or_none()
+
+    async def update_employee_identity_document(self, document_uuid, request_data):
+        result = await self.db.execute(
+            select(EmployeeIdentityDocument).where(
+                EmployeeIdentityDocument.document_uuid == document_uuid
+            )
+        )
+
+        document = result.scalar_one_or_none()
+
+        if not document:
+            raise HTTPException(
+                status_code=404,
+                detail="Employee Identity Document Not Found"
+            )
+
+        document.mapping_uuid = request_data.mapping_uuid
+        document.identity_file_number = request_data.identity_file_number
+        document.expiry_date = request_data.expiry_date
+        document.file_path = request_data.file_path
+
+        await self.db.commit()
+        await self.db.refresh(document)
+
+        return document    

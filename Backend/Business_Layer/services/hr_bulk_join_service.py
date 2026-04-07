@@ -27,7 +27,8 @@ class HrBulkJoinService:
         # ✅ 1. STORE JOINING DATE 
         updated_rows = await self.dao.update_joining_date_for_verified(
             payload.user_emails_list,
-            payload.joining_date
+            payload.joining_date,
+            payload
         )
         joining_date_str = payload.joining_date.strftime("%d %B %Y")
 

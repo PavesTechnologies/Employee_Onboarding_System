@@ -134,3 +134,20 @@ class EmployeeIdentityResponse(BaseModel):
 class DeleteEmployeeIdentityResponse(BaseModel):
     document_uuid: str
     message: str
+
+class SocialLinkRequest(BaseModel):
+    user_uuid: str
+    platform_name: str
+    url: str
+
+
+class SocialLinkResponse(BaseModel):
+    social_link_uuid: str
+    message: str
+
+
+class SocialLinkDetails(BaseModel):
+    social_link_uuid: str
+    user_uuid: str
+    platform_name: str
+    url: str
