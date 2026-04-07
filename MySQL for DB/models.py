@@ -925,7 +925,7 @@ class OfferLetterDetails(Base):
     middle_name: Mapped[Optional[str]] = mapped_column(String(100))
     package: Mapped[Optional[str]] = mapped_column(String(255))
     currency: Mapped[Optional[str]] = mapped_column(String(20))
-    status: Mapped[Optional[str]] = mapped_column(ENUM('Created', 'Offered', 'Accepted', 'Rejected', 'Submitted', 'Verified', 'Completed'), server_default=text("'Created'"))
+    status: Mapped[Optional[str]] = mapped_column(ENUM('Created', 'Offered', 'Accepted', 'Rejected', 'Submitted', 'Verified', 'Completed','Joining','Joining_Pending'), server_default=text("'Created'"))
     hire_type: Mapped[str] = mapped_column(Enum('Direct', 'Offer'), nullable=False)
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
@@ -935,6 +935,7 @@ class OfferLetterDetails(Base):
     joining_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
     cc_emails: Mapped[Optional[str]] = mapped_column(String(256))
     total_ctc: Mapped[Optional[decimal.Decimal]] = mapped_column(DECIMAL(12, 2))
+    joining_comments: Mapped[Optional[str]] = mapped_column(String(255))
 
     addresses: Mapped[list['Addresses']] = relationship('Addresses', back_populates='offer_letter_details')
     contacts: Mapped[list['Contacts']] = relationship('Contacts', back_populates='offer_letter_details')

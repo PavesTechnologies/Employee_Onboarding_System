@@ -1,17 +1,29 @@
 from collections import defaultdict
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+from sqlalchemy import update
+
 from Backend.DAL.dao.weekly_dashboard_dao import get_dashboard_data_from_db
-from Backend.Business_Layer.utils.date_utils import get_date_range
-from datetime import timedelta
+from ...DAL.models.models import OfferLetterDetails
 
-async def get_dashboard_data(db,start_date: date, end_date: date ):
 
-    # start_date, end_date = get_date_range(range_type)
+async def get_dashboard_data(db, start_date: date, end_date: date):
+
+    # ================= FETCH DATA =================
     offers = await get_dashboard_data_from_db(db, start_date, end_date)
-
     today = date.today()
-    
-    # ================= FIXED SUMMARY =================
+
+    # ================= DB UPDATE =================
+    await db.execute(
+        update(OfferLetterDetails)
+        .where(
+            OfferLetterDetails.joining_date < today,
+            OfferLetterDetails.status == "Joining"
+        )
+        .values(status="Joining Pending")
+    )
+    await db.commit()
+
+    # ================= SUMMARY =================
     summary = {
         "selected": 0,
         "offersMade": 0,
@@ -20,24 +32,19 @@ async def get_dashboard_data(db,start_date: date, end_date: date ):
         "pending": 0
     }
 
-    weekly = defaultdict(lambda:{"completed": 0, "joining": 0})
-    monthly = defaultdict(lambda:{"completed": 0, "joining": 0})
-
+    weekly = defaultdict(lambda: {"completed": 0, "joining": 0})
+    monthly = defaultdict(lambda: {"completed": 0, "joining": 0})
     candidates = []
 
+    # ================= HELPER =================
     def resolve_department_name(emp, department_name):
-        joined_department_name = (
-            department_name.strip()
-            if isinstance(department_name, str) and department_name.strip()
-            else None
-        )
-        if joined_department_name:
-            return joined_department_name
+        if isinstance(department_name, str) and department_name.strip():
+            return department_name.strip()
 
-        employee_department = getattr(emp, "departments", None) if emp else None
-        employee_department_name = getattr(employee_department, "department_name", None)
-        if isinstance(employee_department_name, str) and employee_department_name.strip():
-            return employee_department_name.strip()
+        if emp:
+            dept = getattr(emp, "departments", None)
+            if dept and getattr(dept, "department_name", None):
+                return dept.department_name.strip()
 
         return "N/A"
 
@@ -47,31 +54,30 @@ async def get_dashboard_data(db,start_date: date, end_date: date ):
         if not o.joining_date:
             continue
 
-        # ✅ RANGE FILTER
         if not (start_date <= o.joining_date <= end_date):
             continue
 
-        #  DYNAMIC STATUS
-        status = (o.status or "").strip().lower()
+        raw_status = (o.status or "").strip()
 
-        if status == "completed":
+        if raw_status == "Completed":
             status = "Completed"
+        elif raw_status == "Joining Pending":
+            status = "Joining Pending"
         else:
             status = "Joining"
 
-        # ================= KPI =================
+        # KPI
         if status == "Completed":
             summary["joined"] += 1
         else:
             summary["pending"] += 1
 
-        # ================= WEEKLY =================
+        # Weekly
         day = o.joining_date.strftime("%a")
 
-        # ================= MONTHLY =================
+        # Monthly
         month_start = o.joining_date.replace(day=1)
         week_index = (o.joining_date.day - 1) // 7
-
         week_start = month_start + timedelta(days=week_index * 7)
         week_end = week_start + timedelta(days=6)
 
@@ -83,7 +89,8 @@ async def get_dashboard_data(db,start_date: date, end_date: date ):
         else:
             weekly[day]["joining"] += 1
             monthly[label]["joining"] += 1
-        # ================= TABLE =================
+
+        # Table
         candidates.append({
             "name": f"{o.first_name} {o.last_name}",
             "role": o.designation,
@@ -92,11 +99,13 @@ async def get_dashboard_data(db,start_date: date, end_date: date ):
             "status": status
         })
 
-    # ================= OUTPUT =================
+    # ================= WEEKLY OUTPUT =================
     day_order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
     for day in day_order:
         if day not in weekly:
             weekly[day] = {"completed": 0, "joining": 0}
+
     weekly_output = [
         {
             "day": day,
@@ -105,6 +114,8 @@ async def get_dashboard_data(db,start_date: date, end_date: date ):
         }
         for day in day_order
     ]
+
+    # ================= MONTHLY OUTPUT =================
     month_start = today.replace(day=1)
 
     for i in range(5):
@@ -115,17 +126,19 @@ async def get_dashboard_data(db,start_date: date, end_date: date ):
 
         if label not in monthly:
             monthly[label] = {"completed": 0, "joining": 0}
+
     monthly_output = sorted(
-    [
-        {
-            "week": k,
-            "completed": v["completed"],
-            "joining": v["joining"]
-        }
-        for k, v in monthly.items()
-    ],
-    key=lambda x: datetime.strptime(x["week"].split(" - ")[0], "%b %d")
+        [
+            {
+                "week": k,
+                "completed": v["completed"],
+                "joining": v["joining"]
+            }
+            for k, v in monthly.items()
+        ],
+        key=lambda x: datetime.strptime(x["week"].split(" - ")[0], "%b %d")
     )
+
     # ================= ACTIVITIES =================
     activities_sorted = sorted(
         candidates,
@@ -138,15 +151,19 @@ async def get_dashboard_data(db,start_date: date, end_date: date ):
             "message": (
                 f"{c['name']} completed joining for {c['role']}."
                 if c["status"] == "Completed"
-                else f"{c['name']} is scheduled for joining as {c['role']}."
+                else (
+                    f"{c['name']} missed joining date."
+                    if c["status"] == "Joining Pending"
+                    else f"{c['name']} is scheduled for joining as {c['role']}."
+                )
             ),
-            "type": c["status"],   
-            "time": c["joiningDate"] 
+            "type": c["status"],
+            "time": c["joiningDate"]
         }
         for c in activities_sorted
     ]
 
-    # ================= FINAL RESPONSE =================
+    # ================= FINAL =================
     return {
         "summary": summary,
         "monthlyJoinings": monthly_output,

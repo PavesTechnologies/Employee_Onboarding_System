@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date
 
+
 class BulkJoinRequest(BaseModel):
     user_emails_list: List[str]
     joining_date: date
@@ -10,5 +11,13 @@ class BulkJoinRequest(BaseModel):
     department: str
     reporting_manager: str
     custom_message: Optional[str] = None
- 
 
+
+class ReassignJoiningRequest(BaseModel):
+    user_uuid: str
+    new_joining_date: date
+    reporting_manager: str
+    reporting_time: str
+    location: str
+    department: str
+    joining_comments: Optional[str] = None
