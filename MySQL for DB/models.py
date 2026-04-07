@@ -935,6 +935,7 @@ class OfferLetterDetails(Base):
     joining_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
     cc_emails: Mapped[Optional[str]] = mapped_column(String(256))
     total_ctc: Mapped[Optional[decimal.Decimal]] = mapped_column(DECIMAL(12, 2))
+    joining_comments: Mapped[Optional[str]] = mapped_column(String(255))
 
     addresses: Mapped[list['Addresses']] = relationship('Addresses', back_populates='offer_letter_details')
     contacts: Mapped[list['Contacts']] = relationship('Contacts', back_populates='offer_letter_details')

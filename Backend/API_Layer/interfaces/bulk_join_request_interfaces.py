@@ -20,4 +20,4 @@ class ReassignJoiningRequest(BaseModel):
     reporting_time: str
     location: str
     department: str
-    comment: Optional[str] = None
+    joining_comments: Optional[str] = None
