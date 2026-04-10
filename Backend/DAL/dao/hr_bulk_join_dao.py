@@ -28,11 +28,33 @@ class HrBulkJoinDAO:
         return len(result.scalars().all())
 
     # ✅ Update joining details for multiple users
+    # async def update_joining_date_for_verified(
+    #     self,
+    #     email_list: List[str],
+    #     joining_date,
+    #     payload
+    # ):
+    #     stmt = (
+    #         update(OfferLetterDetails)
+    #         .where(OfferLetterDetails.mail.in_(email_list))
+    #         .values(
+    #             joining_date=joining_date,
+    #             reporting_manager=payload.reporting_manager,
+    #             joining_comments=getattr(payload, "joining_comments", None),
+    #             status="joining"
+    #         )
+    #     )
+
+    #     result = await self.db.execute(stmt)
+    #     await self.db.commit()
+    #     return result.rowcount
+
     async def update_joining_date_for_verified(
         self,
         email_list: List[str],
         joining_date,
-        payload
+        payload,
+        status   # ✅ pass from service
     ):
         stmt = (
             update(OfferLetterDetails)
@@ -41,7 +63,7 @@ class HrBulkJoinDAO:
                 joining_date=joining_date,
                 reporting_manager=payload.reporting_manager,
                 joining_comments=getattr(payload, "joining_comments", None),
-                status="Joining"
+                status=status   # ✅ dynamic
             )
         )
 
@@ -53,7 +75,8 @@ class HrBulkJoinDAO:
     async def update_joining_date_for_user(
         self,
         user_uuid: str,
-        payload
+        payload,
+        status: str
     ):
         stmt = (
             update(OfferLetterDetails)
@@ -62,7 +85,7 @@ class HrBulkJoinDAO:
                 joining_date=payload.new_joining_date,
                 reporting_manager=payload.reporting_manager,
                 joining_comments=payload.joining_comments,
-                status="Joining"
+                status=status
             )
         )
 

@@ -67,6 +67,7 @@ async def get_offer_details(user_uuid: str, db: AsyncSession = Depends(get_db)):
         "user_uuid": user.user_uuid,
         "joining_date": user.joining_date,
         "reporting_manager": user.reporting_manager,
-        "joining_comments": user.joining_comments
+        "joining_comments": user.joining_comments,
+        "status": user.status
     }
     

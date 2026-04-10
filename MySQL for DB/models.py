@@ -926,7 +926,7 @@ class OfferLetterDetails(Base):
     middle_name: Mapped[Optional[str]] = mapped_column(String(100))
     package: Mapped[Optional[str]] = mapped_column(String(255))
     currency: Mapped[Optional[str]] = mapped_column(String(20))
-    status: Mapped[Optional[str]] = mapped_column(ENUM('Created', 'Offered', 'Accepted', 'Rejected', 'Submitted', 'Verified', 'Completed','Joining','Joining Pending'), server_default=text("'Created'"))
+    status: Mapped[Optional[str]] = mapped_column(ENUM('Created', 'Offered', 'Accepted', 'Rejected', 'Submitted', 'Verified', 'Completed','Joining','Joining Pending','Rescheduled'), server_default=text("'Created'"))
     hire_type: Mapped[str] = mapped_column(Enum('Direct', 'Offer'), nullable=False)
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
