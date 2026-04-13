@@ -1,0 +1,28 @@
+{% extends "base_document.html" %}
+
+{% block title %}Termination Letter{% endblock %}
+
+{% block content %}
+<h1>Notice of Termination</h1>
+
+<p>Dear <span style="font-weight: 600; color: var(--brand-primary);">{{ first_name }}</span>,</p>
+
+<p>This letter serves as formal notification that your employment with Paves Global Infotech Private Limited as
+    <strong>{{ designation }}</strong> is terminated, effective <strong>{{ last_working_day }}</strong>.</p>
+
+<p>Please note that any final settlement of your accounts, including outstanding wages or eligible accrued benefits,
+    will be processed in accordance with company policy and local labor regulations following the return of all company
+    property.</p>
+
+<p>You are requested to coordinate with the IT and HR departments to finalize your exit clearance and handover any
+    company-issued assets immediately.</p>
+
+<div class="signature-grid">
+    <div class="signature-box">
+        <div class="sign-status">Authorized Signatory</div>
+        <div style="height: 60px;"></div>
+        <div style="font-weight: 700; color: var(--brand-primary); font-size: 11pt;">Human Resources</div>
+        <div style="font-size: 9pt; color: var(--text-gray);">Paves Global Infotech</div>
+    </div>
+</div>
+{% endblock %}

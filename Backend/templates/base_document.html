@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Document{% endblock %}</title>
+    <style>
+        /* Advanced, High-Impact Futuristic/Corporate Theme */
+        :root {
+            --brand-primary: #3949ab;
+            /* Primary Blue */
+            --brand-secondary: #d81b60;
+            /* Accent Pink */
+            --bg-color: #ffffff;
+            --text-dark: #0f172a;
+            --text-gray: #475569;
+            --border-subtle: #cbd5e1;
+            --surface-color: #f8fafc;
+            --accent-gradient: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 0;
+            /* Zero margin to allow full-bleed background designs */
+
+            @top-center {
+                content: element(header);
+            }
+
+            @bottom-center {
+                content: element(footer);
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.6;
+            color: var(--text-dark);
+            -webkit-font-smoothing: antialiased;
+            background-color: var(--bg-color);
+        }
+
+        .border-bottom-left {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .border-bottom-left::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 25px; /* Vertical thickness */
+            height: 250px; /* Height of the left bar */
+            background: linear-gradient(to bottom, #d81b60, #3949ab);
+            border-top-right-radius: 20px;
+        }
+
+        .border-bottom-left::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 25px; /* Horizontal thickness */
+            width: 100%; /* Width of the bottom bar */
+            background: #3949ab;
+        }
+
+        .border-top-right {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Vertical bar on right */
+        .border-top-right::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 25px;
+            height: 250px;
+            background: linear-gradient(to bottom, #3949ab, #d81b60);
+            border-bottom-left-radius: 20px;
+        }
+
+        /* Horizontal bar on top */
+        .border-top-right::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 25px;
+            width: 100%;
+            background: #3949ab;
+        }
+
+        /* Layout Container */
+        .document-container {
+            padding: 40mm 25mm 30mm 25mm;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Fixed Running Headers & Footers */
+        header {
+            position: running(header);
+            width: 100%;
+            height: 35mm;
+        }
+
+        .header-content {
+            padding: 15mm 25mm 0 25mm;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header table {
+            border-bottom: 2px solid var(--surface-color);
+            padding-bottom: 15px;
+            margin-bottom: 10px;
+        }
+
+        .logo {
+            height: 55px;
+            object-fit: contain;
+        }
+
+        .company-info {
+            text-align: right;
+            font-size: 8.5pt;
+            color: var(--text-gray);
+            line-height: 1.5;
+            border-right: 3px solid var(--brand-secondary);
+            padding-right: 15px;
+        }
+
+        .company-name {
+            font-size: 11pt;
+            font-weight: 700;
+            color: var(--brand-primary);
+            letter-spacing: 0.5px;
+        }
+
+        footer {
+            position: running(footer);
+            width: 100%;
+            height: 25mm;
+        }
+
+        .footer-content {
+            margin: 0 25mm;
+            padding-top: 5mm;
+            border-top: 2px solid var(--surface-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 8.5pt;
+            color: var(--text-gray);
+        }
+
+        .footer-badge {
+            background: var(--surface-color);
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: var(--brand-primary);
+            font-weight: 600;
+        }
+
+        .page-number::after {
+            content: counter(page) " of " counter(pages);
+            font-weight: 600;
+            color: var(--brand-primary);
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 26pt;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin: 10mm 0 5mm 0;
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+        }
+
+        h1 span {
+            color: var(--brand-primary);
+        }
+
+        h2 {
+            font-size: 14pt;
+            font-weight: 700;
+            color: var(--brand-primary);
+            margin: 25px 0 15px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: var(--brand-secondary);
+            border-radius: 2px;
+            margin-right: 12px;
+        }
+
+        h3 {
+            font-size: 11.5pt;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 20px 0 10px 0;
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--text-gray);
+            text-align: justify;
+        }
+
+        .highlight-text {
+            color: var(--brand-primary);
+            font-weight: 600;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: var(--surface-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(14, 165, 233, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        }
+
+        .info-item {
+            margin-bottom: 10px;
+        }
+
+        .info-label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            color: var(--brand-secondary);
+            margin-bottom: 2px;
+        }
+
+        .info-value {
+            font-size: 11pt;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Cards Container */
+        .cards-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 15px;
+            margin: 25px 0;
+            page-break-inside: avoid;
+        }
+
+        .value-card {
+            background: var(--surface-color);
+            border-top: 3px solid var(--brand-primary);
+            padding: 15px 20px;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+        }
+
+        .card-label {
+            font-size: 9pt;
+            color: var(--text-gray);
+            margin-bottom: 5px;
+        }
+
+        .card-value {
+            font-size: 13pt;
+            font-weight: 800;
+            color: var(--brand-primary);
+        }
+
+        /* Data Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 25px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .data-table th {
+            background: var(--surface-color);
+            color: var(--brand-primary);
+            font-size: 9.5pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 2px solid var(--border-subtle);
+        }
+
+        .data-table td {
+            background: var(--bg-color);
+            padding: 14px 20px;
+            font-size: 10pt;
+            color: var(--text-gray);
+            border-bottom: 1px solid var(--surface-color);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Signatures */
+        .signature-grid {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 50px;
+            page-break-inside: avoid;
+        }
+
+        .signature-box {
+            background: var(--surface-color);
+            padding: 25px 20px 20px 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px dashed var(--border-subtle);
+            position: relative;
+        }
+
+        .sign-status {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--brand-primary);
+            color: white;
+            font-size: 7.5pt;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .signatory-name {
+            font-weight: 700;
+            font-size: 11pt;
+            color: var(--brand-primary);
+        }
+
+        .signatory-title {
+            font-size: 9pt;
+            color: var(--text-gray);
+        }
+
+        /* Modern Lists */
+        .modern-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 12px;
+        }
+
+        .modern-list li {
+            position: relative;
+            padding-left: 28px;
+            font-size: 9.5pt;
+            color: var(--text-gray);
+            background: var(--surface-color);
+            padding: 10px 10px 10px 35px;
+            border-radius: 6px;
+        }
+
+        .modern-list li::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23d81b60"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>') no-repeat center center;
+            background-size: contain;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        .date-badge {
+            display: inline-block;
+            background: var(--brand-primary);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 9pt;
+            font-weight: 600;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2);
+        }
+
+        
+    </style>
+</head>
+
+<body>
+
+    <!-- Gradient Decorations -->
+    <div class="border-bottom-left"></div>
+    <div class="border-top-right"></div>
+
+    <!-- Running Header -->
+    <header>
+        {% block header %}
+        <table style="width: 100%; border-collapse: collapse; padding: 15mm 25mm 0 25mm;">
+            <tr>
+                <td style="vertical-align: middle; width: 40%;">
+                    <img src="{{ logo_path | default('') }}" class="logo"
+                        style="max-height: 55px; max-width: 150px; object-fit: contain;" alt="Company Logo">
+                </td>
+                <td style="vertical-align: middle; text-align: right; width: 60%;">
+                    <div class="company-info" style="display: inline-block; text-align: right;">
+                        <div class="company-name">Paves Global Infotech Private Limited</div>
+                        Office No.12, 8th Floor, Tower 1<br>
+                        Vasavi Sky City, Gachibowli | Hyderabad 500032
+                    </div>
+                </td>
+            </tr>
+        </table>
+        {% endblock %}
+    </header>
+
+    <!-- Running Footer -->
+    <footer>
+        {% block footer %}
+        <table style="width: 100%; border-collapse: collapse; margin: 0 25mm; padding-top: 5mm; border-top: 1px solid var(--border-subtle); width: calc(100% - 50mm);">
+            <tr>
+                <td style="vertical-align: middle; font-size: 8.5pt; color: var(--text-gray); width: 80%;">
+                    <span class="footer-badge">CONFIDENTIAL</span>
+                    <span style="margin-left: 15px;">www.pavestechnologies.com | careers@pavestechnologies.com</span>
+                </td>
+                <td style="vertical-align: middle; text-align: right; font-size: 8.5pt; color: var(--text-gray); width: 20%;">
+                    <div class="page-number">Page </div>
+                </td>
+            </tr>
+        </table>
+        {% endblock %}
+    </footer>
+
+    <!-- Main Content Container -->
+    <div class="document-container">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+</body>
+
+</html>

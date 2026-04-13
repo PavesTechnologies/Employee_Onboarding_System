@@ -2,6 +2,7 @@ from sqlalchemy import select
 from Backend.Business_Layer.utils.uuid_generator import generate_uuid7
 from ..models.models import ExitApprovals, EmployeeExit
 from sqlalchemy.exc import SQLAlchemyError
+from Backend.Business_Layer.services.exit_clearance_service import ExitClearanceService
 from datetime import datetime
 class ExitApprovalDAO:
 
@@ -83,6 +84,7 @@ class ExitApprovalDAO:
         except Exception as e:
             await db.rollback()
             raise Exception(str(e))
+
     async def hr_approve(
         self,
         db,
@@ -119,7 +121,16 @@ class ExitApprovalDAO:
                 exit_record = exit_result.scalars().first()
 
                 if exit_record:
-                    exit_record.status = "HR Approved"
+                    exit_record.status = "Clearance Pending"
+
+                    # Auto Create Clearances
+                    clearance_service = ExitClearanceService()
+
+                    await clearance_service.create_clearances(
+                        db,
+                        approval.exit_uuid,
+                        exit_record.employee_uuid
+                    )
 
             await db.commit()
             await db.refresh(approval)
@@ -128,7 +139,7 @@ class ExitApprovalDAO:
 
         except Exception as e:
             await db.rollback()
-            raise Exception(str(e))
+            raise Exception(str(e))    
     async def get_all_approvals(self, db):
         try:
             query = select(ExitApprovals)

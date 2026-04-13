@@ -1,0 +1,38 @@
+{% extends "base_document.html" %}
+
+{% block title %}Experience Letter{% endblock %}
+
+{% block content %}
+<h1>Experience Certificate</h1>
+
+<p style="text-align: center; margin-bottom: 30px; font-weight: 600; color: var(--text-dark);">TO WHOMSOEVER IT MAY
+    CONCERN</p>
+
+<p>This is to certify that <strong>{{ first_name }} {{ last_name }}</strong> (Employee ID: {{ employee_id }}) was
+    employed with Paves Global Infotech Private Limited.</p>
+
+<div class="info-grid">
+    <div class="info-item">
+        <div class="info-label">Employment Tenure</div>
+        <div class="info-value">{{ joining_date }} to {{ last_working_day }}</div>
+    </div>
+    <div class="info-item">
+        <div class="info-label">Last Designation</div>
+        <div class="info-value">{{ designation }}</div>
+    </div>
+</div>
+
+<p>During their tenure with us, we found them to be hardworking, diligent, and professional in carrying out their
+    responsibilities.</p>
+
+<p>We wish them success in their future career endeavors.</p>
+
+<div class="signature-grid">
+    <div class="signature-box">
+        <div class="sign-status">Authorized Signatory</div>
+        <div style="height: 60px;"></div>
+        <div style="font-weight: 700; color: var(--brand-primary); font-size: 11pt;">Human Resources</div>
+        <div style="font-size: 9pt; color: var(--text-gray);">Paves Global Infotech</div>
+    </div>
+</div>
+{% endblock %}

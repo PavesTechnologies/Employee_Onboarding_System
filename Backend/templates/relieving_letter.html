@@ -1,0 +1,47 @@
+{% extends "base_document.html" %}
+
+{% block title %}Relieving Letter{% endblock %}
+
+{% block content %}
+<h1>Relieving Letter</h1>
+
+<p>Dear <span style="font-weight: 600; color: var(--brand-primary);">{{ first_name }}</span>,</p>
+
+<p>This is in reference to your resignation from the position of <strong>{{ designation }}</strong>. We would like to
+    inform you that your resignation has been accepted and you are being relieved from the services of Paves Global
+    Infotech Private Limited effective the closing hours of <strong>{{ last_working_day }}</strong>.</p>
+
+<div class="info-grid">
+    <div class="info-item">
+        <div class="info-label">Date of Joining</div>
+        <div class="info-value">{{ joining_date }}</div>
+    </div>
+    <div class="info-item">
+        <div class="info-label">Last Working Day</div>
+        <div class="info-value">{{ last_working_day }}</div>
+    </div>
+    <div class="info-item">
+        <div class="info-label">Last Designation</div>
+        <div class="info-value">{{ designation }}</div>
+    </div>
+    <div class="info-item">
+        <div class="info-label">Employee ID</div>
+        <div class="info-value">{{ employee_id }}</div>
+    </div>
+</div>
+
+<p>We confirm that you have been cleared of all your responsibilities and there are no outstanding dues towards the
+    company.</p>
+
+<p>We take this opportunity to thank you for your contributions to the company and wish you all the best in your future
+    endeavors.</p>
+
+<div class="signature-grid">
+    <div class="signature-box">
+        <div class="sign-status">Authorized Signatory</div>
+        <div style="height: 60px;"></div>
+        <div style="font-weight: 700; color: var(--brand-primary); font-size: 11pt;">Human Resources</div>
+        <div style="font-size: 9pt; color: var(--text-gray);">Paves Global Infotech</div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base_document.html" %}
+
+{% block title %}Full & Final Settlement Letter{% endblock %}
+
+{% block content %}
+<h1>Full & Final Settlement</h1>
+
+<p>Dear <span style="font-weight: 600; color: var(--brand-primary);">{{ first_name }}</span>,</p>
+
+<p>This document details your Full & Final Settlement calculation following your separation from Paves Global Infotech
+    Private Limited on <strong>{{ last_working_day }}</strong>.</p>
+
+<p>Please find below the summary of your final settlement amount.</p>
+
+<div class="info-grid">
+    <div class="info-item">
+        <div class="info-label">Net Payable Amount</div>
+        <div class="info-value" style="color: var(--brand-secondary); font-size: 14pt;">&#8377; {{ net_payable }}</div>
+    </div>
+    <div class="info-item">
+        <div class="info-label">Settlement Status</div>
+        <div class="info-value">Processed</div>
+    </div>
+</div>
+
+<p>The aforementioned amount will be credited to your salary account on file within the standard banking cycle.</p>
+
+<p>This is a system generated letter and constitutes validation of final accounting of dues between you and the company.
+</p>
+
+<div class="signature-grid">
+    <div class="signature-box">
+        <div class="sign-status">Authorized Signatory</div>
+        <div style="height: 60px;"></div>
+        <div style="font-weight: 700; color: var(--brand-primary); font-size: 11pt;">Finance Department</div>
+        <div style="font-size: 9pt; color: var(--text-gray);">Paves Global Infotech</div>
+    </div>
+</div>
+{% endblock %}

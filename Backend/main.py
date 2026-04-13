@@ -20,9 +20,11 @@ from Backend.API_Layer.routes import departments_routes
 from Backend.API_Layer.routes import designation_routes
 from Backend.API_Layer.routes import employee_pf_routes
 from Backend.API_Layer.routes import employee_bank_routes
-from Backend.API_Layer.routes import dashboard_routes, employee_exit_routes, exit_approval_routes
+from Backend.API_Layer.routes import dashboard_routes, employee_exit_routes, exit_approval_routes, exit_clearance_items_routes, exit_clearance_routes
 from datetime import date
 from weasyprint import HTML
+from Backend.API_Layer.routes import exit_final_settlement_routes
+from Backend.API_Layer.routes import exit_documents_routes
 
 
 
@@ -119,6 +121,10 @@ app.include_router(analytics_routes.router, prefix="/api/analytics", tags=["Anal
 app.include_router(dashboard_routes.router)
 app.include_router(employee_exit_routes.router)
 app.include_router(exit_approval_routes.router)
+app.include_router(exit_clearance_items_routes.router)
+app.include_router(exit_clearance_routes.router)
+app.include_router(exit_final_settlement_routes.router)
+app.include_router(exit_documents_routes.router)
 
 
 

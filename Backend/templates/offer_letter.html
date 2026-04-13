@@ -63,8 +63,10 @@
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 25px; /* Vertical thickness */
-            height: 250px; /* Height of the left bar */
+            width: 25px;
+            /* Vertical thickness */
+            height: 250px;
+            /* Height of the left bar */
             background: linear-gradient(to bottom, #d81b60, #3949ab);
             border-top-right-radius: 20px;
         }
@@ -74,8 +76,10 @@
             position: absolute;
             bottom: 0;
             left: 0;
-            height: 25px; /* Horizontal thickness */
-            width: 100%; /* Width of the bottom bar */
+            height: 25px;
+            /* Horizontal thickness */
+            width: 100%;
+            /* Width of the bottom bar */
             background: #3949ab;
         }
 
@@ -407,7 +411,8 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-/* 
+
+        /* 
         .signature-line {
             height: 40px;
             border-bottom: 2px solid var(--text-dark);
@@ -525,8 +530,8 @@
     <!-- ================= PAGE 1: CORE OFFER ================= -->
     <div class="document-container">
 
-        
-      
+
+
         <div style="margin-bottom: 35px;">
             <p style="margin-bottom: 8px; font-weight: 600; color: var(--text-dark);">To,</p>
             <p style="margin-bottom: 4px; font-weight: 700; font-size: 11.5pt; color: var(--brand-primary);">{{
@@ -697,7 +702,8 @@
 
         <h2 style="margin-bottom: 30px;">Signatures & Acceptance</h2>
 
-        <p>By signing below, I acknowledge that I have read, understood, and accept the offer of employment along with the compensation structure detailed in Annexure A and the terms and conditions outlined in Annexure B.</p>
+        <p>By signing below, I acknowledge that I have read, understood, and accept the offer of employment along with
+            the compensation structure detailed in Annexure A and the terms and conditions outlined in Annexure B.</p>
 
         <div class="signature-grid" style="margin-top: 60px;">
             <div class="signature-box">
@@ -716,7 +722,7 @@
                 <div class="signatory-name">{{ first_name }} {{ last_name }}</div>
                 <!-- <div class="signature-title">Date:{{accepted_date}}</div> -->
                 {% else %}
-                
+
                 <div class="signatory-title">Date: _________________</div>
                 {% endif %}
             </div>
