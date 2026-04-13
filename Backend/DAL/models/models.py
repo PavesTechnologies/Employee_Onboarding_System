@@ -1778,6 +1778,21 @@ class EmployeeExit(Base):
     )
 
     # relationships
+    department: Mapped['Departments'] = relationship(
+        "Departments",
+        back_populates="employee_exit",
+        lazy="selectin"
+    )
+
+    designation: Mapped['Designations'] = relationship(
+        "Designations",
+        back_populates="employee_exit",
+        lazy="selectin")
+
+    employee_details: Mapped['EmployeeDetails'] = relationship(
+        "EmployeeDetails",
+        back_populates="employee_exit",
+        lazy="selectin")
 
     approvals: Mapped[list['ExitApprovals']] = relationship(
         "ExitApprovals",
@@ -2023,6 +2038,7 @@ class ExitFinalSettlement(Base):
     )
 
     employee_exit = relationship("EmployeeExit", back_populates="settlement")
+    employee_details = relationship("EmployeeDetails", back_populates="exit_final_settlement")
 
 class ExitClearanceItems(Base):
     __tablename__ = 'exit_clearance_items'
