@@ -1,4 +1,6 @@
 
+from datetime import date
+
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.dao.hr_bulk_join_dao import HrBulkJoinDAO
@@ -8,6 +10,16 @@ class HrBulkJoinService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.dao = HrBulkJoinDAO(self.db)
+
+    def get_joining_status(self, new_joining_date):
+        today = date.today()
+
+        if new_joining_date < today:
+            return "Joining Pending"   
+        elif new_joining_date == today:
+            return "Joining"           
+        else:
+            return "Rescheduled" 
 
     async def process_bulk_join(self, payload, current_user_id: int):
 
@@ -23,12 +35,15 @@ class HrBulkJoinService:
                 status_code=400,
                 detail="No VERIFIED candidates found"
             )
+        status = self.get_joining_status(payload.joining_date)
+        print(f"Determined joining status: {status}")  # ✅ Debug log for status
 
         # ✅ 1. STORE JOINING DATE 
         updated_rows = await self.dao.update_joining_date_for_verified(
             payload.user_emails_list,
             payload.joining_date,
-            payload
+            payload,
+            status   # ✅ pass from service
         )
         joining_date_str = payload.joining_date.strftime("%d %B %Y")
 
@@ -56,7 +71,7 @@ class HrBulkJoinService:
         }
 
 
-    async def reassign_joining(self, payload, current_user_id: int):
+    # async def reassign_joining(self, payload, current_user_id: int):
 
         user = await self.dao.get_user_by_uuid(payload.user_uuid)
 
@@ -85,10 +100,56 @@ class HrBulkJoinService:
         department=payload.department,
         reporting_manager=payload.reporting_manager,
 
-        custom_message=payload.comments
+        custom_message=payload.joining_comments
         )
 
         return {
             "message": "Joining date reassigned successfully",
             "user_uuid": payload.user_uuid
         }
+    
+    async def reassign_joining(self, payload, current_user_id: int):
+ 
+        user = await self.dao.get_user_by_uuid(payload.user_uuid)
+ 
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+ 
+        # ✅ Decide status dynamically
+        # today = date.today()
+ 
+        # if payload.new_joining_date < today:
+        #     status = "Joining Pending"
+        # elif payload.new_joining_date == today:
+        #     status = "Joining"
+        # else:
+        #     status = "Rescheduled"
+        status = self.get_joining_status(payload.new_joining_date)
+        # ✅ Pass status to DAO
+        await self.dao.update_joining_date_for_user(
+            payload.user_uuid,
+            payload,
+            status
+        )
+ 
+        joining_date_str = payload.new_joining_date.strftime("%d %B %Y")
+ 
+        send_joining_email(
+            to_email=user.mail,
+            name=user.first_name,
+            joining_date_str=joining_date_str,
+            reporting_time=payload.reporting_time,
+            location=payload.location,
+            department=payload.department,
+            reporting_manager=payload.reporting_manager,
+            custom_message=payload.joining_comments
+        )
+ 
+        return {
+            "message": "Joining date reassigned successfully",
+            "status": status,   
+            "user_uuid": payload.user_uuid
+        }
+    
+    
+    

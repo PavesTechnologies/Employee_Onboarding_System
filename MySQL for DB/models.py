@@ -824,6 +824,7 @@ class Departments(Base):
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
 
     employee_details: Mapped[list['EmployeeDetails']] = relationship('EmployeeDetails', back_populates='departments')
+    employee_exit: Mapped[list['EmployeeExit']] = relationship('EmployeeExit', back_populates='department')
 
 
 # class Designations(Base):
@@ -925,7 +926,7 @@ class OfferLetterDetails(Base):
     middle_name: Mapped[Optional[str]] = mapped_column(String(100))
     package: Mapped[Optional[str]] = mapped_column(String(255))
     currency: Mapped[Optional[str]] = mapped_column(String(20))
-    status: Mapped[Optional[str]] = mapped_column(ENUM('Created', 'Offered', 'Accepted', 'Rejected', 'Submitted', 'Verified', 'Completed','Joining','Joining_Pending'), server_default=text("'Created'"))
+    status: Mapped[Optional[str]] = mapped_column(ENUM('Created', 'Offered', 'Accepted', 'Rejected', 'Submitted', 'Verified', 'Completed','Joining','Joining Pending','Rescheduled'), server_default=text("'Created'"))
     hire_type: Mapped[str] = mapped_column(Enum('Direct', 'Offer'), nullable=False)
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
@@ -1615,14 +1616,32 @@ class OfferApprovalAction(Base):
 class EmployeeExit(Base):
     __tablename__ = 'employee_exit'
     __table_args__ = (
-        ForeignKeyConstraint(['employee_uuid'], ['employee_details.employee_uuid']),
-        ForeignKeyConstraint(['department_uuid'], ['departments.department_uuid']),
-        ForeignKeyConstraint(['designation_uuid'], ['designations.designation_uuid']),
+
+        ForeignKeyConstraint(
+            ['employee_uuid'],
+            ['employee_details.employee_uuid'],
+            name='employee_exit_ibfk_1'
+        ),
+
+        ForeignKeyConstraint(
+            ['department_uuid'],
+            ['departments.department_uuid'],
+            name='employee_exit_ibfk_2'
+        ),
+
+        ForeignKeyConstraint(
+            ['designation_uuid'],
+            ['designations.designation_uuid'],
+            name='employee_exit_ibfk_3'
+        ),
+
         Index('exit_uuid', 'exit_uuid', unique=True),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
     exit_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
+
     employee_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
 
     employee_id: Mapped[Optional[str]] = mapped_column(String(20))
@@ -1633,7 +1652,13 @@ class EmployeeExit(Base):
     designation_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))
 
     exit_type: Mapped[str] = mapped_column(
-        Enum('Resignation','Termination','Contract End','Absconded','Retirement')
+        Enum(
+            'Resignation',
+            'Termination',
+            'Contract End',
+            'Absconded',
+            'Retirement'
+        )
     )
 
     resignation_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
@@ -1662,7 +1687,8 @@ class EmployeeExit(Base):
     created_by: Mapped[Optional[int]] = mapped_column(Integer)
 
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime, server_default=text('CURRENT_TIMESTAMP')
+        DateTime,
+        server_default=text('CURRENT_TIMESTAMP')
     )
 
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
@@ -1670,37 +1696,47 @@ class EmployeeExit(Base):
         server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
     )
 
-    approvals = relationship(
+    # relationships
+    department: Mapped[Optional["Departments"]] = relationship(
+    "Departments",
+    backref="employee_exits",   # auto creates reverse relation
+    lazy="selectin"
+)
+
+    approvals: Mapped[list['ExitApprovals']] = relationship(
         "ExitApprovals",
         back_populates="employee_exit",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        lazy="selectin"
     )
 
-    clearances = relationship(
+    clearances: Mapped[list['ExitClearance']] = relationship(
         "ExitClearance",
         back_populates="employee_exit",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        lazy="selectin"
     )
 
-    interview = relationship(
+    interview: Mapped[list['ExitInterview']] = relationship(
         "ExitInterview",
         back_populates="employee_exit",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        lazy="selectin"
     )
 
-    documents = relationship(
+    documents: Mapped[list['ExitDocuments']] = relationship(
         "ExitDocuments",
         back_populates="employee_exit",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        lazy="selectin"
     )
 
-    settlement = relationship(
+    settlement: Mapped[list['ExitFinalSettlement']] = relationship(
         "ExitFinalSettlement",
         back_populates="employee_exit",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        lazy="selectin"
     )
-
-
 # ==========================================
 
 
