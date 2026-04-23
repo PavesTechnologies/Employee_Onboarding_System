@@ -1,0 +1,30 @@
+{% extends "base_document.html" %}
+
+{% block title %}Resignation Acceptance Letter{% endblock %}
+
+{% block content %}
+<h1>Resignation Acceptance</h1>
+
+<p>Dear <span style="font-weight: 600; color: var(--brand-primary);">{{ first_name }}</span>,</p>
+
+<p>This letter is to formally acknowledge the receipt and acceptance of your resignation from the position of <strong>{{
+        designation }}</strong>.</p>
+
+<p>As per the company policy and your employment terms, your final working day with Paves Global Infotech Private
+    Limited will be <strong>{{ last_working_day }}</strong>.</p>
+
+<p>Before your departure, please ensure the handover of all company assets, intellectual property, and active tasks to
+    your reporting manager to facilitate a smooth clearance process.</p>
+
+<p>We appreciate the time you have spent with us and your contributions to the team. We wish you success in your future
+    plans.</p>
+
+<div class="signature-grid">
+    <div class="signature-box">
+        <div class="sign-status">Authorized Signatory</div>
+        <div style="height: 60px;"></div>
+        <div style="font-weight: 700; color: var(--brand-primary); font-size: 11pt;">Human Resources</div>
+        <div style="font-size: 9pt; color: var(--text-gray);">Paves Global Infotech</div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base_document.html" %}
+
+{% block title %}No Objection Certificate{% endblock %}
+
+{% block content %}
+<h1>No Objection Certificate</h1>
+
+<p style="text-align: center; margin-bottom: 30px; font-weight: 600; color: var(--text-dark);">TO WHOMSOEVER IT MAY
+    CONCERN</p>
+
+<p>This is to certify that <strong>{{ first_name }} {{ last_name }}</strong>, Employee ID <strong>{{ employee_id
+        }}</strong>, was an employee of Paves Global Infotech Private Limited from <strong>{{ joining_date }}</strong>
+    to <strong>{{ last_working_day }}</strong>.</p>
+
+<p>During their employment with us, they fulfilled their responsibilities and completed the final exit clearance
+    procedures.</p>
+
+<p>The company has no objection to them seeking or commencing employment with any other organization.</p>
+
+<div class="signature-grid">
+    <div class="signature-box">
+        <div class="sign-status">Authorized Signatory</div>
+        <div style="height: 60px;"></div>
+        <div style="font-weight: 700; color: var(--brand-primary); font-size: 11pt;">Human Resources</div>
+        <div style="font-size: 9pt; color: var(--text-gray);">Paves Global Infotech</div>
+    </div>
+</div>
+{% endblock %}

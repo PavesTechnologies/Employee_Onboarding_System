@@ -1675,6 +1675,9 @@ class EmployeeExit(Base):
             'HR Approved',
             'Clearance Pending',
             'FnF Pending',
+            'Settlement Approved',
+            'Paid',
+            'Documents Generated',
             'Completed',
             'Rejected'
         ),

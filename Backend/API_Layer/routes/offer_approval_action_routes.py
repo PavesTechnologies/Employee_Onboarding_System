@@ -14,7 +14,7 @@ from ...DAL.utils.dependencies import get_db
 from ...API_Layer.interfaces.offer_request_interfaces import OfferRequestResponse
 
 router = APIRouter()
-@router.get("/status/{user_uuid}",response_model=OfferRequestResponse, dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.get("/status/{user_uuid}",response_model=OfferRequestResponse, dependencies=[Depends(require_roles("HR", "Admin"))])
 async def get_offer_approval_status(
     user_uuid: str,
     request: Request,
@@ -73,7 +73,7 @@ async def create_offer_approval_actions(
 
 @router.put(
     "/update_action"
-, dependencies=[Depends(require_roles("HR", "ADMIN"))])
+, dependencies=[Depends(require_roles("Manager"))])
 async def update_offer_action(
     payload: OfferApproveActionRequest,
     request: Request,
@@ -97,7 +97,7 @@ async def update_offer_action(
 
     return response
 
-@router.get("/admin/my-actions", dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.get("/admin/my-actions", dependencies=[Depends(require_roles("Manager"))])
 async def get_my_offer_actions(
     request: Request,
     db: AsyncSession = Depends(get_db)
@@ -118,7 +118,7 @@ async def get_my_offer_actions(
     return await service.get_admin_actions(current_user_id, auth_header)
 
 
-@router.get("/admin-users", dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.get("/admin-users", dependencies=[Depends(require_roles("HR", "Admin", "Manager"))])
 async def get_admin_users(request: Request):
     """
     Controller passes token to service
@@ -135,7 +135,7 @@ async def get_admin_users(request: Request):
     return await fetch_admin_users_reformed(
         token=auth_header
     )
-@router.get("/my-actions", response_model=list[OfferApproveActionResponse], dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.get("/my-actions", response_model=list[OfferApproveActionResponse], dependencies=[Depends(require_roles("Manager"))])
 async def get_all_my_actions(
     request: Request,
     db: AsyncSession = Depends(get_db)
@@ -157,7 +157,7 @@ async def get_all_my_actions(
             status_code=500,
             detail=f"An error occurred: {str(e)}"
         )
-@router.put("/reassign", response_model=OfferReassignApprovalResponse, dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.put("/reassign", response_model=OfferReassignApprovalResponse, dependencies=[Depends(require_roles("HR"))])
 async def reassign_offer_approval(
     payload: OfferReassignApprovalRequest,
     request: Request,
