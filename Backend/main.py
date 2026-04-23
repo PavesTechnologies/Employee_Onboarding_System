@@ -5,6 +5,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import os
 from jinja2 import Environment, FileSystemLoader
 
+
 from Backend.API_Layer.routes import docusign_token_generation_route, employee_experience_routes, hr_bulk_join_router, hr_onboarding_routes, offer_approval_action_routes, otp_routes, redis_cache_routes, weekly_dashboard_routes
 from .API_Layer.routes import (master_routes, offerletter_routes, education_routes, offerresponse_routes, employee_details_routes,
                                identity_routes, employee_upload_routes,analytics_routes)
@@ -46,14 +47,14 @@ app.add_middleware(JWTMiddleware)
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=["http://localhost:5173",
-    #                 "http://localhost:3000",
-    #                 "https://employeeonbordingforms.netlify.app",
-    #                 "https://nonprovidentially-xiphisternal-junior.ngrok-free.dev",
-    #                 "https://api.15.134.36.38.sslip.io",
-    #                 "http://13.202.204.204"],
+    allow_origins=["http://localhost:5173",
+                    "http://localhost:3000",
+                    "https://employeeonbordingforms.netlify.app",
+                    "https://nonprovidentially-xiphisternal-junior.ngrok-free.dev",
+                    "https://api.15.134.36.38.sslip.io",
+                    "http://13.202.204.204"],
 
-    allow_origins=["*"],
+    # allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
