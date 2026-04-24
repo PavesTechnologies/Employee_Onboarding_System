@@ -250,12 +250,11 @@ class OfferApprovalActionService:
     ) -> list[OfferActionAdminResponse]:
 
         requests = await self.dao.get_requests_for_action_taker(current_user_id)
+        user_details = await fetch_admin_users_reformed(token=auth_header)
 
         response: list[OfferActionAdminResponse] = []
 
         for req in requests:
-
-            user_details = await fetch_admin_users_reformed(token=auth_header)
             action_taker = next((u for u in user_details if u["user_id"] == req.request_by), None)
 
             offer = req.offer_letter_details
@@ -273,6 +272,7 @@ class OfferApprovalActionService:
                 OfferActionAdminResponse(
                     user_uuid=offer.user_uuid,
                     user_first_name=offer.first_name,
+                    user_middle_name=offer.middle_name,
                     user_last_name=offer.last_name,
 
                     # ✅ request_id = request_by (HR user id)

@@ -204,8 +204,7 @@ class EmployeeAboutDAO:
             employee_uuid=employee_uuid,
             about_me=request_data.about_me,
             work_enjoyment=request_data.work_enjoyment,
-            interests_hobbies=request_data.interests_hobbies,
-            links=request_data.links
+            interests_hobbies=request_data.interests_hobbies
         )
 
         self.db.add(employee_about)
@@ -220,7 +219,6 @@ class EmployeeAboutDAO:
         employee_about.about_me = request_data.about_me
         employee_about.work_enjoyment = request_data.work_enjoyment
         employee_about.interests_hobbies = request_data.interests_hobbies
-        employee_about.links = request_data.links
         await self.db.commit()
         await self.db.refresh(employee_about)
 

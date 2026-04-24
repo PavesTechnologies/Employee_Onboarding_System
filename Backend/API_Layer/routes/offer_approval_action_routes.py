@@ -12,6 +12,7 @@ from ..utils.role_based import require_roles
 
 from ...DAL.utils.dependencies import get_db
 from ...API_Layer.interfaces.offer_request_interfaces import OfferRequestResponse
+from ...API_Layer.interfaces.OfferActionAdmin_interfaces import OfferActionAdminResponse
 
 router = APIRouter()
 @router.get("/status/{user_uuid}",response_model=OfferRequestResponse, dependencies=[Depends(require_roles("HR", "ADMIN"))])
@@ -97,7 +98,7 @@ async def update_offer_action(
 
     return response
 
-@router.get("/admin/my-actions", dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.get("/admin/my-actions", response_model=list[OfferActionAdminResponse], dependencies=[Depends(require_roles("HR", "ADMIN"))])
 async def get_my_offer_actions(
     request: Request,
     db: AsyncSession = Depends(get_db)

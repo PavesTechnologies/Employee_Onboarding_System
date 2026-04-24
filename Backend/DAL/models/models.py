@@ -833,7 +833,6 @@ class EmployeeAbout(Base):
     about_me: Mapped[Optional[str]] = mapped_column(Text)
     work_enjoyment: Mapped[Optional[str]] = mapped_column(Text)
     interests_hobbies: Mapped[Optional[str]] = mapped_column(Text)
-    links: Mapped[Optional[list[str]]] = mapped_column(JSON)
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
     employee_details: Mapped['EmployeeDetails'] = relationship('EmployeeDetails', back_populates='employee_about')
@@ -1849,6 +1848,19 @@ class EmployeeExit(Base):
         back_populates="employee_exit",
         cascade="all, delete-orphan",
         lazy="selectin"
+    )
+
+    employee_details: Mapped[Optional["EmployeeDetails"]] = relationship(
+        "EmployeeDetails",
+        back_populates="employee_exit",
+    )
+    department: Mapped[Optional["Departments"]] = relationship(
+        "Departments",
+        back_populates="employee_exit",
+    )
+    designation: Mapped[Optional["Designations"]] = relationship(
+        "Designations",
+        back_populates="employee_exit",
     )
 # ==========================================
 # Exit Approvals

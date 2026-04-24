@@ -157,7 +157,6 @@ class EmployeeAboutRequest(BaseModel):
     about_me: Optional[str] = ""
     work_enjoyment: Optional[str] = ""
     interests_hobbies: Optional[str] = ""
-    links: list[str] = Field(default_factory=list)
 
 
 class EmployeeAboutResponse(BaseModel):
@@ -171,4 +170,3 @@ class EmployeeAboutDetails(BaseModel):
     about_me: Optional[str] = ""
     work_enjoyment: Optional[str] = ""
     interests_hobbies: Optional[str] = ""
-    links: list[str] = Field(default_factory=list)

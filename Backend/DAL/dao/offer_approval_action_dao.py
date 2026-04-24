@@ -139,6 +139,7 @@ class OfferApprovalActionDAO:
                 OfferApprovalRequest.user_uuid,
                 OfferApprovalRequest.request_by,
                 OfferLetterDetails.first_name,
+                OfferLetterDetails.middle_name,
                 OfferLetterDetails.last_name,
                 OfferLetterDetails.mail,
                 OfferLetterDetails.designation,
