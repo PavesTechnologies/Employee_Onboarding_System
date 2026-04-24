@@ -353,3 +353,55 @@ CREATE TABLE otptable (
     otp VARCHAR(10) NOT NULL,
     expirytime DATETIME NOT NULL
 );
+
+CREATE TABLE employee_tasks (
+    task_id INT AUTO_INCREMENT PRIMARY KEY,
+    task_uuid CHAR(36) UNIQUE NOT NULL,
+
+    user_uuid CHAR(36) NOT NULL,
+
+    task_title VARCHAR(255) NOT NULL,
+
+    task_type ENUM(
+        'Onboarding',
+        'Exit',
+        'IT Provisioning',
+        'Finance Clearance',
+        'Admin'
+    ) NOT NULL,
+
+    description TEXT,
+
+    assigned_to VARCHAR(150) NOT NULL,
+    assigned_team VARCHAR(100),
+
+    priority ENUM('High','Medium','Low') DEFAULT 'Medium',
+
+    status ENUM(
+        'To Do',
+        'In Progress',
+        'Completed',
+        'Cancelled'
+    ) DEFAULT 'To Do',
+
+    progress INT DEFAULT 0,
+
+    due_date DATE,
+    reminder_date DATE,
+
+    send_notification BOOLEAN DEFAULT TRUE,
+
+    escalation_owner VARCHAR(150),
+
+    internal_notes TEXT,
+    comments TEXT,
+
+    created_by VARCHAR(150) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    updated_by VARCHAR(150),
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    completed_by VARCHAR(150),
+    completed_at DATETIME NULL
+);

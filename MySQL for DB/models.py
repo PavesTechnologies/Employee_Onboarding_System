@@ -1922,3 +1922,144 @@ class ExitFinalSettlement(Base):
     )
 
     employee_exit = relationship("EmployeeExit", back_populates="settlement")
+
+class EmployeeTasks(Base):
+    __tablename__ = "employee_tasks"
+
+    # Primary Key
+    task_id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    # Unique UUID for task
+    task_uuid: Mapped[str] = mapped_column(
+        CHAR(36),
+        unique=True,
+        nullable=False
+    )
+
+    # Link to Offer Letter Table
+    user_uuid: Mapped[str] = mapped_column(
+        CHAR(36),
+        ForeignKey("offer_letter_details.user_uuid"),
+        nullable=False
+    )
+
+    # Task Details
+    task_title: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
+    )
+
+    task_type: Mapped[str] = mapped_column(
+        Enum(
+            "Onboarding",
+            "Exit",
+            "IT Provisioning",
+            "Finance Clearance",
+            "Admin",
+            name="task_type_enum"
+        ),
+        nullable=False
+    )
+
+    description: Mapped[Optional[str]] = mapped_column(Text)
+
+    # Assignment Info
+    assigned_to: Mapped[str] = mapped_column(
+        String(150),
+        nullable=False
+    )
+
+    assigned_team: Mapped[Optional[str]] = mapped_column(
+        String(100)
+    )
+
+    # Priority
+    priority: Mapped[str] = mapped_column(
+        Enum(
+            "High",
+            "Medium",
+            "Low",
+            name="task_priority_enum"
+        ),
+        default="Medium",
+        nullable=False
+    )
+
+    # Status
+    status: Mapped[str] = mapped_column(
+        Enum(
+            "To Do",
+            "In Progress",
+            "Completed",
+            "Cancelled",
+            name="task_status_enum"
+        ),
+        default="To Do",
+        nullable=False
+    )
+
+    # Progress %
+    progress: Mapped[int] = mapped_column(
+        Integer,
+        default=0
+    )
+
+    # Dates
+    due_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
+
+    reminder_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
+
+    # Notification
+    send_notification: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True
+    )
+
+    # Escalation
+    escalation_owner: Mapped[Optional[str]] = mapped_column(
+        String(150)
+    )
+
+    # Notes
+    internal_notes: Mapped[Optional[str]] = mapped_column(Text)
+
+    comments: Mapped[Optional[str]] = mapped_column(Text)
+
+    # Audit Fields
+    created_by: Mapped[str] = mapped_column(
+        String(150),
+        nullable=False
+    )
+
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime,
+        server_default=text("CURRENT_TIMESTAMP")
+    )
+
+    updated_by: Mapped[Optional[str]] = mapped_column(
+        String(150)
+    )
+
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime,
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=datetime.datetime.utcnow
+    )
+
+    completed_by: Mapped[Optional[str]] = mapped_column(
+        String(150)
+    )
+
+    completed_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime
+    )
+
+    # Relationship with Offer Letter Details
+    offer_letter = relationship(
+        "OfferLetterDetails",
+        backref="employee_tasks"
+    )

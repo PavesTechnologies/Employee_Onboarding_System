@@ -17,7 +17,7 @@ router = APIRouter(
     tags=["Designations"]
 )
 
-@router.post("/", response_model=DesignationResponse, dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.post("/", response_model=DesignationResponse, dependencies=[Depends(require_roles("HR", "ADMIN", "MANAGER","GENERAL"))])
 async def create_designation(data: DesignationCreate, db: AsyncSession = Depends(get_db)):
     designation = await DesignationsService.create_designation(db, data)
     if not designation:
@@ -25,7 +25,7 @@ async def create_designation(data: DesignationCreate, db: AsyncSession = Depends
     return designation
 
 
-@router.get("/", response_model=List[DesignationResponse], dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.get("/", response_model=List[DesignationResponse], dependencies=[Depends(require_roles("HR", "ADMIN","MANAGER","GENERAL"))])
 async def get_all_designations(db: AsyncSession = Depends(get_db)):
     return await DesignationsService.get_all_designations(db)
 
@@ -35,7 +35,7 @@ async def get_designations_by_department(db, department_uuid):
         db, department_uuid
     )
 
-@router.get("/department/{department_uuid}",dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.get("/department/{department_uuid}",dependencies=[Depends(require_roles("HR", "ADMIN","MANAGER","GENERAL"))])
 async def get_designations_by_department(
     department_uuid: str,
     db: AsyncSession = Depends(get_db)
@@ -43,7 +43,7 @@ async def get_designations_by_department(
     return await DesignationsService.get_designations_by_department(
         db, department_uuid
     )
-@router.get("/{designation_uuid}",dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.get("/{designation_uuid}",dependencies=[Depends(require_roles("HR", "ADMIN","MANAGER","GENERAL"))])
 async def get_designation_name(
     designation_uuid: str,
     db: AsyncSession = Depends(get_db)
@@ -57,7 +57,7 @@ async def get_designation_name(
         "designation_uuid": designation.designation_uuid,
         "designation_name": designation.designation_name
     }
-@router.put("/{designation_uuid}", response_model=DesignationResponse, dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.put("/{designation_uuid}", response_model=DesignationResponse, dependencies=[Depends(require_roles("HR", "ADMIN", "MANAGER","GENERAL"))])
 async def update_designation(designation_uuid: str, data: DesignationUpdate, db: AsyncSession = Depends(get_db)):
     designation = await DesignationsService.update_designation(
         db,
@@ -68,7 +68,7 @@ async def update_designation(designation_uuid: str, data: DesignationUpdate, db:
         raise HTTPException(status_code=404, detail="Designation not found")
     return designation
 
-@router.delete("/{designation_uuid}", dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.delete("/{designation_uuid}", dependencies=[Depends(require_roles("HR", "ADMIN", "MANAGER","GENERAL"))])
 async def delete_designation(designation_uuid: str, db: AsyncSession = Depends(get_db)):
     designation = await DesignationsService.delete_designation(
         db,

@@ -32,7 +32,7 @@ async def create_country(
 # deactivate country by country uuid
 from fastapi import Query
 
-@router.put("/country/deactivateoractivate/{country_uuid}", response_model=CreateCountryResponse)
+@router.put("/country/deactivateoractivate/{country_uuid}", response_model=CreateCountryResponse, dependencies=[Depends(require_roles("HR", "ADMIN"))])
 async def update_country(
     country_uuid: str,
     is_active: bool = Query(...),   # 👈 IMPORTANT
@@ -43,7 +43,7 @@ async def update_country(
     return CreateCountryResponse(message=message, country_uuid=country_uuid)
 
 # get country details by uuid
-@router.get("/country/{country_uuid}", response_model=CountryDetails)
+@router.get("/country/{country_uuid}", response_model=CountryDetails,dependencies=[Depends(require_roles("HR", "ADMIN"))])
 async def get_country_uuid(
     country_uuid: str,
     db: AsyncSession = Depends(get_db)):

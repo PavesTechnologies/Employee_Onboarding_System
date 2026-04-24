@@ -15,7 +15,7 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=DepartmentResponse, dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.post("/", response_model=DepartmentResponse, dependencies=[Depends(require_roles("HR", "ADMIN","MANAGER"))])
 async def create_department(
     department: DepartmentCreate,
     db: AsyncSession = Depends(get_db)
@@ -29,7 +29,7 @@ async def create_department(
     return dept
 
 @staticmethod
-@router.get("/", response_model=List[DepartmentResponse],dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.get("/", response_model=List[DepartmentResponse],dependencies=[Depends(require_roles("HR", "ADMIN","MANAGER","GENERAL"))])
 async def get_departments(db: AsyncSession = Depends(get_db)):
 
     departments = await DepartmentsService.get_all_departments(db)
@@ -54,7 +54,7 @@ async def update_department(
 
     return department
 
-@router.get("/{department_uuid}", response_model=DepartmentResponse, dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.get("/{department_uuid}", response_model=DepartmentResponse, dependencies=[Depends(require_roles("HR", "ADMIN","MANAGER","GENERAL"))])
 async def get_department_by_uuid(
     department_uuid: str,
     db: AsyncSession = Depends(get_db)
@@ -73,7 +73,7 @@ async def get_department_by_uuid(
 
     return department
 
-@router.delete("/{department_uuid}", dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.delete("/{department_uuid}", dependencies=[Depends(require_roles("HR", "ADMIN", "MANAGER","GENERAL"))])
 async def delete_department(
     department_uuid: str,
     db: AsyncSession = Depends(get_db)
