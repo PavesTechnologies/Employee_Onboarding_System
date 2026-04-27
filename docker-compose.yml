@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: onboarding-system-api
+    image: pavesadmin/intranet-eos:latest
+    ports:
+      # Maps your computer's 8000 to FastAPI's 8000
+      - "8000:8000"
+    
+    # Ensure your .env file contains your DB_HOST, DB_USER, etc.
+    env_file:
+      - ./Backend/.env
+
+    restart: unless-stopped
+
+    networks:
+      - intranet-network
+
+    volumes:
+      - onboarding-logs:/app/logs
+      # Optional: Persist generated PDFs so they survive a container restart
+      - onboarding-pdfs:/app/generated_pdfs
+
+    healthcheck:
+      # Updated to check port 8000. 
+      # Note: If you don't have a /health endpoint, use /docs or /
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  intranet-network:
+    driver: bridge
+
+volumes:
+  onboarding-logs:
+    driver: local
+  onboarding-pdfs:
+    driver: local
