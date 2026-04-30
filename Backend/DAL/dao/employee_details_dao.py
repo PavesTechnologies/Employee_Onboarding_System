@@ -1,4 +1,4 @@
-from ..models.models import PersonalDetails, Addresses, EmployeeIdentityDocument, EmployeeSocialLink
+from ..models.models import PersonalDetails, Addresses, EmployeeIdentityDocument, EmployeeSocialLink, EmployeeAbout
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, exists
 from typing import Optional
@@ -181,4 +181,53 @@ class EmployeeSocialLinkDAO:
         await self.db.delete(social_link)
         await self.db.commit()
     
+class EmployeeAboutDAO:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def get_employee_about(self, employee_uuid):
+        result = await self.db.execute(
+            select(EmployeeAbout).where(
+                EmployeeAbout.employee_uuid == employee_uuid
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def create_employee_about(
+        self,
+        employee_about_uuid,
+        employee_uuid,
+        request_data
+    ):
+        employee_about = EmployeeAbout(
+            employee_about_uuid=employee_about_uuid,
+            employee_uuid=employee_uuid,
+            about_me=request_data.about_me,
+            work_enjoyment=request_data.work_enjoyment,
+            interests_hobbies=request_data.interests_hobbies
+        )
+
+        self.db.add(employee_about)
+        await self.db.commit()
+        await self.db.refresh(employee_about)
+
+        return employee_about
+
+    async def update_employee_about(self, employee_uuid, request_data):
+        employee_about = await self.get_employee_about(employee_uuid)
+
+        employee_about.about_me = request_data.about_me
+        employee_about.work_enjoyment = request_data.work_enjoyment
+        employee_about.interests_hobbies = request_data.interests_hobbies
+        await self.db.commit()
+        await self.db.refresh(employee_about)
+
+        return employee_about
     
+    async def delete_employee_about(self, employee_uuid):
+        employee_about = await self.get_employee_about(employee_uuid)
+
+        await self.db.delete(employee_about)
+        await self.db.commit()
+        
+        return employee_about

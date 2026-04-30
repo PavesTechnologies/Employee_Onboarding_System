@@ -11,6 +11,7 @@ class OfferApproveActionResponse(BaseModel):
     request_by: int
     requested_by_name: Optional[str] = None
     first_name: str
+    middle_name: Optional[str] = None
     last_name: str
     mail: str
     designation: str

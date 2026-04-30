@@ -26,3 +26,4 @@ Thumbs.db
 
 # key
 private.key
+**/generated_pdfs/*

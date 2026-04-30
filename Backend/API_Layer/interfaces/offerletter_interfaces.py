@@ -27,7 +27,7 @@ class OfferCreateRequest(BaseModel):
     # currency : str
     compensation_components: List[CompensationComponent]   
     total_ctc: float                                    
-    cc_mails: Optional[List[EmailStr]] = None
+    cc_emails: Optional[List[EmailStr]] = None
 
 class OfferCreateResponse(BaseModel):
     message: str

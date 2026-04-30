@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from ...DAL.dao.employee_details_dao import EmployeeDetailsDAO, AddressDAO, EmployeeIdentityDAO, EmployeeSocialLinkDAO
+from ...DAL.dao.employee_details_dao import EmployeeDetailsDAO, AddressDAO, EmployeeIdentityDAO, EmployeeSocialLinkDAO, EmployeeAboutDAO
 from ...DAL.dao.master_dao import CountryDAO
 from ...DAL.dao.offerletter_dao import OfferLetterDAO
 from ...DAL.dao.identity_dao import IdentityDAO
@@ -216,5 +216,47 @@ class EmployeeSocialLinkService:
 
         return await self.dao.delete_social_link(social_link_uuid)
     
+class EmployeeAboutService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+        self.dao = EmployeeAboutDAO(self.db)
 
+    async def get_employee_about(self, employee_uuid):
+        result = await self.dao.get_employee_about(employee_uuid)
+
+        if not result:
+            raise HTTPException(
+                status_code=404,
+                detail="Employee About Details Not Found"
+            )
+
+        return result
+
+    async def save_employee_about(self, employee_uuid, request_data):
+        existing = await self.dao.get_employee_about(employee_uuid)
+
+        if existing:
+            return await self.dao.update_employee_about(
+                employee_uuid,
+                request_data
+            )
+
+        employee_about_uuid = generate_uuid7()
+
+        return await self.dao.create_employee_about(
+            employee_about_uuid,
+            employee_uuid,
+            request_data
+        )
+    
+    async def delete_employee_about(self, employee_uuid):
+        existing = await self.dao.get_employee_about(employee_uuid)
+
+        if not existing:
+            raise HTTPException(
+                status_code=404,
+                detail="Employee About Details Not Found"
+            )
+
+        return await self.dao.delete_employee_about(employee_uuid)
     

@@ -1,3 +1,4 @@
+from Backend.DAL.utils import dependencies
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..interfaces.master_interfaces import (CreateCountryResponse, CountryDetails, CountryAllDetails,
@@ -10,7 +11,7 @@ from ..utils.role_based import require_roles
 
 router = APIRouter()
 ## COUNTRY ROUTES START ##
-@router.post("/country", response_model= CreateCountryResponse, dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.post("/country", response_model= CreateCountryResponse, dependencies=[Depends(require_roles("HR", "Admin"))])
 async def create_country(
     calling_code: str,
     db: AsyncSession = Depends(get_db)

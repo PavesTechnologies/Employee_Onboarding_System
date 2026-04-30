@@ -271,12 +271,19 @@ class HrOnboardingDAO:
                     relation_uuids.add(personal_row.emergency_contact_relation_uuid)
             relation = {}
             if relation_uuids:
-                r = await s.execute(
-                    select(RelationMaster)
-                    .options(noload("*"))
-                    .where(RelationMaster.relation_uuid.in_(relation_uuids))
-                )
-                relation = {r.relation_uuid: r.relation_name for r in r.scalars().all()}
+                try:
+                    r = await s.execute(
+                        select(RelationMaster)
+                        .options(noload("*"))
+                        .where(RelationMaster.relation_uuid.in_(relation_uuids))
+                    )
+                    relation = {
+                        rel.relation_uuid: rel.relation_name
+                        for rel in r.scalars().all()
+                    }
+                except Exception as e:
+                    print("Relation master lookup skipped:", str(e))
+                    relation = {}
 
             # degree mapping
             degree_uuids = set()

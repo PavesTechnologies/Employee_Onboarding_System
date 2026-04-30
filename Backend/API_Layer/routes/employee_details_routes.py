@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.utils.dependencies import get_db
 from ..interfaces.employee_details_interfaces import (PersonalDetails, DeleteEmployeeIdentityResponse, PersonalDetailsRequest, PersonalDetailsResponse, PersonalDetails,
                                                       UpdatePersonalRequest, CreateAddressRequest, CreateAddressResponse,
-                                                      AddressDetails, EmployeeIdentityResponse, SocialLinkRequest, SocialLinkResponse, SocialLinkDetails)
-from ...Business_Layer.services.employee_details_service import EmployeeDetailsService, AddressService, EmployeeIdentityService, EmployeeSocialLinkService
+                                                      AddressDetails, EmployeeIdentityResponse, SocialLinkRequest, SocialLinkResponse, SocialLinkDetails, EmployeeAboutResponse, EmployeeAboutRequest, EmployeeAboutDetails)
+from ...Business_Layer.services.employee_details_service import EmployeeDetailsService, AddressService, EmployeeIdentityService, EmployeeSocialLinkService, EmployeeAboutService
 from datetime import date
 from ..utils.role_based import require_roles
 import time
@@ -26,6 +26,85 @@ async def get_all_personal_details(db: AsyncSession = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+@router.get("/about/{employee_uuid}", response_model=EmployeeAboutDetails)
+async def get_employee_about(
+    employee_uuid: str,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        about_service = EmployeeAboutService(db)
+        return await about_service.get_employee_about(employee_uuid)
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/about", response_model=EmployeeAboutResponse)
+async def save_employee_about(
+    request_data: EmployeeAboutRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        about_service = EmployeeAboutService(db)
+
+        result = await about_service.save_employee_about(
+            request_data.employee_uuid,
+            request_data
+        )
+
+        return EmployeeAboutResponse(
+            employee_about_uuid=result.employee_about_uuid,
+            message="Employee About Details Saved Successfully"
+        )
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/about/{employee_uuid}", response_model=EmployeeAboutResponse)
+async def update_employee_about(
+    employee_uuid: str,
+    request_data: EmployeeAboutRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        about_service = EmployeeAboutService(db)
+
+        result = await about_service.save_employee_about(
+            employee_uuid,
+            request_data
+        )
+
+        return EmployeeAboutResponse(
+            employee_about_uuid=result.employee_about_uuid,
+            message="Employee About Details Updated Successfully"
+        )
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/about/{employee_uuid}", response_model=EmployeeAboutResponse)
+async def delete_employee_about(
+    employee_uuid: str,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        about_service = EmployeeAboutService(db)
+        result = await about_service.delete_employee_about(employee_uuid)
+        return EmployeeAboutResponse(
+            employee_about_uuid=result.employee_about_uuid,
+            message="Employee About Details Deleted Successfully"
+        )
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 @router.get("/{personal_uuid}", response_model = PersonalDetails)
 async def get_personal_details_by_user_uuid(personal_uuid: str, db: AsyncSession = Depends(get_db)):

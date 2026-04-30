@@ -29,7 +29,7 @@ from Backend.API_Layer.utils.role_based import require_roles
 router = APIRouter()
 
 # ✅ Create single offer letter
-@router.post("/create", response_model=OfferCreateResponse, dependencies=[Depends(require_roles("HR", "Admin"))])
+@router.post("/create", response_model=OfferCreateResponse, dependencies=[Depends(require_roles("HR"))])
 async def create_offer_letter(
     request_data: OfferCreateRequest,
     request: Request,
@@ -58,7 +58,7 @@ async def create_offer_letter(
         raise HTTPException(status_code=500, detail=str(e))
 
 # ✅ Bulk create offer letters
-@router.post("/bulk_create", response_model=BulkOfferCreateResponse, dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.post("/bulk_create", response_model=BulkOfferCreateResponse, dependencies=[Depends(require_roles("HR"))])
 
 async def create_bulk_offer_letters(
     request: Request,
@@ -120,7 +120,7 @@ async def create_bulk_offer_letters(
 
 
 # ✅ Get all offers
-@router.get("/", response_model=list[OfferLetterDetailsResponse], dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.get("/", response_model=list[OfferLetterDetailsResponse], dependencies=[Depends(require_roles("HR", "Manager", "Admin"))])
 async def get_all_offers(
     db: AsyncSession = Depends(get_db)
 ):
@@ -139,7 +139,7 @@ async def get_all_offers(
 
 import time
 
-@router.get("/user_id/details", response_model=list[OfferLetterDetailsResponse], dependencies=[Depends(require_roles("HR", "ADMIN","MANAGER"))])
+@router.get("/user_id/details", response_model=list[OfferLetterDetailsResponse], dependencies=[Depends(require_roles("HR", "Manager"))])
 
 async def get_offer_by_user_id(
     request: Request,
@@ -155,7 +155,7 @@ async def get_offer_by_user_id(
     return result
     
 # get offer by offer uuid
-@router.get("/offer/{user_uuid}", response_model=OfferLetterDetailsResponse)
+@router.get("/offer/{user_uuid}", response_model=OfferLetterDetailsResponse, dependencies=[Depends(require_roles("HR", "Manager", "Admin"))])
 
 async def get_offer_by_uuid(
     user_uuid: str,
@@ -177,8 +177,7 @@ async def get_offer_by_uuid(
     
 
 
-@router.put("/{user_uuid}", response_model=OfferUpdateResponse)
-
+@router.put("/{user_uuid}", response_model=OfferUpdateResponse, dependencies=[Depends(require_roles("HR"))])
 async def update_offer_by_uuid(
     user_uuid: str,
     request_data: OfferCreateRequest,
@@ -189,12 +188,10 @@ async def update_offer_by_uuid(
         offer_service = OfferLetterService(db)
         current_user_id = int(request.state.user.get("user_id"))
 
-        offer = await offer_service.update_offer_by_uuid(
-            user_uuid, request_data, current_user_id
-        )
+        await offer_service.update_offer_by_uuid(user_uuid, request_data, current_user_id)
 
         return OfferUpdateResponse(
-            message="Offer Details Updated Successfully",
+            message="Offer Details and Compensation Updated Successfully",
             offer_id=user_uuid
         )
 
@@ -202,7 +199,6 @@ async def update_offer_by_uuid(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.get("/created", response_model=list[OfferLetterDetailsResponse], dependencies=[Depends(require_roles("HR", "ADMIN"))])
 
@@ -221,7 +217,7 @@ async def get_created_offerletters(
     return result
 
 
-@router.post("/bulk-send", dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.post("/bulk-send", dependencies=[Depends(require_roles("HR"))])
 
 async def bulk_send_offer_letters(
     request_data: BulkSendOfferLettersRequest,
@@ -246,7 +242,7 @@ async def bulk_send_offer_letters(
 # 1. The offer letter status is 'rejected'
 # 2. The offer letter status was in 'created' and approval status is 'Rejected'
 # 3. the offer letter status is in  'created'(no action taken from approver
-@router.delete("/delete/{user_uuid}", response_model=DeleteOfferResponse, dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.delete("/delete/{user_uuid}", response_model=DeleteOfferResponse, dependencies=[Depends(require_roles("HR"))])
 async def delete_offer_letter(
 
     user_uuid: str,
@@ -286,7 +282,7 @@ async def get_final_offer_preview(
 
 
 
-@router.get("/{user_uuid}/generate-preview")
+@router.get("/{user_uuid}/generate-preview", dependencies=[Depends(require_roles("HR", "Manager"))])
 async def generate_offer_preview(
     user_uuid: str,
     db: AsyncSession = Depends(get_db)
@@ -326,10 +322,6 @@ async def generate_offer_preview(
         "compensation_components": offer.get("compensation_components", [])
 
 }
-        
-
-    
-
     # 4️⃣ Generate PDF
     document_service = DocumentService()
     pdf_path = document_service.generate_offer_pdf(offer_data)

@@ -10,7 +10,7 @@ from ..utils.role_based import require_roles
 
 router = APIRouter()
 
-@router.post("/request", dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.post("/request", dependencies=[Depends(require_roles("HR"))])
 async def create_offer_approval_requests(
     payload: list[OfferRequestListResponse],
     request: Request,
