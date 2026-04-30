@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.models.models import OfferApprovalAction, OfferApprovalRequest, OfferCompensation, OfferLetterDetails
 from ...API_Layer.interfaces.offerletter_interfaces import OfferCreateRequest
 import time
+from sqlalchemy import delete
 
 
 class OfferLetterDAO:
@@ -37,7 +38,7 @@ class OfferLetterDAO:
             # package=request_data.package,
             # currency=request_data.currency,
             total_ctc=request_data.total_ctc,
-            cc_emails=",".join(request_data.cc_mails) if request_data.cc_mails else None,
+            cc_emails=",".join(request_data.cc_emails) if request_data.cc_emails else None,
         )
         self.db.add(new_offer)
 
@@ -259,38 +260,55 @@ class OfferLetterDAO:
     #     return offer
 
     async def update_offer_by_uuid(
-        self,
-        user_uuid: str,
-        request_data: OfferCreateRequest,
-        current_user_id: int,
-    ):
-
-     stmt = (
-        update(OfferLetterDetails)
-        .where(OfferLetterDetails.user_uuid == user_uuid)
-        .values(
-            first_name=request_data.first_name,
-            last_name=request_data.last_name,
-            mail=request_data.mail,
-            country_code=request_data.country_code,
-            contact_number=request_data.contact_number,
-            designation=request_data.designation,
-            employee_type=request_data.employee_type,
-            package=request_data.package,
-            currency=request_data.currency,
-            job_id=request_data.job_id,
-            cc_emails=",".join(request_data.cc_emails) if request_data.cc_emails else None,
+    self,
+    user_uuid: str,
+    request_data: OfferCreateRequest,
+    current_user_id: int,
+) -> bool:
+    # 1. Update the main OfferLetterDetails record
+        stmt = (
+            update(OfferLetterDetails)
+            .where(OfferLetterDetails.user_uuid == user_uuid)
+            .values(
+                first_name=request_data.first_name,
+                middle_name=request_data.middle_name,
+                last_name=request_data.last_name,
+                mail=request_data.mail,
+                country_code=request_data.country_code,
+                contact_number=request_data.contact_number,
+                designation=request_data.designation,
+                employee_type=request_data.employee_type,
+                total_ctc=request_data.total_ctc, # Matching your latest POST logic
+                cc_emails=",".join(request_data.cc_emails) if request_data.cc_emails else None,
+                
+            )
         )
-    )
 
-     result = await self.db.execute(stmt)
+        result = await self.db.execute(stmt)
+        if result.rowcount == 0:
+            return False
 
-    # If no rows updated → record does not exist
-     if result.rowcount == 0:
-        return None
-     await self.db.commit()
+        # 2. Sync Compensation Components (The "Delete and Re-insert" pattern)
+        
+        # Remove all old components for this UUID
+        await self.db.execute(
+            delete(OfferCompensation).where(OfferCompensation.offer_uuid == user_uuid)
+        )
 
-     return True
+        # Insert the new components from request_data
+        for comp in request_data.compensation_components:
+            row = OfferCompensation(
+                offer_uuid=user_uuid,
+                name=comp.name,
+                type=comp.type,
+                frequency=comp.frequency,
+                amount=comp.amount
+            )
+            self.db.add(row)
+
+        # Flush to ensure everything is ready for the Service layer's commit
+        await self.db.flush()
+        return True
 
     
     async def fetch_created_offerletters(self, created_by: int):
