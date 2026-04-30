@@ -1139,7 +1139,6 @@ class EmployeeDetails(Base):
         Index('fk_employee_offer', 'user_uuid'),
         Index('work_email', 'work_email', unique=True)
     )
-
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     employee_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
     user_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
@@ -1164,7 +1163,10 @@ class EmployeeDetails(Base):
     total_experience: Mapped[Optional[decimal.Decimal]] = mapped_column(DECIMAL(4, 1))
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
-
+    export_status: Mapped[Optional[str]] = mapped_column(
+    Enum('NOT_EXPORTED','SUCCESS','FAILED','ALREADY_EXISTS'),server_default=text("'NOT_EXPORTED'"))
+    export_error: Mapped[Optional[str]] = mapped_column(Text)
+    exported_at: Mapped[Optional[datetime.datetime]] = mapped_column(TIMESTAMP)
     departments: Mapped[Optional['Departments']] = relationship('Departments', back_populates='employee_details')
     designations: Mapped[Optional['Designations']] = relationship('Designations', back_populates='employee_details')
     offer_letter_details: Mapped['OfferLetterDetails'] = relationship('OfferLetterDetails', back_populates='employee_details')
