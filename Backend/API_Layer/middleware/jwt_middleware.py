@@ -8,7 +8,7 @@ class JWTMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
         # Add paths you want to skip
-        self.open_endpoints = ["/docs", "/openapi.json", "/redoc", "/offerresponse" ,"/masters/country", "/employee-upload", "/identity/country-mapping", "/experience/", "/otp/send","/otp/verifyOtp","education/employee-education-document","/masters/education-level","/education/country-mapping","/education/employee-education-document","/token-verification/", "/docusign", "/employee-upload/identity-documents", "/employee-details","/hr/candidate/submit","/masters/contacts","/generate-offer", "/education/degree-master", "/bank","/pf"]
+        self.open_endpoints = ["/docs", "/openapi.json", "/redoc", "/offerresponse" ,"/masters/country", "/employee-upload", "/identity/country-mapping", "/experience/", "/otp/send","/otp/verifyOtp","education/employee-education-document","/masters/education-level","/education/country-mapping","/education/employee-education-document","/token-verification/", "/docusign", "/employee-upload/identity-documents", "/employee-details","/hr/candidate/submit","/masters/contacts","/generate-offer", "/education/degree-master", "/bank","/pf","/offerletters/offer/"]
         
     async def dispatch(self, request: Request, call_next):
         # Allow preflight OPTIONS requests to pass through
