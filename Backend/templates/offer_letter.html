@@ -705,28 +705,41 @@
         <p>By signing below, I acknowledge that I have read, understood, and accept the offer of employment along with
             the compensation structure detailed in Annexure A and the terms and conditions outlined in Annexure B.</p>
 
-        <div class="signature-grid" style="margin-top: 60px;">
-            <div class="signature-box">
-                <div class="sign-status">Employer Signature</div>
-                <!-- <div class="signature-line"></div> -->
-                <!-- <div class="signatory-name">Authorized Signatory</div>
-                <div style="height: 80px;"></div>
-                <div class="signatory-title">Human Resources Division<br>Paves Global Infotech</div> -->
-                <div style="height: 80px;"></div>
-            </div>
+         <div class="signature-grid" style="margin-top: 60px;">
 
-            <div class="signature-box" style="border-style: solid; border-color: var(--brand-secondary);">
-                <div class="sign-status" style="background: var(--brand-secondary);">Candidate Acceptance</div>
-                <!-- <div class="signature-line"></div> -->
-                {% if status == "accepted" %}
-                <div class="signatory-name">{{ first_name }} {{ last_name }}</div>
-                <!-- <div class="signature-title">Date:{{accepted_date}}</div> -->
-                {% else %}
+    <!-- Manager -->
+    <div class="signature-box">
+        <div class="sign-status">Manager Approval</div>
 
-                <div class="signatory-title">Date: _________________</div>
-                {% endif %}
-            </div>
+        <div style="height:20px;"></div>
+
+        <div style="color: #f8fafc; font-size: 10pt; white-space: nowrap; line-height: 1;">SIGN_MANAGER</div>
+
+        <div style="height:40px;"></div>
+
+        <div class="signatory-title">
+            Approved By Manager
         </div>
+    </div>
+
+    <!-- Employee -->
+    <div class="signature-box" style="border-style: solid; border-color: var(--brand-secondary);">
+        <div class="sign-status" style="background: var(--brand-secondary);">
+            Candidate Acceptance
+        </div>
+
+        <div style="height:20px;"></div>
+
+        <div style="color: #f8fafc; font-size: 10pt; white-space: nowrap; line-height: 1;">SIGN_EMPLOYEE</div>
+
+        <div style="height:40px;"></div>
+
+        <div class="signatory-name">
+            {{ first_name }} {{ last_name }}
+        </div>
+    </div>
+
+</div>
 
     </div>
 

@@ -1,5 +1,6 @@
 # Backend/Business_Layer/services/offerletter_service.py
 import asyncio
+import json
 from unittest import result
 from fastapi import HTTPException
 import base64
@@ -1088,10 +1089,12 @@ class OfferLetterService:
                 raise Exception("Email missing in record")
 
             # 3️⃣ Extract managers from cc_mails
-            cc_emails = []
-            if cc_raw:
-                cc_emails = cc_raw
+            if isinstance(cc_raw, str):
+                cc_emails = [manager_email.strip() for manager_email in cc_raw.split(",") if manager_email.strip()]
+            elif cc_raw:
+                cc_emails = [manager_email.strip() for manager_email in cc_raw if manager_email and manager_email.strip()]
             else:
+                cc_emails = []
                 print("⚠️ No cc_mails found in DB")
 
             print("👥 Managers:", cc_emails)
@@ -1123,53 +1126,67 @@ class OfferLetterService:
                 "documentId": "1"
             }
 
-            # 7️⃣ Build signers dynamically
+                # 7️⃣ Build signers list with routing order
             signers = []
-            routing_order = 1
+            recipient_id = 1
+            
+            # Decide routing order: Managers (1) -> Employee (2)
+            # If no managers exist, Employee is promoted to Order 1
+            has_managers = len(cc_emails) > 0
+            emp_order = "2" if has_managers else "1"
 
-            # 🔹 Managers (FIRST)
-            for idx, manager_email in enumerate(cc_emails):
+            print(f"🚀 DOCUSIGN FLOW: Processing {len(cc_emails)} managers (Order 1) and Employee (Order {emp_order})")
+
+            # A) Add Managers (Routing Order 1)
+            for m_email in cc_emails:
+                if not m_email or "@" not in m_email:
+                    print(f"⚠️ Skipping invalid manager email: {m_email}")
+                    continue
+                
                 signers.append({
-                    "email": manager_email,
-                    "name": f"Manager {idx+1}",
-                    "recipientId": str(routing_order),
-                    "routingOrder": str(routing_order),
+                    "email": m_email.strip(),
+                    "name": f"Approving Manager",
+                    "recipientId": str(recipient_id),
+                    "routingOrder": "1",
                     "tabs": {
-                        "signHereTabs": [
-                            {
-                                "documentId": "1",
-                                "pageNumber": "5",
-                                "xPosition": "120",
-                                "yPosition": "300"
-                            }
-                        ]
+                        "signHereTabs": [{
+                            "anchorString": "SIGN_MANAGER",
+                            "anchorUnits": "pixels",
+                            "anchorXOffset": "0",
+                            "anchorYOffset": "0",
+                            "anchorIgnoreCase": "true",
+                            "anchorMatchWholeWord": "true",
+                            "documentId": "1"
+                        }]
                     }
                 })
-                routing_order += 1
+                recipient_id += 1
 
-            # 🔹 Employee (LAST)
+            # B) Add Employee (Routing Order 1 or 2)
             signers.append({
-                "email": email,
+                "email": email.strip(),
                 "name": f"{first_name} {last_name}",
-                "recipientId": str(routing_order),
-                "routingOrder": str(routing_order),
+                "recipientId": str(recipient_id),
+                "routingOrder": emp_order,
                 "tabs": {
-                    "signHereTabs": [
-                        {
-                            "documentId": "1",
-                            "pageNumber": "5",
-                            "xPosition": "360",
-                            "yPosition": "620"
-                        }
-                    ]
+                    "signHereTabs": [{
+                        "anchorString": "SIGN_EMPLOYEE",
+                        "anchorUnits": "pixels",
+                        "anchorXOffset": "0",
+                        "anchorYOffset": "0",
+                        "anchorIgnoreCase": "true",
+                        "anchorMatchWholeWord": "true",
+                        "documentId": "1"
+                    }]
                 }
             })
 
-            print("🧾 Total Signers:", len(signers))
+            print(f"🧾 Total Signers: {len(signers)}")
+            for s in signers:
+                print(f"MAIL: {s['email']} | ROLE: {'Manager' if s['routingOrder'] == '1' else 'Employee'} | ORDER: {s['routingOrder']}")
 
-            # 8️⃣ Envelope
             envelope_definition = {
-                "emailSubject": "Please sign the offer letter",
+                "emailSubject": "Please sign your offer letter from Paves Global Infotech",
                 "documents": [document],
                 "recipients": {
                     "signers": signers
@@ -1177,38 +1194,43 @@ class OfferLetterService:
                 "status": "sent"
             }
 
+
+      
+
             # 9️⃣ API call
             url = f"{DOCUSIGN_BASE_URL}/v2.1/accounts/{DOCUSIGN_ACCOUNT_ID}/envelopes"
 
             print("📤 Sending request to DocuSign...")
             print("🌐 URL:", url)
+            print("========== FINAL ENVELOPE JSON ==========")
+            print(json.dumps(envelope_definition, indent=2))
+            print("=======================================")
 
             response = requests.post(
-                url,
-                json=envelope_definition,
-                headers=headers
-            )
+                        url,
+                        json=envelope_definition,
+                        headers=headers
+                    )
 
             print("📥 DocuSign Status Code:", response.status_code)
             print("📥 DocuSign Response:", response.text)
 
-            # 🔟 Handle response
+                    # 🔟 Handle response
             if response.status_code not in [200, 201]:
-                raise Exception(f"DocuSign failed: {response.text}")
+                        raise Exception(f"DocuSign failed: {response.text}")
 
             envelope_id = response.json()["envelopeId"]
-
             print("✅ Envelope created:", envelope_id)
 
-            # 1️⃣1️⃣ Save envelope ID
+                    # 1️⃣1️⃣ Save envelope ID
             await self.dao.update_pandadoc_draft_id(user_uuid, envelope_id)
 
-            # 1️⃣2️⃣ Update status
+                    # 1️⃣2️⃣ Update status
             await self.dao.update_offerletter_status(
-                user_uuid=user_uuid,
-                new_status="Offered",
-                current_user_id=current_user_id
-            )
+                        user_uuid=user_uuid,
+                        new_status="Offered",
+                        current_user_id=current_user_id
+                    )
 
         return {"message": "Offer letters sent via DocuSign"}
     async def delete_offer_letter(self, user_uuid: str) -> str:
