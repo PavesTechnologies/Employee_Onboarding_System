@@ -3,6 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import aliased
 
+from Backend.API_Layer.utils.role_based import require_roles
+from Backend.API_Layer.utils.role_based import require_roles
 from Backend.DAL.utils.dependencies import get_db
 
 from Backend.DAL.models.models import (
@@ -16,7 +18,7 @@ router = APIRouter(
 )
 
 
-@router.get("/resources")
+@router.get("/resources",dependencies=[Depends(require_roles("resource_manager"))])
 async def get_rms_resources(
     db: AsyncSession = Depends(get_db)
 ):
@@ -65,16 +67,7 @@ async def get_rms_resources(
 
             OfferLetterDetails.joining_date.label("date_of_joining"),
 
-            # Reporting Manager Name
-            func.trim(
-                func.concat(
-                    ManagerEmployee.first_name,
-                    " ",
-                    func.coalesce(ManagerEmployee.middle_name, ""),
-                    " ",
-                    ManagerEmployee.last_name
-                )
-            ).label("reporting_manager_name"),
+            EmployeeDetails.reporting_manager_uuid.label("reporting_manager_uuid"),
 
             EmployeeExit.notice_start_date.label("notice_start_date"),
 
@@ -99,10 +92,7 @@ async def get_rms_resources(
             EmployeeDetails.employee_uuid == EmployeeExit.employee_uuid
         )
 
-          .outerjoin(
-            ManagerEmployee,
-            EmployeeDetails.reporting_manager_uuid == ManagerEmployee.employee_uuid
-        )
+       
     )
 
 
@@ -141,7 +131,7 @@ async def get_rms_resources(
 
             "work_mode": resource.work_mode,
 
-            "reporting_manager_name": resource.reporting_manager_name,
+            "reporting_manager_uuid": resource.reporting_manager_uuid,
 
             "annual_ctc": float(resource.annual_ctc)
             if resource.annual_ctc else None,
