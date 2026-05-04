@@ -674,6 +674,12 @@ class RelationMaster(Base):
         server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
     )
 
+    # Relationship with personal_details table (assuming personal_details has user_uuid)
+    personal_details: Mapped[list['PersonalDetails']] = relationship(
+        'PersonalDetails',
+        back_populates='relation_master'
+    )
+
 class EmployeeEducationDocument(Base):
     __tablename__ = 'employee_education_document'
     __table_args__ = (

@@ -1379,7 +1379,7 @@ class PersonalDetails(Base):
     )
 
 class RelationMaster(Base):
-    __tablename__ = "relation"
+    __tablename__ = "relation_master"
     __table_args__ = (
         Index('relation_uuid', 'relation_uuid', unique=True),
     )
