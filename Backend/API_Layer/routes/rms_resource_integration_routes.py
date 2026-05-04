@@ -18,7 +18,7 @@ router = APIRouter(
 )
 
 
-@router.get("/resources",dependencies=[Depends(require_roles("resource_manager"))])
+@router.get("/resources",dependencies=[Depends(require_roles("Resource_Manager", "HR"))])
 async def get_rms_resources(
     db: AsyncSession = Depends(get_db)
 ):
