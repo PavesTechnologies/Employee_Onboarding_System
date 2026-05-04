@@ -428,12 +428,13 @@ class EmployeeDetails(Base):
     reporting_manager_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))  
     employment_type: Mapped[Optional[str]] = mapped_column(Enum('Full-Time', 'Part-Time', 'Intern', 'Contractor', 'Freelance'))  
     joining_date: Mapped[Optional[datetime.date]] = mapped_column(Date)  
-    employment_status: Mapped[Optional[str]] = mapped_column(Enum('Probation', 'Active', 'Resigned', 'Terminated', 'Absconded'), server_default=text("'Probation'"))  
+    employment_status: Mapped[Optional[str]] = mapped_column(Enum('Probation', 'Active', 'Resigned', 'Terminated', 'Absconded','Exited','On-Notice'), server_default=text("'Probation'"))  
     blood_group: Mapped[Optional[str]] = mapped_column(String(5))  
     gender: Mapped[Optional[str]] = mapped_column(Enum('Male', 'Female', 'Other'))  
     marital_status: Mapped[Optional[str]] = mapped_column(Enum('Single', 'Married', 'Divorced', 'Widowed'))  
     total_experience: Mapped[Optional[decimal.Decimal]] = mapped_column(DECIMAL(4, 1))  
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))  
+    created_by: Mapped[Optional[str]] = mapped_column(CHAR(36))
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))  
     export_status: Mapped[Optional[str]] = mapped_column(
     Enum('NOT_EXPORTED', 'SUCCESS', 'FAILED', 'ALREADY_EXISTS'),server_default=text("'NOT_EXPORTED'"))
@@ -1769,7 +1770,8 @@ class EmployeeExit(Base):
     resignation_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
     last_working_day: Mapped[Optional[datetime.date]] = mapped_column(Date)
     notice_period: Mapped[Optional[int]] = mapped_column(Integer)
-
+    notice_start_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
+    notice_end_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
     reason: Mapped[Optional[str]] = mapped_column(Text)
     remarks: Mapped[Optional[str]] = mapped_column(Text)
 
