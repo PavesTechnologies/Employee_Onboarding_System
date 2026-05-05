@@ -87,6 +87,7 @@ class OfferLetterDAO:
             employee_type=request_data.employee_type,
             package=request_data.package,
             currency=request_data.currency,
+            cc_emails=",".join(request_data.cc_mails) if request_data.cc_mails else None,
         )
         self.db.add(new_offer)
         # Don't commit - let the caller handle it

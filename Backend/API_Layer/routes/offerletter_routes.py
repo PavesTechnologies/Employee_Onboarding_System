@@ -3,7 +3,7 @@
 import os
 
 from Backend.DAL.utils.database import get_read_db
-from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Request
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Request, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from Backend.API_Layer.interfaces.offerletter_interfaces import(
     DeleteOfferResponse,
@@ -268,11 +268,15 @@ async def delete_offer_letter(
 @router.get("/{user_uuid}/docusign-preview")   
 async def get_docusign_preview(
     user_uuid: str,
+    signer_email: str | None = Query(
+        default=None,
+        description="Optional signer email. Use this to open a manager signing view instead of the employee view.",
+    ),
     db: AsyncSession = Depends(get_db)
 ):
     
     offer_service = OfferLetterService(db)
-    return await offer_service.get_docusign_preview(user_uuid)
+    return await offer_service.get_docusign_preview(user_uuid, signer_email)
         
 
 @router.get("/{user_uuid}/final-preview")
