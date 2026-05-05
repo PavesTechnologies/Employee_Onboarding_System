@@ -28,6 +28,8 @@ class EmployeeExitDAO:
         resignation_date=data.resignation_date,
         last_working_day=data.last_working_day,
         notice_period=data.notice_period,
+        notice_start_date=data.notice_start_date,
+        notice_end_date=data.notice_end_date,
         reason=data.reason,
         remarks=data.remarks
 
@@ -70,6 +72,8 @@ class EmployeeExitDAO:
             existing.resignation_date = data.resignation_date
             existing.last_working_day = data.last_working_day
             existing.notice_period = data.notice_period
+            existing.notice_start_date = data.notice_start_date
+            existing.notice_end_date = data.notice_end_date
             existing.reason = data.reason
             existing.remarks = data.remarks
             await db.commit()
@@ -92,6 +96,8 @@ class EmployeeExitDAO:
             existing.resignation_date = data.resignation_date
             existing.last_working_day = data.last_working_day
             existing.notice_period = data.notice_period
+            existing.notice_start_date = data.notice_start_date
+            existing.notice_end_date = data.notice_end_date
             existing.reason = data.reason
             existing.remarks = data.remarks
             await db.commit()

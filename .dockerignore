@@ -1,0 +1,18 @@
+# Ignore local python environment
+venv/
+.venv/
+env/
+
+# Ignore database and logs
+MySQL for DB/
+generated_pdfs/
+*.log
+
+# Ignore git and IDE settings
+.git
+.github
+.vscode
+
+# Ignore compiled python files
+__pycache__/
+*.pyc

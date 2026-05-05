@@ -226,34 +226,38 @@ class OfferLetterService:
    
     async def update_offer_by_uuid(self, user_uuid: str, request_data: OfferCreateRequest, current_user_id: int):
         try:
+            # Check if offer exists first
             offer = await self.dao.get_offer_by_uuid(user_uuid)
             if not offer:
                 raise HTTPException(status_code=404, detail="Offer not found")
 
-            # validations...
-            first_name = validate_name(request_data.first_name)
-            last_name = validate_name(request_data.last_name)
-            mail = validate_email(request_data.mail)
-            country_code = validate_country(request_data.country_code)
-            contact_number = validate_phone_number(request_data.country_code, request_data.contact_number, type='contact')
-            designation = validate_designation(request_data.designation)
-            package = validate_package(request_data.package)
-            currency = validate_currency(request_data.currency)
+            # --- VALIDATIONS (Keep consistent with POST) ---
+            validate_name(request_data.first_name)
+            validate_email(request_data.mail)
+            validate_phone_number(request_data.country_code, request_data.contact_number, type='contact_number')
+            # Add total_ctc or compensation validation if needed
 
-            # Email uniqueness
-            if mail != offer.mail:
-                existing = await self.dao.get_offer_by_email(mail)
+            # Email uniqueness check
+            if request_data.mail != offer['mail']:
+                existing = await self.dao.get_offer_by_email(request_data.mail)
                 if existing:
-                    raise HTTPException(status_code=409, detail="Email already exists")
+                    raise HTTPException(status_code=409, detail="Email already belongs to another offer")
 
-            updated_offer = await self.dao.update_offer_by_uuid(user_uuid, request_data, current_user_id)
-
-            return updated_offer
+            # --- UPDATE EXECUTION ---
+            success = await self.dao.update_offer_by_uuid(user_uuid, request_data, current_user_id)
+            
+            if success:
+                await self.db.commit() # Commit both Detail and Compensation changes
+                return True
+            
+            return False
 
         except HTTPException:
+            await self.db.rollback()
             raise
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            await self.db.rollback()
+            raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")    
     async def get_offer_by_user_id(self, user_id: int):
         return await self.dao.get_offer_by_user_id(user_id)
 

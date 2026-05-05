@@ -155,7 +155,7 @@ async def get_offer_by_user_id(
     return result
     
 # get offer by offer uuid
-@router.get("/offer/{user_uuid}", response_model=OfferLetterDetailsResponse, dependencies=[Depends(require_roles("HR", "Manager", "Admin"))])
+@router.get("/offer/{user_uuid}", response_model=OfferLetterDetailsResponse)
 
 async def get_offer_by_uuid(
     user_uuid: str,
@@ -178,7 +178,6 @@ async def get_offer_by_uuid(
 
 
 @router.put("/{user_uuid}", response_model=OfferUpdateResponse, dependencies=[Depends(require_roles("HR"))])
-
 async def update_offer_by_uuid(
     user_uuid: str,
     request_data: OfferCreateRequest,
@@ -189,12 +188,10 @@ async def update_offer_by_uuid(
         offer_service = OfferLetterService(db)
         current_user_id = int(request.state.user.get("user_id"))
 
-        offer = await offer_service.update_offer_by_uuid(
-            user_uuid, request_data, current_user_id
-        )
+        await offer_service.update_offer_by_uuid(user_uuid, request_data, current_user_id)
 
         return OfferUpdateResponse(
-            message="Offer Details Updated Successfully",
+            message="Offer Details and Compensation Updated Successfully",
             offer_id=user_uuid
         )
 
@@ -202,7 +199,6 @@ async def update_offer_by_uuid(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.get("/created", response_model=list[OfferLetterDetailsResponse], dependencies=[Depends(require_roles("HR", "ADMIN"))])
 

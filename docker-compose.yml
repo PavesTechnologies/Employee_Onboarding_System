@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: onboarding-system-api
+    image: pavesadmin/intranet-eos:latest
+
+    ports:
+      - "8000:8000"
+
+    env_file:
+      - ./Backend/.env
+
+    restart: unless-stopped
+
+    networks:
+      - intranet-network
+
+    volumes:
+      - onboarding-logs:/app/logs
+      - onboarding-pdfs:/app/generated_pdfs
+
+    # ✅ FIX: Ensure correct permissions at runtime
+    command: >
+      sh -c "mkdir -p /app/generated_pdfs &&
+             chmod -R 775 /app/generated_pdfs &&
+             uvicorn Backend.main:app --host 0.0.0.0 --port 8000 --proxy-headers"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  intranet-network:
+    driver: bridge
+
+volumes:
+  onboarding-logs:
+  onboarding-pdfs:
