@@ -21,13 +21,13 @@ class OfferLetterDAO:
         offer = result.scalar_one_or_none()
 
         if offer and offer.cc_emails:
-            offer.cc_mails = [
+            offer.cc_emails = [
                 mail.strip()
                 for mail in offer.cc_emails.split(",")
                 if mail.strip()
             ]
         else:
-            offer.cc_mails = []
+            offer.cc_emails = []
 
         return offer
 
@@ -88,7 +88,7 @@ class OfferLetterDAO:
             employee_type=request_data.employee_type,
             package=request_data.package,
             currency=request_data.currency,
-            cc_emails=",".join(request_data.cc_mails) if request_data.cc_mails else None,
+            cc_emails=",".join(request_data.cc_emails) if request_data.cc_emails else None,
         )
         self.db.add(new_offer)
         # Don't commit - let the caller handle it
@@ -213,7 +213,7 @@ class OfferLetterDAO:
             "created_by": offer.created_by,
             "status": offer.status,
             
-            "cc_mails": offer.cc_emails.split(",") if offer.cc_emails else [],
+            "cc_emails": offer.cc_emails.split(",") if offer.cc_emails else [],
             "total_ctc": offer.total_ctc,
             "compensation_components": compensation_list
         }

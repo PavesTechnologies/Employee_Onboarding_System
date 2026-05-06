@@ -62,7 +62,7 @@ class OfferLetterDetailsResponse(BaseModel):
     created_by: Optional[int] = None
     status : Optional[str] = None
 
-    cc_mails: Optional[List[EmailStr]] = None
+    cc_emails: Optional[List[EmailStr]] = None
     compensation_components: List[CompensationComponentResponse]= []
 
 

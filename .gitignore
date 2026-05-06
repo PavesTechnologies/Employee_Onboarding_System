@@ -25,4 +25,5 @@ Thumbs.db
 *.pem
 
 # key
-private.key
+
+**/generated_pdfs/*

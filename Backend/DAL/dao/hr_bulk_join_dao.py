@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from typing import List
 
-from ...DAL.models.models import OfferLetterDetails
+from ...DAL.models.models import OfferLetterDetails, EmployeeDetails
 
 
 class HrBulkJoinDAO:
@@ -102,14 +102,22 @@ class HrBulkJoinDAO:
         return result.scalar_one_or_none()
 
     # ✅ Get employees under manager
+    # ✅ Get employees under manager with employee_id
     async def get_employees_under_manager(
         self,
         manager_name: str
     ):
-        query = select(OfferLetterDetails).where(
-            OfferLetterDetails.reporting_manager == manager_name
+        query = (
+            select(OfferLetterDetails, EmployeeDetails)
+            .join(
+                EmployeeDetails,
+                OfferLetterDetails.user_uuid == EmployeeDetails.user_uuid
+            )
+            .where(
+                OfferLetterDetails.reporting_manager == manager_name
+            )
         )
 
         result = await self.db.execute(query)
 
-        return result.scalars().all()
+        return result.all()
