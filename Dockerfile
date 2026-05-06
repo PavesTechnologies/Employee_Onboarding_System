@@ -32,6 +32,7 @@ WORKDIR /app
 # Copy venv + code
 COPY --from=builder /opt/venv /opt/venv
 COPY --chown=appuser:appuser Backend/ Backend/
+COPY --chown=appuser:appuser generated_pdfs/ generated_pdfs/
 
 # ✅ Create required directories with correct permissions
 RUN mkdir -p /app/generated_pdfs /app/logs && \
