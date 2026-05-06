@@ -1,5 +1,6 @@
 # Backend/DAL/dao/offerletter_dao.py
 import datetime
+from tracemalloc import start
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.models.models import OfferApprovalAction, OfferApprovalRequest, OfferCompensation, OfferLetterDetails
@@ -155,9 +156,36 @@ class OfferLetterDAO:
         rows = result.all()
         print("⏱ Result processing:", time.perf_counter() - t2)
 
+        formatted_rows = []
+
+        for row in rows:
+            formatted_rows.append({
+                "user_uuid": row.user_uuid,
+                "first_name": row.first_name,
+                "middle_name": row.middle_name,
+                "last_name": row.last_name,
+                "mail": row.mail,
+                "country_code": row.country_code,
+                "contact_number": row.contact_number,
+                "designation": row.designation,
+                "employee_type": row.employee_type,
+                "total_ctc": row.total_ctc,
+                "created_by": row.created_by,
+                "status": row.status,
+                "cc_emails": (
+                    [
+                        email.strip()
+                        for email in row.cc_emails.split(",")
+                        if email.strip()
+                    ]
+                    if row.cc_emails
+                    else []
+                )
+            })
+
         print("⏱ DAO total:", time.perf_counter() - start)
 
-        return rows
+        return formatted_rows
 
     async def get_offer_by_uuid(self, user_uuid: str):
         start = time.perf_counter()
