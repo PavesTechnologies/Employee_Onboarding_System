@@ -500,7 +500,7 @@ class EmployeeBankDetails(Base):
     branch_name: Mapped[Optional[str]] = mapped_column(String(100))
     account_number: Mapped[str] = mapped_column(String(30), nullable=False)
     ifsc_code: Mapped[str] = mapped_column(String(15), nullable=False)
-    account_type: Mapped[str] = mapped_column(Enum("Savings", "Current"))
+    account_type: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'verified', 'rejected'), server_default=text("'uploaded'"))
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
 
