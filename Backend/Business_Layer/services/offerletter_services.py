@@ -849,17 +849,13 @@ class OfferLetterService:
             last_name = record.get("last_name")
             cc_raw = record.get("cc_emails")
             
-
-            
-
-
             print("👤 Employee:", email)
 
             if not email:
                 raise Exception("Email missing in record")
 
-            # 3️⃣ Extract managers from cc_mails
-            cc_raw = record.get("cc_mails")
+            # 3️⃣ Extract managers from cc_emails
+            cc_raw = record.get("cc_emails")
 
             print("FULL RECORD:", record)
             print("cc_raw:", cc_raw, type(cc_raw))
@@ -870,7 +866,7 @@ class OfferLetterService:
                 cc_emails = [e.strip() for e in cc_raw.split(",") if e.strip()]
             else:
                 cc_emails = []
-                print("⚠️ No cc_mails found in DB")
+                print("⚠️ No cc_emails found in DB")
 
             print("👥 Managers:", cc_emails)
             # 4️⃣ PDF path
