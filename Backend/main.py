@@ -47,15 +47,7 @@ app.add_middleware(JWTMiddleware)
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173",
-                    "http://localhost:3000",
-                    "https://employeeonbordingforms.netlify.app",
-                    "https://nonprovidentially-xiphisternal-junior.ngrok-free.dev",
-                    "https://api.15.134.36.38.sslip.io",
-                    "http://13.202.204.204",
-                    "http://13.204.95.26:4000/"],
-
-    # allow_origins=["*"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
