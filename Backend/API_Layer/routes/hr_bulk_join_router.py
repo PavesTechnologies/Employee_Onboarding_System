@@ -24,7 +24,6 @@ async def bulk_join(
           
         result = await service.process_bulk_join(payload, current_user_id)
 
-
         return result
 
     except HTTPException as he:
