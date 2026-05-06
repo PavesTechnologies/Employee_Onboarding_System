@@ -169,7 +169,7 @@ class HrBulkJoinService:
         self,
         user_uuid: str
     ):
-        # Step 1 — Find manager using UUID
+        # Step 1 — Find manager
         manager = await self.dao.get_user_by_uuid(user_uuid)
 
         if not manager:
@@ -178,22 +178,22 @@ class HrBulkJoinService:
                 detail="Manager not found"
             )
 
-        # Step 2 — Create manager full name
+        # Step 2 — Manager full name
         manager_name = (
             f"{manager.first_name} {manager.last_name}"
         ).strip()
 
-        # Step 3 — Find employees under manager
+        # Step 3 — Fetch employees
         employees = await self.dao.get_employees_under_manager(
             manager_name
         )
 
-        # Step 4 — Return response
+        # Step 4 — Response
         return [
             {
-                "user_uuid": emp.user_uuid,
-                "name": f"{emp.first_name} {emp.last_name}".strip(),
-                "employee_id": getattr(emp, "employee_id", None)
+                "user_uuid": offer.user_uuid,
+                "name": f"{offer.first_name} {offer.last_name}".strip(),
+                "employee_id": employee.employee_id
             }
-            for emp in employees
+            for offer, employee in employees
         ]
