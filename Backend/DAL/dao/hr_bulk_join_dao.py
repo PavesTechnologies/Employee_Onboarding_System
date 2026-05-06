@@ -100,3 +100,16 @@ class HrBulkJoinDAO:
         )
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
+
+    # ✅ Get employees under manager
+    async def get_employees_under_manager(
+        self,
+        manager_name: str
+    ):
+        query = select(OfferLetterDetails).where(
+            OfferLetterDetails.reporting_manager == manager_name
+        )
+
+        result = await self.db.execute(query)
+
+        return result.scalars().all()
