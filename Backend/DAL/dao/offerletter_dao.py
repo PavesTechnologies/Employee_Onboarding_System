@@ -153,32 +153,32 @@ class OfferLetterDAO:
         print("⏱ DB execute:", time.perf_counter() - t1)
 
         t2 = time.perf_counter()
-        rows = result.all()
+        rows = result.mappings().all()
         print("⏱ Result processing:", time.perf_counter() - t2)
 
         formatted_rows = []
 
         for row in rows:
             formatted_rows.append({
-                "user_uuid": row.user_uuid,
-                "first_name": row.first_name,
-                "middle_name": row.middle_name,
-                "last_name": row.last_name,
-                "mail": row.mail,
-                "country_code": row.country_code,
-                "contact_number": row.contact_number,
-                "designation": row.designation,
-                "employee_type": row.employee_type,
-                "total_ctc": row.total_ctc,
-                "created_by": row.created_by,
-                "status": row.status,
+                "user_uuid": row["user_uuid"],
+                "first_name": row["first_name"],
+                "middle_name": row["middle_name"],
+                "last_name": row["last_name"],
+                "mail": row["mail"],
+                "country_code": row["country_code"],
+                "contact_number": row["contact_number"],
+                "designation": row["designation"],
+                "employee_type": row["employee_type"],
+                "total_ctc": row["total_ctc"],
+                "created_by": row["created_by"],
+                "status": row["status"],
                 "cc_emails": (
                     [
                         email.strip()
-                        for email in row.cc_emails.split(",")
+                        for email in row["cc_emails"].split(",")
                         if email.strip()
                     ]
-                    if row.cc_emails
+                    if row["cc_emails"]
                     else []
                 )
             })
