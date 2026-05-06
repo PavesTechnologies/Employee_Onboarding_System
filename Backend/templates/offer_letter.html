@@ -705,28 +705,35 @@
         <p>By signing below, I acknowledge that I have read, understood, and accept the offer of employment along with
             the compensation structure detailed in Annexure A and the terms and conditions outlined in Annexure B.</p>
 
-        <div class="signature-grid" style="margin-top: 60px;">
-            <div class="signature-box">
-                <div class="sign-status">Employer Signature</div>
-                <!-- <div class="signature-line"></div> -->
-                <!-- <div class="signatory-name">Authorized Signatory</div>
-                <div style="height: 80px;"></div>
-                <div class="signatory-title">Human Resources Division<br>Paves Global Infotech</div> -->
-                <div style="height: 80px;"></div>
-            </div>
+    <div class="signature-grid">
 
-            <div class="signature-box" style="border-style: solid; border-color: var(--brand-secondary);">
-                <div class="sign-status" style="background: var(--brand-secondary);">Candidate Acceptance</div>
-                <!-- <div class="signature-line"></div> -->
-                {% if status == "accepted" %}
-                <div class="signatory-name">{{ first_name }} {{ last_name }}</div>
-                <!-- <div class="signature-title">Date:{{accepted_date}}</div> -->
-                {% else %}
+    <div class="signature-box">
+        <div class="sign-status">Manager Signature</div>
 
-                <div class="signatory-title">Date: _________________</div>
-                {% endif %}
-            </div>
+        <div style="font-size:1px; color:white;">
+            MANAGER_SIGN_HERE
         </div>
+
+        <div style="height:50px;"></div>
+
+        <div class="signatory-name">Manager</div>
+    </div>
+
+    <div class="signature-box">
+        <div class="sign-status">Employee Signature</div>
+
+        <div style="font-size:1px; color:white;">
+            EMPLOYEE_SIGN_HERE
+        </div>
+
+        <div style="height:50px;"></div>
+
+        <div class="signatory-name">
+            {{ first_name }} {{ last_name }}
+        </div>
+    </div>
+
+</div>
 
     </div>
 

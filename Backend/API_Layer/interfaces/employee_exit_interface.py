@@ -16,7 +16,8 @@ class EmployeeExitCreate(BaseModel):
     resignation_date: Optional[date] = None
     last_working_day: Optional[date] = None
     notice_period: Optional[int] = None
-
+    notice_start_date: Optional[date] = None
+    notice_end_date: Optional[date] = None
     reason: Optional[str] = None
     remarks: Optional[str] = None
 

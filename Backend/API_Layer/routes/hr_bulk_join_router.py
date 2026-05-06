@@ -24,7 +24,6 @@ async def bulk_join(
           
         result = await service.process_bulk_join(payload, current_user_id)
 
-
         return result
 
     except HTTPException as he:
@@ -70,4 +69,28 @@ async def get_offer_details(user_uuid: str, db: AsyncSession = Depends(get_db)):
         "joining_comments": user.joining_comments,
         "status": user.status
     }
+@router.get("/reporting-manager/{user_uuid}/employees")
+async def get_employees_under_manager(
+    user_uuid: str,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        service = HrBulkJoinService(db)
+
+        employees = await service.get_employees_under_manager(
+            user_uuid
+        )
+
+        return {
+            "employees": employees
+        }
+
+    except HTTPException as he:
+        raise he
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
     
