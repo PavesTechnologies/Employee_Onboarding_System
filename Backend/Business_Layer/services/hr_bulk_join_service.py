@@ -162,3 +162,38 @@ class HrBulkJoinService:
             "status": status,
             "user_uuid": payload.user_uuid
         }
+    
+
+    # ✅ Get employees under reporting manager
+    async def get_employees_under_manager(
+        self,
+        user_uuid: str
+    ):
+        # Step 1 — Find manager using UUID
+        manager = await self.dao.get_user_by_uuid(user_uuid)
+
+        if not manager:
+            raise HTTPException(
+                status_code=404,
+                detail="Manager not found"
+            )
+
+        # Step 2 — Create manager full name
+        manager_name = (
+            f"{manager.first_name} {manager.last_name}"
+        ).strip()
+
+        # Step 3 — Find employees under manager
+        employees = await self.dao.get_employees_under_manager(
+            manager_name
+        )
+
+        # Step 4 — Return response
+        return [
+            {
+                "user_uuid": emp.user_uuid,
+                "name": f"{emp.first_name} {emp.last_name}".strip(),
+                "employee_id": getattr(emp, "employee_id", None)
+            }
+            for emp in employees
+        ]
