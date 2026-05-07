@@ -44,7 +44,11 @@ class OfferLetterDAO:
                 if mail.strip()
             ]
         else:
-            offer.cc_emails = []
+            if offer:
+                offer.cc_emails = []
+
+        if offer:
+            self.db.expunge(offer)  # Detach from session to avoid faulty sync of the list to the DB
 
         return offer
 

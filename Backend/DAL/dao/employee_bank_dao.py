@@ -27,17 +27,9 @@ class EmployeeBankDAO:
             branch_name=request_data.branch_name,
             account_number=request_data.account_number,
             ifsc_code=request_data.ifsc_code,
-            account_type=request_data.account_type.value
+            account_type=request_data.account_type.value,
+            status='uploaded'
         )
-        print(type(request_data.user_uuid))
-        print(request_data.user_uuid)
-
-        print(type(request_data.account_holder_name))
-        print(type(request_data.bank_name))
-        print(type(request_data.branch_name))
-        print(type(request_data.account_number))
-        print(type(request_data.ifsc_code))
-        print(type(request_data.account_type))
         self.db.add(bank)
         await self.db.commit()
         await self.db.refresh(bank)
@@ -56,7 +48,7 @@ class EmployeeBankDAO:
         bank.branch_name = request_data.branch_name
         bank.account_number = request_data.account_number
         bank.ifsc_code = request_data.ifsc_code
-        bank.account_type = request_data.account_type
+        bank.account_type = request_data.account_type.value
         await self.db.commit()
         await self.db.refresh(bank)
         return bank
