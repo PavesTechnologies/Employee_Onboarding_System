@@ -36,7 +36,7 @@ async def create_exit_approval(
 @router.put(
     "/manager-approve",
     response_model=ExitApprovalResponse,
-    dependencies=[Depends(require_roles("MANAGER"))]
+    dependencies=[Depends(require_roles("REPORTING_MANAGER"))]
 )
 async def manager_approve(
     payload: ManagerApprovalRequest,
@@ -113,7 +113,7 @@ async def hr_approve(
 @router.get(
     "/",
     response_model=list[ExitApprovalResponse],
-    dependencies=[Depends(require_roles("MANAGER", "HR"))]
+    dependencies=[Depends(require_roles("REPORTING_MANAGER", "HR"))]
 )
 async def get_all_approvals(
     db: AsyncSession = Depends(get_db)
@@ -166,7 +166,7 @@ async def get_my_pending_approvals(
 @router.get(
     "/{exit_uuid}",
     response_model=list[ExitApprovalResponse],
-    dependencies=[Depends(require_roles("MANAGER", "HR"))]
+    dependencies=[Depends(require_roles("REPORTING_MANAGER", "HR"))]
 )
 async def get_approvals_by_exit_uuid(
     exit_uuid: str,
@@ -189,7 +189,7 @@ async def get_approvals_by_exit_uuid(
 @router.get(
     "/employee/{employee_uuid}",
     response_model=list[ExitApprovalResponse],
-    dependencies=[Depends(require_roles("MANAGER", "HR"))]
+    dependencies=[Depends(require_roles("REPORTING_MANAGER", "HR"))]
 )
 async def get_approvals_by_employee_uuid(
     employee_uuid: str,
@@ -212,7 +212,7 @@ async def get_approvals_by_employee_uuid(
 @router.get(
     "/history/{exit_uuid}",
     response_model=list[ExitApprovalResponse],
-    dependencies=[Depends(require_roles("MANAGER", "HR"))]
+    dependencies=[Depends(require_roles("REPORTING_MANAGER", "HR"))]
 )
 async def get_approvals_history(
     exit_uuid: str,

@@ -26,6 +26,9 @@ class S3StorageService:
         self.secret_access_key = get_env_var('AWS_SECRET_ACCESS_KEY')
         self.region_name = get_env_var('AWS_REGION')
         self.bucket_name = get_env_var('S3_BUCKET_NAME')
+        print("AWS_ACCESS_KEY_ID:", self.access_key_id)
+        print("AWS_SECRET_ACCESS_KEY:", self.secret_access_key)
+        print("BUCKET:", self.bucket_name)
         
         if not all([self.access_key_id, self.secret_access_key, self.bucket_name]):
             raise ValueError("AWS credentials and bucket name must be provided")

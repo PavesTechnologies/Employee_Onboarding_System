@@ -5,7 +5,6 @@ env/
 
 # Ignore database and logs
 MySQL for DB/
-
 *.log
 
 # Ignore git and IDE settings

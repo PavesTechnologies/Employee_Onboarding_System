@@ -120,7 +120,7 @@ async def create_bulk_offer_letters(
 
 
 # ✅ Get all offers
-@router.get("/", response_model=list[OfferLetterDetailsResponse], dependencies=[Depends(require_roles("HR", "Manager", "Admin"))])
+@router.get("/", response_model=list[OfferLetterDetailsResponse], dependencies=[Depends(require_roles("HR", "REPORTING_MANAGER", "Admin"))])
 async def get_all_offers(
     db: AsyncSession = Depends(get_db)
 ):
@@ -139,7 +139,7 @@ async def get_all_offers(
 
 import time
 
-@router.get("/user_id/details", response_model=list[OfferLetterDetailsResponse], dependencies=[Depends(require_roles("HR", "Manager"))])
+@router.get("/user_id/details", response_model=list[OfferLetterDetailsResponse], dependencies=[Depends(require_roles("HR", "REPORTING_MANAGER"))])
 
 async def get_offer_by_user_id(
     request: Request,
@@ -154,7 +154,7 @@ async def get_offer_by_user_id(
     print("⏱ FULL endpoint:", time.perf_counter() - start)
     return result
     
-# get offer by offer uuid
+# get offer by user uuid
 @router.get("/offer/{user_uuid}", response_model=OfferLetterDetailsResponse)
 
 async def get_offer_by_uuid(
@@ -286,7 +286,7 @@ async def get_final_offer_preview(
 
 
 
-@router.get("/{user_uuid}/generate-preview", dependencies=[Depends(require_roles("HR", "Manager"))])
+@router.get("/{user_uuid}/generate-preview", dependencies=[Depends(require_roles("HR", "REPORTING_MANAGER"))])
 async def generate_offer_preview(
     user_uuid: str,
     db: AsyncSession = Depends(get_db)

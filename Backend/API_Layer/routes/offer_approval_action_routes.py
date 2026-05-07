@@ -74,7 +74,7 @@ async def create_offer_approval_actions(
 
 @router.put(
     "/update_action"
-, dependencies=[Depends(require_roles("Manager"))])
+, dependencies=[Depends(require_roles("REPORTING_MANAGER"))])
 async def update_offer_action(
     payload: OfferApproveActionRequest,
     request: Request,
@@ -98,7 +98,7 @@ async def update_offer_action(
 
     return response
 
-@router.get("/admin/my-actions", response_model=list[OfferActionAdminResponse], dependencies=[Depends(require_roles("HR", "ADMIN", "Manager"))])
+@router.get("/admin/my-actions", response_model=list[OfferActionAdminResponse], dependencies=[Depends(require_roles("HR", "ADMIN", "REPORTING_MANAGER"))])
 async def get_my_offer_actions(
     request: Request,
     db: AsyncSession = Depends(get_db)
@@ -119,7 +119,7 @@ async def get_my_offer_actions(
     return await service.get_admin_actions(current_user_id, auth_header)
 
 
-@router.get("/admin-users", dependencies=[Depends(require_roles("HR", "Admin", "Manager"))])
+@router.get("/admin-users", dependencies=[Depends(require_roles("HR", "Admin", "REPORTING_MANAGER"))])
 async def get_admin_users(request: Request):
     """
     Controller passes token to service
@@ -136,7 +136,7 @@ async def get_admin_users(request: Request):
     return await fetch_admin_users_reformed(
         token=auth_header
     )
-@router.get("/my-actions", response_model=list[OfferApproveActionResponse], dependencies=[Depends(require_roles("Manager"))])
+@router.get("/my-actions", response_model=list[OfferApproveActionResponse], dependencies=[Depends(require_roles("REPORTING_MANAGER"))])
 async def get_all_my_actions(
     request: Request,
     db: AsyncSession = Depends(get_db)
