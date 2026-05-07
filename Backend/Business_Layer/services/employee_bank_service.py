@@ -57,7 +57,7 @@ class EmployeeBankService:
                 request_data.user_uuid)
             if not employee:
                 raise HTTPException(status_code=404, detail="Employee Not Found")
-            bank_uuid = generate_uuid7()
+            bank_uuid = str(generate_uuid7())
             
             print("BANK UUID:", bank_uuid)
             print("BANK UUID TYPE:", type(bank_uuid))
