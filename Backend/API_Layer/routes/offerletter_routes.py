@@ -297,25 +297,17 @@ async def generate_offer_preview(
 
     pdf_path = f"generated_pdfs/offer_{user_uuid}.pdf"
 
-    # 1️⃣ If PDF already exists → return directly
-    if os.path.exists(pdf_path):
-        return FileResponse(
-            pdf_path,
-            media_type="application/pdf",
-            filename=f"offer_{user_uuid}.pdf"
-        )
-
-    # 2️⃣ Fetch offer data
+    # 1️⃣ Fetch latest offer data
     offer_service = OfferLetterService(db)
     offer = await offer_service.get_offer_by_uuid(user_uuid)
 
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
 
-    # 3️⃣ Convert DB object → dictionary
     offer_data = {
         "user_uuid": offer["user_uuid"],
         "first_name": offer["first_name"],
+        "middle_name": offer.get("middle_name"),
         "last_name": offer["last_name"],
         "mail": offer["mail"],
         "designation": offer["designation"],
@@ -324,9 +316,11 @@ async def generate_offer_preview(
         "contact_number": offer["contact_number"],
         "total_ctc": offer.get("total_ctc"),
         "compensation_components": offer.get("compensation_components", [])
+    }
 
-}
-    # 4️⃣ Generate PDF
+    print("DEBUG: offer_data for PDF generation:", offer_data)
+
+    # 2️⃣ Generate PDF (No caching to ensure data updates are reflected)
     document_service = DocumentService()
     pdf_path = document_service.generate_offer_pdf(offer_data)
 

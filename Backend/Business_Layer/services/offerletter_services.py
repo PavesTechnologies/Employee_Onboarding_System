@@ -53,8 +53,8 @@ class OfferLetterService:
             country_code = validate_country(request_data.country_code)
             contact_number = validate_phone_number(request_data.country_code, request_data.contact_number, type = 'contact_number')
             designation = validate_designation(request_data.designation)
+            currency = validate_currency(request_data.currency)
             # package = validate_package(request_data.package)
-            # currency = validate_currency(request_data.currency)
             # --- DUPLICATE CHECK ---
             existing_offer = await self.dao.get_offer_by_email(mail)
             if existing_offer:
@@ -311,6 +311,7 @@ class OfferLetterService:
             ],
             "tokens": [
                 {"name": "first_name", "value": payload["first_name"]},
+                {"name": "middle_name", "value": payload.get("middle_name", "")},
                 {"name": "last_name", "value": payload["last_name"]},
                 {"name": "designation", "value": payload["designation"]},
                 # {"name": "employee_type", "value": payload["employee_type"]},
@@ -514,6 +515,7 @@ class OfferLetterService:
                 # Build payload for PandaDoc
                 payload = {
                     "first_name": record.first_name,
+                    "middle_name": record.middle_name,
                     "last_name": record.last_name,
                     "email": record.mail,
                     "designation": record.designation,
@@ -1086,7 +1088,8 @@ class OfferLetterService:
                 if not record:
                     raise HTTPException(status_code=404, detail="Offer not found")
 
-                full_name = f"{record['first_name']} {record['last_name']}"
+                middle_name = record.get('middle_name')
+                full_name = f"{record['first_name']} {middle_name + ' ' if middle_name else ''}{record['last_name']}"
 
                 cc_emails = []
                 if record.get("cc_emails"):
@@ -1171,8 +1174,9 @@ class OfferLetterService:
             record = await self.dao.get_offer_by_uuid(user_uuid)
 
             employee_email = record["mail"].strip()
-            employee_name = f"{record['first_name']} {record['last_name']}"
-            cc_raw = record.get("cc_emails")
+            middle_name = record.get('middle_name')
+            employee_name = f"{record['first_name']} {middle_name + ' ' if middle_name else ''}{record['last_name']}"
+            cc_raw = record.get("cc_mails")
             if isinstance(cc_raw, str):
                 manager_emails = [manager_email.strip() for manager_email in cc_raw.split(",") if manager_email.strip()]
             elif cc_raw:
