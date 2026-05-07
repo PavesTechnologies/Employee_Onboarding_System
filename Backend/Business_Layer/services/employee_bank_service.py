@@ -51,6 +51,7 @@ class EmployeeBankService:
 
 
     async def create_bank_details(self, request_data):
+        bank_uuid = None
         try:
             # Validate employee exists
             employee = await self.offerdao.get_offer_by_user_uuid(
