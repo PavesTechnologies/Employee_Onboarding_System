@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.dao.employee_bank_dao import EmployeeBankDAO
 from ...DAL.dao.offerletter_dao import OfferLetterDAO
 from ..utils.uuid_generator import generate_uuid7
+import traceback
 
 
 class EmployeeBankService:
@@ -57,6 +58,9 @@ class EmployeeBankService:
             if not employee:
                 raise HTTPException(status_code=404, detail="Employee Not Found")
             bank_uuid = generate_uuid7()
+            
+            print("BANK UUID:", bank_uuid)
+            print("BANK UUID TYPE:", type(bank_uuid))
             result = await self.dao.create_bank_details(
                 bank_uuid,
                 request_data
@@ -68,6 +72,9 @@ class EmployeeBankService:
         except HTTPException as he:
             raise he
         except Exception as e:
+            print("BANK UUID:", bank_uuid)
+            print("BANK UUID TYPE:", type(bank_uuid))
+            traceback.print_exc()
             raise HTTPException(status_code=500, detail=str(e))
 
 
