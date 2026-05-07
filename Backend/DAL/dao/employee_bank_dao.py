@@ -27,7 +27,7 @@ class EmployeeBankDAO:
             branch_name=request_data.branch_name,
             account_number=request_data.account_number,
             ifsc_code=request_data.ifsc_code,
-            account_type=request_data.account_type
+            account_type=request_data.account_type.value
         )
         print(type(request_data.user_uuid))
         print(request_data.user_uuid)
