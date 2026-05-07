@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from time import perf_counter
+import traceback
 
 from ...DAL.utils.dependencies import get_db
 from ..interfaces.employee_bank_interfaces import (
@@ -66,8 +67,8 @@ async def create_bank_details(request_data: CreateBankDetailsRequest, db: AsyncS
     except HTTPException as he:
         raise he
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.put("/{bank_uuid}", response_model=CreateBankDetailsResponse)
 async def update_bank_details(bank_uuid: str, request_data: CreateBankDetailsRequest, db: AsyncSession = Depends(get_db)):
