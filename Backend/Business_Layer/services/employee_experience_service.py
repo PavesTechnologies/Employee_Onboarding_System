@@ -180,11 +180,27 @@ class EmployeeExperienceService:
             raise HTTPException(status_code=404, detail="Experience details not found")
         return result
 
-    async def get_experience_by_employee_uuid(self, employee_uuid: str):
+    # async def get_experience_by_employee_uuid(self, employee_uuid: str):
+    #     result = await self.dao.get_experience_by_employee_uuid(employee_uuid)
+    #     if not result:
+    #         raise HTTPException(status_code=404, detail="No Experience Found for this Employee")
+    #     return result
+    async def get_experience_by_employee_uuid(
+    self,
+    employee_uuid: str,
+    has_experience: bool = False
+    ):
         result = await self.dao.get_experience_by_employee_uuid(employee_uuid)
-        if not result:
-            raise HTTPException(status_code=404, detail="No Experience Found for this Employee")
-        return result
+
+        # Experienced candidate must have records
+        if has_experience and not result:
+            raise HTTPException(
+                status_code=404,
+                detail="Experience Details Not Found for this user"
+            )
+
+        # Freshers can have empty experience
+        return result or []
 
    # ------------------ UPDATE EXPERIENCE ------------------
     async def update_experience_with_files(
