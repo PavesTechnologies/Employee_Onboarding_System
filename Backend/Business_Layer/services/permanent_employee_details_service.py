@@ -83,52 +83,73 @@ class PermanentEmployeeDetailsService:
                 return email
 
             counter += 1
-    async def create_employee(self, db: AsyncSession, request: CreatePermanentEmployeeRequest):
+
+    async def resolve_reporting_manager_employee_id(self, db: AsyncSession, reporting_manager):
+        if reporting_manager is None or str(reporting_manager).strip() == "":
+            return None
+
+        manager = await self.dao.get_employee_by_manager_value(
+            db,
+            reporting_manager
+        )
+
+        if not manager:
+            raise ValueError("Invalid reporting manager selected")
+
+        return manager.employee_id
+
+    async def create_employee(self, db: AsyncSession, payload: CreatePermanentEmployeeRequest, current_user_id: str):
 
         # check if employee already exists for this user
-        existing = await self.dao.get_employee_by_user_uuid(db, request.user_uuid)
+        existing = await self.dao.get_employee_by_user_uuid(db, payload.user_uuid)
 
         if existing:
             raise ValueError("Employee already created for this user")
 
         employee_id = await self.generate_employee_id(db)
 
-        work_email = await self.generate_work_email(db, request.first_name, request.last_name)
+        work_email = await self.generate_work_email(db, payload.first_name, payload.last_name)
+        reporting_manager_employee_id = await self.resolve_reporting_manager_employee_id(
+            db,
+            payload.reporting_manager_uuid
+        )
+        print("Generated user ID:",current_user_id )
         employee = EmployeeDetails(
 
             employee_uuid=str(uuid.uuid4()),
-            user_uuid=request.user_uuid,
+            user_uuid=payload.user_uuid,
             employee_id=employee_id,
 
-            first_name=request.first_name,
-            middle_name=request.middle_name,
-            last_name=request.last_name,
-            date_of_birth=request.date_of_birth,
+            first_name=payload.first_name,
+            middle_name=payload.middle_name,
+            last_name=payload.last_name,
+            date_of_birth=payload.date_of_birth,
             work_email=work_email,
-            contact_number=request.contact_number,
+            contact_number=payload.contact_number,
 
-            department_uuid=request.department_uuid,
-            designation_uuid=request.designation_uuid,
-            reporting_manager_uuid=request.reporting_manager_uuid,
+            department_uuid=payload.department_uuid,
+            designation_uuid=payload.designation_uuid,
+            reporting_manager_uuid=reporting_manager_employee_id,
 
-            employment_type=request.employment_type,
-            joining_date=request.joining_date,
-            location=request.location,
-            work_mode=request.work_mode,
-            employment_status=request.employment_status,
+            employment_type=payload.employment_type,
+            joining_date=payload.joining_date,
+            location=payload.location,
+            work_mode=payload.work_mode,
+            employment_status=payload.employment_status,
 
-            blood_group=request.blood_group,
-            gender=request.gender,
-            marital_status=request.marital_status,
+            blood_group=payload.blood_group,
+            gender=payload.gender,
+            marital_status=payload.marital_status,
 
-            total_experience=request.total_experience,
-
+            total_experience=payload.total_experience,
+            created_by=current_user_id,
             created_at=datetime.datetime.utcnow(),
             updated_at=datetime.datetime.utcnow()
         )
 
+        print("Employee object to be created", employee)
         employee = await self.dao.create_employee(db, employee)
-
+        print("Employee created in DB", employee)
         return CreatePermanentEmployeeResponse(
             employee_uuid=employee.employee_uuid,
             employee_id=employee.employee_id,
@@ -274,7 +295,10 @@ class PermanentEmployeeDetailsService:
             employee.designation_uuid = request.designation_uuid
 
         if request.reporting_manager_uuid is not None:
-            employee.reporting_manager_uuid = request.reporting_manager_uuid
+            employee.reporting_manager_uuid = await self.resolve_reporting_manager_employee_id(
+                db,
+                request.reporting_manager_uuid
+            )
 
         if request.employment_type is not None:
             employee.employment_type = request.employment_type
@@ -347,6 +371,11 @@ class PermanentEmployeeDetailsService:
                     row.get("designation")
                 )
 
+                reporting_manager_employee_id = await self.resolve_reporting_manager_employee_id(
+                    db,
+                    row.get("reporting_manager_uuid")
+                )
+
                 # Insert Offer Letter
                 await self.dao.insert_offer_letter(
                     db,
@@ -362,7 +391,8 @@ class PermanentEmployeeDetailsService:
                     user_uuid,
                     employee_uuid,
                     department_uuid,
-                    designation_uuid
+                    designation_uuid,
+                    reporting_manager_employee_id
                 )
 
                 success_count += 1

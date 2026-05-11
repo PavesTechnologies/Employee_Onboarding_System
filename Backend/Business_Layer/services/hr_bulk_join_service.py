@@ -13,6 +13,20 @@ class HrBulkJoinService:
         self.db = db
         self.dao = HrBulkJoinDAO(self.db)
 
+    async def resolve_reporting_manager(self, reporting_manager):
+        manager = await self.dao.get_employee_by_manager_value(reporting_manager)
+
+        if not manager:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid reporting manager selected"
+            )
+
+        return {
+            "employee_id": manager.employee_id,
+            "name": f"{manager.first_name} {manager.last_name}".strip()
+        }
+
     # ✅ Status Logic
     def get_joining_status(self, new_joining_date, is_reassigned=False):
         today = date.today()
@@ -70,11 +84,16 @@ class HrBulkJoinService:
 
         print("FINAL STATUS FROM FUNCTION :", status)
 
+        reporting_manager = await self.resolve_reporting_manager(
+            payload.reporting_manager
+        )
+
         updated_rows = await self.dao.update_joining_date_for_verified(
             payload.user_emails_list,
             payload.joining_date,
             payload,
-            status
+            status,
+            reporting_manager["employee_id"]
         )
 
         print("UPDATED ROWS :", updated_rows)
@@ -92,7 +111,7 @@ class HrBulkJoinService:
                 location=payload.location,
                 reporting_time=payload.reporting_time,
                 department=payload.department,
-                reporting_manager=payload.reporting_manager,
+                reporting_manager=reporting_manager["name"],
                 custom_message=payload.custom_message
             )
 
@@ -135,10 +154,15 @@ class HrBulkJoinService:
 
         print("FINAL STATUS FROM FUNCTION :", status)
 
+        reporting_manager = await self.resolve_reporting_manager(
+            payload.reporting_manager
+        )
+
         await self.dao.update_joining_date_for_user(
             payload.user_uuid,
             payload,
-            status
+            status,
+            reporting_manager["employee_id"]
         )
 
         print("DATABASE UPDATED SUCCESSFULLY")
@@ -154,7 +178,7 @@ class HrBulkJoinService:
             reporting_time=payload.reporting_time,
             location=payload.location,
             department=payload.department,
-            reporting_manager=payload.reporting_manager,
+            reporting_manager=reporting_manager["name"],
             custom_message=payload.joining_comments
         )
 
@@ -175,8 +199,21 @@ class HrBulkJoinService:
                 detail=f"No employee found with ID: {employee_id}"
             )
 
-        # Step 2: Fetch all employees who report to this UUID
-        subordinates = await self.dao.get_team_by_manager_id(manager_id)
+        # Step 2 — Manager full name
+        manager_employee = await self.dao.get_employee_by_manager_value(
+            manager.user_uuid
+        )
+
+        # Step 3 — Fetch employees
+        if not manager_employee:
+            raise HTTPException(
+                status_code=404,
+                detail="Manager employee details not found"
+            )
+
+        employees = await self.dao.get_employees_under_manager(
+            manager_employee.employee_id
+        )
 
         # Step 3: Format the response
         return [
@@ -185,5 +222,5 @@ class HrBulkJoinService:
                 "user_uuid": emp.user_uuid,
                 "name": f"{emp.first_name} {emp.last_name}".strip()
             }
-            for emp in subordinates
+            for offer, employee in employees
         ]

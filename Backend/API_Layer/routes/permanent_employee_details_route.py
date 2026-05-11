@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from Backend.API_Layer.interfaces.permenent_employee_details_interfaces import CreatePermanentEmployeeRequest, CreatePermanentEmployeeResponse, UpdatePermanentEmployeeRequest
@@ -18,13 +18,15 @@ service = PermanentEmployeeDetailsService()
 
 @router.post("/", response_model=CreatePermanentEmployeeResponse)
 async def create_employee(
-        request: CreatePermanentEmployeeRequest,
+        payload: CreatePermanentEmployeeRequest,
+        request: Request,
         db: AsyncSession = Depends(get_db)
 ):
 
     try:
-
-        return await service.create_employee(db, request)
+        current_user_id = request.state.user.get("employee_id")
+        print("Current user id",current_user_id)
+        return await service.create_employee(db, payload, current_user_id)
 
     except ValueError as e:
 
