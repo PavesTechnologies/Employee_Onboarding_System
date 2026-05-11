@@ -49,8 +49,17 @@ class HrOnboardingService:
             education_details = await self.dao.get_education_details_by_uuid(user_uuid)
             if education_details is None:
                 raise HTTPException(status_code=404, detail="Education Details Not Found for this user")
+            # Experience optional for freshers
             experience_details = await self.dao.get_experience_details_by_uuid(user_uuid)
-            if personal_details.get("has_experience") and not experience_details:
+
+            # Get offer/candidate details
+            offer = await self.offer_dao.get_offer_by_uuid(user_uuid)
+
+            # Default False if value missing
+            has_experience = offer.get("has_experience", False)
+
+            # Only experienced candidates require experience records
+            if has_experience and not experience_details:
                 raise HTTPException(
                     status_code=404,
                     detail="Experience Details Not Found for this user"
