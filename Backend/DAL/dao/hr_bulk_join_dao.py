@@ -93,31 +93,18 @@ class HrBulkJoinDAO:
         await self.db.commit()
         return result.rowcount
 
-    # ✅ Get user by UUID
-    async def get_user_by_uuid(self, user_uuid: str):
-        query = select(OfferLetterDetails).where(
-            OfferLetterDetails.user_uuid == user_uuid
+    
+
+# Fetch the manager's UUID based on the string ID provided (e.g., "EMP101")
+    async def get_manager_id_by_id(self, employee_id: str):
+        query = select(EmployeeDetails.employee_id).where(
+            EmployeeDetails.employee_id == employee_id
         )
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
-    # ✅ Get employees under manager
-    # ✅ Get employees under manager with employee_id
-    async def get_employees_under_manager(
-        self,
-        manager_name: str
-    ):
-        query = (
-            select(OfferLetterDetails, EmployeeDetails)
-            .join(
-                EmployeeDetails,
-                OfferLetterDetails.user_uuid == EmployeeDetails.user_uuid
-            )
-            .where(
-                OfferLetterDetails.reporting_manager == manager_name
-            )
-        )
-
+    async def get_team_by_manager_id(self, manager_id: str):
+        query = select(EmployeeDetails).where(
+            EmployeeDetails.reporting_manager_uuid == manager_id)
         result = await self.db.execute(query)
-
-        return result.all()
+        return result.scalars().all()

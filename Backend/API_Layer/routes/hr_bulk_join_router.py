@@ -69,17 +69,17 @@ async def get_offer_details(user_uuid: str, db: AsyncSession = Depends(get_db)):
         "joining_comments": user.joining_comments,
         "status": user.status
     }
-@router.get("/reporting-manager/{user_uuid}/employees")
+@router.get("/reporting-manager/{employee_id}/employees")
 async def get_employees_under_manager(
-    user_uuid: str,
+    employee_id: str,
     db: AsyncSession = Depends(get_db)
 ):
     try:
         service = HrBulkJoinService(db)
 
         employees = await service.get_employees_under_manager(
-            user_uuid
-        )
+                employee_id
+            )
 
         return {
             "employees": employees
