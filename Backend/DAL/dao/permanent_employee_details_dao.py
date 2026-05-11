@@ -1,4 +1,4 @@
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from Backend.DAL.models.models import EmployeeDetails
@@ -36,6 +36,49 @@ class PermanentEmployeeDetailsDAO:
         )
 
         return result.scalars().first()
+
+    async def get_employee_by_manager_value(self, db: AsyncSession, reporting_manager):
+        if reporting_manager is None:
+            return None
+
+        manager_value = str(reporting_manager).strip()
+        if not manager_value:
+            return None
+
+        filters = [
+            EmployeeDetails.employee_id == manager_value,
+            EmployeeDetails.employee_uuid == manager_value,
+            EmployeeDetails.user_uuid == manager_value,
+            func.trim(
+                func.concat(
+                    EmployeeDetails.first_name,
+                    " ",
+                    EmployeeDetails.last_name
+                )
+            ) == manager_value,
+            func.trim(
+                func.concat(
+                    EmployeeDetails.first_name,
+                    " ",
+                    func.coalesce(EmployeeDetails.middle_name, ""),
+                    " ",
+                    EmployeeDetails.last_name
+                )
+            ) == manager_value
+        ]
+
+        if manager_value.isdigit():
+            filters.insert(0, EmployeeDetails.id == int(manager_value))
+
+        for filter_condition in filters:
+            result = await db.execute(
+                select(EmployeeDetails).where(filter_condition)
+            )
+            employee = result.scalars().first()
+            if employee:
+                return employee
+
+        return None
 
 
     async def create_employee(self, db: AsyncSession, employee: EmployeeDetails):
@@ -154,7 +197,8 @@ class PermanentEmployeeDetailsDAO:
         user_uuid,
         employee_uuid,
         department_uuid,
-        designation_uuid
+        designation_uuid,
+        reporting_manager_employee_id
     ):
 
         query = text("""
@@ -216,7 +260,7 @@ class PermanentEmployeeDetailsDAO:
             "date_of_birth": row.get("date_of_birth"),
             "department_uuid": department_uuid,
             "designation_uuid": designation_uuid,
-            "reporting_manager_uuid": row.get("reporting_manager_uuid"),
+            "reporting_manager_uuid": reporting_manager_employee_id,
             "blood_group": row.get("blood_group"),
             "total_experience": row.get("total_experience"),
             "work_email": row.get("work_email"),
