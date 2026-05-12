@@ -1,3 +1,4 @@
+from Backend.API_Layer.interfaces import exit_final_settlement_interface
 from datetime import date
 
 from fastapi import HTTPException
@@ -188,42 +189,31 @@ class HrBulkJoinService:
         }
     
 
-    # ✅ Get employees under reporting manager
-    async def get_employees_under_manager(
-        self,
-        user_uuid: str
-    ):
-        # Step 1 — Find manager
-        manager = await self.dao.get_user_by_uuid(user_uuid)
+    async def get_employees_under_manager(self, employee_id: str):
+        """
+        Given a manager's employee_id, return all employees
+        whose reporting_manager_uuid equals that employee_id.
+        """
+        employees = await self.dao.get_employees_under_manager(employee_id)
 
-        if not manager:
+        if not employees:
             raise HTTPException(
                 status_code=404,
-                detail="Manager not found"
+                detail=f"No employees found under manager ID: {employee_id}"
             )
 
-        # Step 2 — Manager full name
-        manager_employee = await self.dao.get_employee_by_manager_value(
-            manager.user_uuid
-        )
-
-        # Step 3 — Fetch employees
-        if not manager_employee:
-            raise HTTPException(
-                status_code=404,
-                detail="Manager employee details not found"
-            )
-
-        employees = await self.dao.get_employees_under_manager(
-            manager_employee.employee_id
-        )
-
-        # Step 4 — Response
         return [
             {
-                "user_uuid": offer.user_uuid,
-                "name": f"{offer.first_name} {offer.last_name}".strip(),
-                "employee_id": employee.employee_id
+                "employee_id": employee.employee_id,
+                "user_uuid": employee.user_uuid,
+                "name": " ".join(
+                    part for part in [
+                        employee.first_name,
+                        employee.middle_name,
+                        employee.last_name
+                    ]
+                    if part
+                ).strip()
             }
-            for offer, employee in employees
+            for employee in employees
         ]

@@ -104,21 +104,21 @@ class HrBulkJoinDAO:
 
         return None
 
-    async def get_employees_under_manager(
-        self,
-        manager_employee_id: str
-    ):
+    async def get_employees_under_manager(self, manager_employee_id: str):
+        """
+        Fetch all employees whose reporting_manager_uuid
+        contains the manager's employee_id.
+        Example:
+            manager_employee_id = "5100001"
+            reporting_manager_uuid = "5100001"
+        """
         query = (
-            select(OfferLetterDetails, EmployeeDetails)
-            .join(
-                EmployeeDetails,
-                OfferLetterDetails.user_uuid == EmployeeDetails.user_uuid
-            )
+            select(EmployeeDetails)
             .where(
-                OfferLetterDetails.reporting_manager == manager_employee_id
+                EmployeeDetails.reporting_manager_uuid == manager_employee_id
             )
+            .order_by(EmployeeDetails.first_name)
         )
 
         result = await self.db.execute(query)
-
-        return result.all()
+        return result.scalars().all()
