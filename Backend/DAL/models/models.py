@@ -193,7 +193,7 @@ class OfferLetterDetails(Base):
     package: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     currency: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     job_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    created_by: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    created_by: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     hire_type: Mapped[Optional[str]] = mapped_column(Enum('Direct', 'Offer'), nullable=True)
     middle_name: Mapped[Optional[str]] = mapped_column(String(100))
     package: Mapped[Optional[str]] = mapped_column(String(255))
