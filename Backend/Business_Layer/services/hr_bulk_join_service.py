@@ -190,37 +190,30 @@ class HrBulkJoinService:
     
 
     async def get_employees_under_manager(self, employee_id: str):
-        # Step 1: Find the internal UUID of the employee ID provided
-        manager_id = await self.dao.get_manager_id_by_id(employee_id)
+        """
+        Given a manager's employee_id, return all employees
+        whose reporting_manager_uuid equals that employee_id.
+        """
+        employees = await self.dao.get_employees_under_manager(employee_id)
 
-        if not manager_id:
-            raise HTTPException(
-                status_code=404, 
-                detail=f"No employee found with ID: {employee_id}"
-            )
-
-        # Step 2 — Manager full name
-        manager_employee = await self.dao.get_employee_by_manager_value(
-            manager.user_uuid
-        )
-
-        # Step 3 — Fetch employees
-        if not manager_employee:
+        if not employees:
             raise HTTPException(
                 status_code=404,
-                detail="Manager employee details not found"
+                detail=f"No employees found under manager ID: {employee_id}"
             )
 
-        employees = await self.dao.get_employees_under_manager(
-            manager_employee.employee_id
-        )
-
-        # Step 3: Format the response
         return [
             {
-                "employee_id": emp.employee_id,
-                "user_uuid": emp.user_uuid,
-                "name": f"{emp.first_name} {emp.last_name}".strip()
+                "employee_id": employee.employee_id,
+                "user_uuid": employee.user_uuid,
+                "name": " ".join(
+                    part for part in [
+                        employee.first_name,
+                        employee.middle_name,
+                        employee.last_name
+                    ]
+                    if part
+                ).strip()
             }
-            for offer, employee in employees
+            for employee in employees
         ]

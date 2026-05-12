@@ -77,20 +77,13 @@ async def get_employees_under_manager(
     try:
         service = HrBulkJoinService(db)
 
-        employees = await service.get_employees_under_manager(
-                employee_id
-            )
-
+        employees = await service.get_employees_under_manager(employee_id)
         return {
             "employees": employees
         }
 
     except HTTPException as he:
         raise he
-
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=500,detail=str(e))
     
