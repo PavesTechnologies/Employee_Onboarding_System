@@ -8,6 +8,7 @@ from ...DAL.utils.dependencies import get_db
 from Backend.API_Layer.utils.role_based import require_roles
 from Backend.DAL.utils.database import get_read_db
 
+
 router = APIRouter(
     prefix="/core-employee-details",
     tags=["Permanent Employees"]
@@ -82,20 +83,21 @@ async def delete_employee(
             status_code=404,
             detail=str(e)
         )
-
+def get_current_employee_id(request: Request) -> str:
+    employee_id = request.state.user.get("employee_id")
+    if not employee_id:
+        raise HTTPException(status_code=401, detail="Employee ID missing in token")
+    return str(employee_id)
 @router.post("/bulk-direct-upload")
 async def bulk_direct_upload(
+    request : Request,
     file: UploadFile = File(...),
-    uploaded_by: int = 1,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     try:
-        result = await service.bulk_direct_upload(
-            db,
-            file,
-            uploaded_by
-        )
-        return result
+        current_user_id = get_current_employee_id(request)
+        print("Uploaded by",current_user_id)
+        return await service.bulk_direct_upload(db, file, current_user_id)
     except HTTPException as he:
         raise he
     except Exception as e:
@@ -103,13 +105,13 @@ async def bulk_direct_upload(
 
 
 @router.get("/bulk-template/")
-async def download_bulk_template(db: AsyncSession = Depends(get_read_db)):
-    print("entering routes")
+async def download_bulk_template(
+    db: AsyncSession = Depends(get_read_db),
+):
     try:
-        print("Downloading bulk template")
         return await service.download_bulk_template(db)
     except HTTPException as he:
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
