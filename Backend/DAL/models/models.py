@@ -623,7 +623,7 @@ class PersonalDetails(Base):
     residence_country_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))
     emergency_contact_name: Mapped[Optional[str]] = mapped_column(String(100))
     emergency_contact_phone: Mapped[Optional[str]] = mapped_column(String(20))
-    emergency_contact_relation_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36), ForeignKey("relation_master.relation_uuid"))
+    emergency_contact_relation_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))   
     status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'verified', 'rejected'), server_default=text("'uploaded'"))
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
@@ -2265,3 +2265,5 @@ class ExitClearanceItems(Base):
         "ExitClearance",
         back_populates="items"
     )
+
+

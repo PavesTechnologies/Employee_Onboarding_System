@@ -361,12 +361,7 @@ class PermanentEmployeeDetailsService:
     GENDERS = ["Male", "Female", "Other"]
     MARITAL_STATUSES = ["Single", "Married", "Divorced", "Widowed"]
 
-    def generate_email(self, first_name, middle_name, last_name):
-        parts = []
-        for part in [first_name, middle_name, last_name]:
-            if part and str(part).strip():
-                 parts.append(str(part).strip().lower().replace(" ", ""))
-        return ".".join(parts) + "@pavestechnologies.com"
+   
 
     def get_employee_id(self, manager_value):
         if not manager_value:
@@ -404,13 +399,8 @@ class PermanentEmployeeDetailsService:
                 user_uuid = str(generate_uuid7())
                 employee_uuid = str(generate_uuid7())
 
-                employee_id = await self.dao.get_next_employee_id(db)
-
-                work_email = self.generate_email(
-                        row.get("first_name"),
-                        row.get("middle_name"),
-                        row.get("last_name"),
-                )
+                employee_id = row.get("employee_id")
+                work_email = row.get("work_email")
                 department_uuid = await self.dao.get_department_uuid(
                     db,
                     row.get("department")
@@ -490,6 +480,8 @@ class PermanentEmployeeDetailsService:
             "total_ctc",
             "job_id",
             "date_of_birth",
+            "work_email",
+            "employee_id",
             "department",
             "designation",
             "reporting_manager_uuid",

@@ -203,20 +203,6 @@ class PermanentEmployeeDetailsDAO:
         result = await db.execute(query)
         return result.fetchall()
 
-    async def get_next_employee_id(self, db):
-        query = text("""
-            SELECT MAX(CAST(employee_id AS UNSIGNED))
-            FROM employee_details
-            WHERE employee_id REGEXP '^[0-9]+$'
-        """)
-        result = await db.execute(query)
-        max_id = result.scalar()
-
-        if not max_id:
-            return "5100001"
-
-        return str(int(max_id) + 1)
-
     async def insert_offer_letter(self, db, row, user_uuid, uploaded_by, reporting_manager_employee_id):
         query = text("""
             INSERT INTO offer_letter_details (
