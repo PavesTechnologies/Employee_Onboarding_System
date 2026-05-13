@@ -2,7 +2,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from Backend.DAL.models.models import EmployeeDetails
-
+from sqlalchemy.orm import load_only
 
 class PermanentEmployeeDetailsDAO:
 
@@ -104,14 +104,33 @@ class PermanentEmployeeDetailsDAO:
         await db.refresh(employee)
 
         return employee
-    
+        
     async def get_all_employees(self, db: AsyncSession):
-
-        result = await db.execute(
-            select(EmployeeDetails)
+        query = select(
+            EmployeeDetails.user_uuid,
+            EmployeeDetails.employee_uuid,
+            EmployeeDetails.employee_id,
+            EmployeeDetails.first_name,
+            EmployeeDetails.middle_name,
+            EmployeeDetails.last_name,
+            EmployeeDetails.date_of_birth,
+            EmployeeDetails.work_email,
+            EmployeeDetails.contact_number,
+            EmployeeDetails.department_uuid,
+            EmployeeDetails.designation_uuid,
+            EmployeeDetails.employment_type,
+            EmployeeDetails.joining_date,
+            EmployeeDetails.location,
+            EmployeeDetails.work_mode,
+            EmployeeDetails.employment_status,
+            EmployeeDetails.blood_group,
+            EmployeeDetails.gender,
+            EmployeeDetails.marital_status
         )
-
-        return result.scalars().all()
+        
+        result = await db.execute(query)
+        # .mappings() is CRITICAL to avoid the "tuple indices" error
+        return result.mappings().all()
     
     async def delete_employee(self, db: AsyncSession, employee_uuid: str):
         employee = await self.get_employee_by_uuid(db, employee_uuid)
@@ -171,7 +190,7 @@ class PermanentEmployeeDetailsDAO:
         result = await db.execute(query)
         return [row[0] for row in result.fetchall()]
 
-    async def get_all_employees(self, db):
+    async def get_employees_for_dropdown(self, db):
         query = text("""
             SELECT employee_id,
                    first_name,

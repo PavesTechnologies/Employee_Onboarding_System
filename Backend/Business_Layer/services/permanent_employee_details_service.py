@@ -188,39 +188,36 @@ class PermanentEmployeeDetailsService:
             "marital_status": employee.marital_status,
             "total_experience": employee.total_experience
         }
-    
+  
     async def get_all_employees(self, db: AsyncSession):
-
         employees = await self.dao.get_all_employees(db)
-
+        
         response = []
-
         for emp in employees:
             response.append({
-                "user_uuid": emp.user_uuid,
-                "employee_uuid": emp.employee_uuid,
-                "employee_id": emp.employee_id,
-                "first_name": emp.first_name,
-                "middle_name": emp.middle_name,
-                "last_name": emp.last_name,
-                "date_of_birth": emp.date_of_birth,
-                "work_email": emp.work_email,
-                "contact_number": emp.contact_number,
-                "department_uuid": emp.department_uuid,
-                "designation_uuid": emp.designation_uuid,
-                "employment_type": emp.employment_type,
-                "joining_date": emp.joining_date,
-                "location": emp.location,
-                "work_mode": emp.work_mode,
-                "employment_status": emp.employment_status,
-                "blood_group": emp.blood_group,
-                "gender": emp.gender,
-                "marital_status": emp.marital_status
+                "user_uuid": emp["user_uuid"],  # Now this works!
+                "employee_uuid": emp["employee_uuid"],
+                "employee_id": emp.get("employee_id"),
+                "first_name": emp.get("first_name"),
+                "middle_name": emp.get("middle_name"),
+                "last_name": emp.get("last_name"),
+                "date_of_birth": str(emp["date_of_birth"]) if emp.get("date_of_birth") else None,
+                "work_email": emp.get("work_email"),
+                "contact_number": emp.get("contact_number"),
+                "department_uuid": emp.get("department_uuid"),
+                "designation_uuid": emp.get("designation_uuid"),
+                "employment_type": emp.get("employment_type"),
+                "joining_date": str(emp["joining_date"]) if emp.get("joining_date") else None,
+                "location": emp.get("location"),
+                "work_mode": emp.get("work_mode"),
+                "employment_status": emp.get("employment_status"),
+                "blood_group": emp.get("blood_group"),
+                "gender": emp.get("gender"),
+                "marital_status": emp.get("marital_status")
             })
 
         return response
-    
-    # async def update_employee(
+        # async def update_employee(
     #     self,
     #     db: AsyncSession,
     #     employee_uuid: str,
@@ -469,7 +466,7 @@ class PermanentEmployeeDetailsService:
         departments = await self.dao.get_departments(db)
         designations = await self.dao.get_designations(db)
         country_codes = await self.dao.get_country_codes(db)
-        employees = await self.dao.get_all_employees(db)
+        employees = await self.dao.get_employees_for_dropdown(db)
 
         manager_values = []
         for emp in employees:
