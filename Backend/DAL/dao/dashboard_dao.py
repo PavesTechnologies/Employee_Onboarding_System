@@ -1,3 +1,5 @@
+import calendar
+
 from sqlalchemy import select, func, case, and_, or_, tuple_
 from datetime import date, datetime, timedelta
 
@@ -273,11 +275,22 @@ class DashboardDAO:
 
         return {
             "birthdays": [
-                self._format_celebration_item(employee, employee.date_of_birth)
+                self._format_celebration_item(
+                    employee,
+                    self._get_celebration_date(
+                        employee.date_of_birth,
+                        start_date,
+                        end_date
+                    )
+                )
                 for employee in birthdays_result.scalars().all()
             ],
             "workAnniversaries": [
-                self._format_celebration_item(employee, employee.joining_date)
+                self._format_work_anniversary_item(
+                    employee,
+                    start_date,
+                    end_date
+                )
                 for employee in anniversaries_result.scalars().all()
             ],
             "newJoinees": [
@@ -314,3 +327,25 @@ class DashboardDAO:
             ),
             "date": event_date.strftime("%d/%m/%y")
         }
+
+    def _format_work_anniversary_item(self, employee, start_date: date, end_date: date):
+        anniversary_date = self._get_celebration_date(
+            employee.joining_date,
+            start_date,
+            end_date
+        )
+
+        return {
+            **self._format_celebration_item(employee, anniversary_date),
+            "anniversaryYear": anniversary_date.year - employee.joining_date.year
+        }
+
+    def _get_celebration_date(self, original_date: date, start_date: date, end_date: date):
+        occurrence_year = start_date.year
+        if (original_date.month, original_date.day) < (start_date.month, start_date.day):
+            occurrence_year = end_date.year
+
+        last_day = calendar.monthrange(occurrence_year, original_date.month)[1]
+        occurrence_day = min(original_date.day, last_day)
+
+        return date(occurrence_year, original_date.month, occurrence_day)

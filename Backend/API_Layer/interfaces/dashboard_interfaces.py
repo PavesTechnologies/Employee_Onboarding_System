@@ -61,7 +61,11 @@ class CelebrationItem(BaseModel):
     date: str
 
 
+class WorkAnniversaryItem(CelebrationItem):
+    anniversaryYear: int
+
+
 class CelebrationsResponse(BaseModel):
     birthdays: List[CelebrationItem]
-    workAnniversaries: List[CelebrationItem]
+    workAnniversaries: List[WorkAnniversaryItem]
     newJoinees: List[CelebrationItem]
