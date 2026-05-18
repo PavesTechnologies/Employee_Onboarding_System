@@ -1,8 +1,8 @@
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from Backend.DAL.models.models import EmployeeDetails
-
+from sqlalchemy.orm import load_only
 
 class PermanentEmployeeDetailsDAO:
 
@@ -37,6 +37,49 @@ class PermanentEmployeeDetailsDAO:
 
         return result.scalars().first()
 
+    async def get_employee_by_manager_value(self, db: AsyncSession, reporting_manager):
+        if reporting_manager is None:
+            return None
+
+        manager_value = str(reporting_manager).strip()
+        if not manager_value:
+            return None
+
+        filters = [
+            EmployeeDetails.employee_id == manager_value,
+            EmployeeDetails.employee_uuid == manager_value,
+            EmployeeDetails.user_uuid == manager_value,
+            func.trim(
+                func.concat(
+                    EmployeeDetails.first_name,
+                    " ",
+                    EmployeeDetails.last_name
+                )
+            ) == manager_value,
+            func.trim(
+                func.concat(
+                    EmployeeDetails.first_name,
+                    " ",
+                    func.coalesce(EmployeeDetails.middle_name, ""),
+                    " ",
+                    EmployeeDetails.last_name
+                )
+            ) == manager_value
+        ]
+
+        if manager_value.isdigit():
+            filters.insert(0, EmployeeDetails.id == int(manager_value))
+
+        for filter_condition in filters:
+            result = await db.execute(
+                select(EmployeeDetails).where(filter_condition)
+            )
+            employee = result.scalars().first()
+            if employee:
+                return employee
+
+        return None
+
 
     async def create_employee(self, db: AsyncSession, employee: EmployeeDetails):
 
@@ -61,14 +104,33 @@ class PermanentEmployeeDetailsDAO:
         await db.refresh(employee)
 
         return employee
-    
+        
     async def get_all_employees(self, db: AsyncSession):
-
-        result = await db.execute(
-            select(EmployeeDetails)
+        query = select(
+            EmployeeDetails.user_uuid,
+            EmployeeDetails.employee_uuid,
+            EmployeeDetails.employee_id,
+            EmployeeDetails.first_name,
+            EmployeeDetails.middle_name,
+            EmployeeDetails.last_name,
+            EmployeeDetails.date_of_birth,
+            EmployeeDetails.work_email,
+            EmployeeDetails.contact_number,
+            EmployeeDetails.department_uuid,
+            EmployeeDetails.designation_uuid,
+            EmployeeDetails.employment_type,
+            EmployeeDetails.joining_date,
+            EmployeeDetails.location,
+            EmployeeDetails.work_mode,
+            EmployeeDetails.employment_status,
+            EmployeeDetails.blood_group,
+            EmployeeDetails.gender,
+            EmployeeDetails.marital_status
         )
-
-        return result.scalars().all()
+        
+        result = await db.execute(query)
+        # .mappings() is CRITICAL to avoid the "tuple indices" error
+        return result.mappings().all()
     
     async def delete_employee(self, db: AsyncSession, employee_uuid: str):
         employee = await self.get_employee_by_uuid(db, employee_uuid)
@@ -78,14 +140,70 @@ class PermanentEmployeeDetailsDAO:
         await db.delete(employee)
         await db.commit()
 
-    async def insert_offer_letter(
-        self,
-        db: AsyncSession,
-        row,
-        user_uuid,
-        uploaded_by
-    ):
 
+    async def get_departments(self, db):
+        query = text("""
+            SELECT department_uuid, department_name
+            FROM departments
+            ORDER BY department_name
+        """)
+        result = await db.execute(query)
+        return result.fetchall()
+
+    async def get_designations(self, db):
+        query = text("""
+            SELECT designation_uuid,
+                   designation_name,
+                   department_uuid
+            FROM designations
+            ORDER BY designation_name
+        """)
+        result = await db.execute(query)
+        return result.fetchall()
+
+    async def get_department_uuid(self, db, department_name):
+        query = text("""
+            SELECT department_uuid
+            FROM departments
+            WHERE department_name = :name
+        """)
+        result = await db.execute(query, {"name": department_name})
+        return result.scalar()
+
+    async def get_designation_uuid(self, db, designation_name):
+        query = text("""
+            SELECT designation_uuid
+            FROM designations
+            WHERE designation_name = :name
+        """)
+        result = await db.execute(query, {"name": designation_name})
+        return result.scalar()
+
+    async def get_country_codes(self, db):
+        query = text("""
+            SELECT DISTINCT calling_code
+            FROM countries
+            WHERE calling_code IS NOT NULL
+              AND calling_code <> ''
+            ORDER BY calling_code
+        """)
+        result = await db.execute(query)
+        return [row[0] for row in result.fetchall()]
+
+    async def get_employees_for_dropdown(self, db):
+        query = text("""
+            SELECT employee_id,
+                   first_name,
+                   middle_name,
+                   last_name
+            FROM employee_details
+            WHERE employee_id IS NOT NULL
+            ORDER BY employee_id
+        """)
+        result = await db.execute(query)
+        return result.fetchall()
+
+    async def insert_offer_letter(self, db, row, user_uuid, uploaded_by, reporting_manager_employee_id):
         query = text("""
             INSERT INTO offer_letter_details (
                 user_uuid,
@@ -103,6 +221,8 @@ class PermanentEmployeeDetailsDAO:
                 status,
                 job_id,
                 total_ctc,
+                currency,
+                reporting_manager,
                 created_by,
                 created_at
             )
@@ -122,6 +242,8 @@ class PermanentEmployeeDetailsDAO:
                 'Completed',
                 :job_id,
                 :total_ctc,
+                :currency,
+                :reporting_manager,
                 :created_by,
                 NOW()
             )
@@ -141,22 +263,26 @@ class PermanentEmployeeDetailsDAO:
             "joining_date": row.get("joining_date"),
             "job_id": row.get("job_id"),
             "total_ctc": row.get("total_ctc"),
-            "created_by": uploaded_by
+            "currency": row.get("currency"),
+            "reporting_manager": reporting_manager_employee_id,
+            "created_by": uploaded_by,
         }
 
         await db.execute(query, values)
 
-
     async def insert_employee(
         self,
-        db: AsyncSession,
+        db,
         row,
         user_uuid,
         employee_uuid,
+        employee_id,
+        work_email,
         department_uuid,
-        designation_uuid
+        designation_uuid,
+        reporting_manager_employee_id,
+        uploaded_by
     ):
-
         query = text("""
             INSERT INTO employee_details (
                 employee_uuid,
@@ -166,20 +292,22 @@ class PermanentEmployeeDetailsDAO:
                 middle_name,
                 last_name,
                 date_of_birth,
+                work_email,
+                contact_number,
                 department_uuid,
                 designation_uuid,
                 reporting_manager_uuid,
-                blood_group,
-                total_experience,
-                work_email,
-                contact_number,
                 employment_type,
                 joining_date,
                 location,
                 work_mode,
+                employment_status,
+                blood_group,
                 gender,
                 marital_status,
-                created_at
+                total_experience,
+                created_by
+                
             )
             VALUES (
                 :employee_uuid,
@@ -189,93 +317,52 @@ class PermanentEmployeeDetailsDAO:
                 :middle_name,
                 :last_name,
                 :date_of_birth,
+                :work_email,
+                :contact_number,
                 :department_uuid,
                 :designation_uuid,
                 :reporting_manager_uuid,
-                :blood_group,
-                :total_experience,
-                :work_email,
-                :contact_number,
                 :employment_type,
                 :joining_date,
                 :location,
                 :work_mode,
+                :employment_status,
+                :blood_group,
                 :gender,
                 :marital_status,
-                NOW()
+                :total_experience,
+                :created_by
+                
             )
         """)
 
         values = {
             "employee_uuid": employee_uuid,
             "user_uuid": user_uuid,
-            "employee_id": row.get("employee_id"),
+            "employee_id": employee_id,
             "first_name": row.get("first_name"),
             "middle_name": row.get("middle_name"),
             "last_name": row.get("last_name"),
             "date_of_birth": row.get("date_of_birth"),
+            "work_email": work_email,
+            "contact_number": row.get("contact_number"),
             "department_uuid": department_uuid,
             "designation_uuid": designation_uuid,
-            "reporting_manager_uuid": row.get("reporting_manager_uuid"),
-            "blood_group": row.get("blood_group"),
-            "total_experience": row.get("total_experience"),
-            "work_email": row.get("work_email"),
-            "contact_number": row.get("contact_number"),
-            "employment_type": row.get("employee_type"),
+            "reporting_manager_uuid": reporting_manager_employee_id,
+            "employment_type": row.get("employment_type"),
             "joining_date": row.get("joining_date"),
             "location": row.get("location"),
             "work_mode": row.get("work_mode"),
+            "employment_status": row.get("employment_status"),
+            "blood_group": row.get("blood_group"),
             "gender": row.get("gender"),
-            "marital_status": row.get("marital_status")
+            "marital_status": row.get("marital_status"),
+            "total_experience": row.get("total_experience"),
+            "created_by": uploaded_by,
         }
 
         await db.execute(query, values)
         await db.commit()
 
-    async def get_department_uuid(self, db, department_name):
-
-        query = text("""
-            SELECT department_uuid
-            FROM departments
-            WHERE department_name = :name
-        """)
-
-        result = await db.execute(query, {"name": department_name})
-
-        return result.scalar()
 
 
-    async def get_designation_uuid(self, db, designation_name):
-
-        query = text("""
-            SELECT designation_uuid
-            FROM designations
-            WHERE designation_name = :name
-        """)
-
-        result = await db.execute(query, {"name": designation_name})
-
-        return result.scalar()
-
-    async def get_designations(self, db):
-
-        query = text("""
-            SELECT designation_uuid,
-                designation_name,
-                department_uuid
-            FROM designations
-        """)
-
-        result = await db.execute(query)
-
-        return result.fetchall()
-    async def get_departments(self, db):
-
-        query = text("""
-            SELECT department_uuid, department_name
-            FROM departments
-        """)
-
-        result = await db.execute(query)
-
-        return result.fetchall()

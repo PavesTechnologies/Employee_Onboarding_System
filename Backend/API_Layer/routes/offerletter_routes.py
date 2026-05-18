@@ -28,6 +28,13 @@ from Backend.API_Layer.utils.role_based import require_roles
 
 router = APIRouter()
 
+
+def get_current_employee_id(request: Request) -> str:
+    employee_id = request.state.user.get("employee_id")
+    if not employee_id:
+        raise HTTPException(status_code=401, detail="Employee ID missing in token")
+    return str(employee_id)
+
 # ✅ Create single offer letter
 @router.post("/create", response_model=OfferCreateResponse, dependencies=[Depends(require_roles("HR"))])
 async def create_offer_letter(
@@ -41,8 +48,8 @@ async def create_offer_letter(
     """
     try:
         print("In create_offer_letter route", request_data)
-        print("current user", request.state.user.get("user_id"))  # Example of accessing user info from JWT
-        current_user_id = int(request.state.user.get("user_id"))  # ✅ Access user info from request state
+        current_user_id = get_current_employee_id(request)
+        print("current employee", current_user_id)
 
         offer_service = OfferLetterService(db)           # ✅ pass injected session
         offer_id = await offer_service.create_offer(request_data, current_user_id)
@@ -81,7 +88,7 @@ async def create_bulk_offer_letters(
                 detail="Invalid file format. Only .xlsx, .xls, .csv are allowed"
             )
 
-        current_user_id = int(request.state.user.get("user_id"))
+        current_user_id = get_current_employee_id(request)
         
         # Read file into DataFrame
         content = await file.read()
@@ -147,7 +154,7 @@ async def get_offer_by_user_id(
 ):
     start = time.perf_counter()
 
-    current_user_id = int(request.state.user.get("user_id"))
+    current_user_id = get_current_employee_id(request)
     offer_service = OfferLetterService(db)
     result = await offer_service.get_offer_by_user_id(current_user_id)
 
@@ -186,7 +193,7 @@ async def update_offer_by_uuid(
 ):
     try:
         offer_service = OfferLetterService(db)
-        current_user_id = int(request.state.user.get("user_id"))
+        current_user_id = get_current_employee_id(request)
 
         await offer_service.update_offer_by_uuid(user_uuid, request_data, current_user_id)
 
@@ -207,8 +214,7 @@ async def get_created_offerletters(
     db: AsyncSession = Depends(get_db)
 ):
     print("Fetching created offer letters endpoint called")
-    # Extract user_id from JWT middleware
-    current_user_id = request.state.user.get("user_id")
+    current_user_id = get_current_employee_id(request)
 
     offer_service = OfferLetterService(db)
     result =  await offer_service.get_created_offerletters(current_user_id)
@@ -228,7 +234,7 @@ async def bulk_send_offer_letters(
     print("Bulk send offer letters endpoint called")
     offer_service = OfferLetterService(db)
     print('offer_service created in route')
-    current_user_id = int(request.state.user.get("user_id"))
+    current_user_id = get_current_employee_id(request)
 
     result = await offer_service.send_bulk_offerletters_via_docusign_pdf(
         request_data,

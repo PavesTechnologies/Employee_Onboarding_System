@@ -39,7 +39,7 @@ class OfferLetterService:
         self.dao = OfferLetterDAO(self.db)
 
  
-    async def create_offer(self, request_data: OfferCreateRequest, current_user_id: int):
+    async def create_offer(self, request_data: OfferCreateRequest, current_user_id: str):
         """
         Business logic for creating a new offer letter.
         Includes validation of all user input fields.
@@ -73,7 +73,7 @@ class OfferLetterService:
             raise HTTPException(status_code=500, detail=str(e))
         
     
-    async def create_bulk_offers(self, df, current_user_id: int):
+    async def create_bulk_offers(self, df, current_user_id: str):
         """
         Bulk create offers with proper transaction handling and duplicate detection.
         Returns data without committing - caller (route) handles commit.
@@ -224,7 +224,7 @@ class OfferLetterService:
             return None
         return offers
    
-    async def update_offer_by_uuid(self, user_uuid: str, request_data: OfferCreateRequest, current_user_id: int):
+    async def update_offer_by_uuid(self, user_uuid: str, request_data: OfferCreateRequest, current_user_id: str):
         try:
             # Check if offer exists first
             offer = await self.dao.get_offer_by_uuid(user_uuid)
@@ -258,10 +258,10 @@ class OfferLetterService:
         except Exception as e:
             await self.db.rollback()
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")    
-    async def get_offer_by_user_id(self, user_id: int):
+    async def get_offer_by_user_id(self, user_id: str):
         return await self.dao.get_offer_by_user_id(user_id)
 
-    async def get_created_offerletters(self, current_user_id: int):
+    async def get_created_offerletters(self, current_user_id: str):
         """
         Fetch all offer letters where:
         - status = 'created'
@@ -478,7 +478,7 @@ class OfferLetterService:
             raise HTTPException(status_code=500, detail=f"Unexpected Error: {str(e)}")
         
 
-    async def send_bulk_offerletters(self, request_data: BulkSendOfferLettersRequest, current_user_id: int):
+    async def send_bulk_offerletters(self, request_data: BulkSendOfferLettersRequest, current_user_id: str):
         """
         Business logic for sending multiple offer letters using PandaDoc.
         Fetches offer details, sends each offer letter, updates status, and
@@ -816,7 +816,7 @@ class OfferLetterService:
     async def send_bulk_offerletters_via_docusign_pdf(
         self,
         request_data,
-        current_user_id: int
+        current_user_id: str
     ):
 
         print("🚀 Sending generated PDF via DocuSign")

@@ -193,7 +193,7 @@ class OfferLetterDetails(Base):
     package: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     currency: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     job_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    created_by: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    created_by: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     hire_type: Mapped[Optional[str]] = mapped_column(Enum('Direct', 'Offer'), nullable=True)
     middle_name: Mapped[Optional[str]] = mapped_column(String(100))
     package: Mapped[Optional[str]] = mapped_column(String(255))
@@ -623,7 +623,7 @@ class PersonalDetails(Base):
     residence_country_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))
     emergency_contact_name: Mapped[Optional[str]] = mapped_column(String(100))
     emergency_contact_phone: Mapped[Optional[str]] = mapped_column(String(20))
-    emergency_contact_relation_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36), ForeignKey("relation_master.relation_uuid"))
+    emergency_contact_relation_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))   
     status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'verified', 'rejected'), server_default=text("'uploaded'"))
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
@@ -2265,3 +2265,5 @@ class ExitClearanceItems(Base):
         "ExitClearance",
         back_populates="items"
     )
+
+

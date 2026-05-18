@@ -73,7 +73,7 @@ class OfferLetterDetailsResponse(BaseModel):
     employee_type: Optional[str] = None
     currency: Optional[str] = None
     total_ctc: float | None = None
-    created_by: Optional[int] = None
+    created_by: Optional[str] = None
     status : Optional[str] = None
 
     cc_emails: Optional[List[EmailStr]] = None
@@ -98,7 +98,7 @@ class OfferPendingCandidate(BaseModel):
     package: str
     currency: str
     status: str
-    created_by: int
+    created_by: str
 
 class BulkSendOfferLettersRequest(BaseModel):
     user_uuid_list: List[str]

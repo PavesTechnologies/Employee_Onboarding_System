@@ -16,6 +16,7 @@ from openpyxl.workbook.defined_name import DefinedName
 from Backend.DAL.dao.permanent_employee_details_dao import PermanentEmployeeDetailsDAO
 from Backend.DAL.models.models import EmployeeDetails
 from openpyxl.utils import get_column_letter
+from datetime import datetime
 
 
 class PermanentEmployeeDetailsService:
@@ -83,52 +84,73 @@ class PermanentEmployeeDetailsService:
                 return email
 
             counter += 1
-    async def create_employee(self, db: AsyncSession, request: CreatePermanentEmployeeRequest):
+
+    async def resolve_reporting_manager_employee_id(self, db: AsyncSession, reporting_manager):
+        if reporting_manager is None or str(reporting_manager).strip() == "":
+            return None
+
+        manager = await self.dao.get_employee_by_manager_value(
+            db,
+            reporting_manager
+        )
+
+        if not manager:
+            raise ValueError("Invalid reporting manager selected")
+
+        return manager.employee_id
+
+    async def create_employee(self, db: AsyncSession, payload: CreatePermanentEmployeeRequest, current_user_id: str):
 
         # check if employee already exists for this user
-        existing = await self.dao.get_employee_by_user_uuid(db, request.user_uuid)
+        existing = await self.dao.get_employee_by_user_uuid(db, payload.user_uuid)
 
         if existing:
             raise ValueError("Employee already created for this user")
 
         employee_id = await self.generate_employee_id(db)
 
-        work_email = await self.generate_work_email(db, request.first_name, request.last_name)
+        work_email = await self.generate_work_email(db, payload.first_name, payload.last_name)
+        reporting_manager_employee_id = await self.resolve_reporting_manager_employee_id(
+            db,
+            payload.reporting_manager_uuid
+        )
+        print("Generated user ID:",current_user_id )
         employee = EmployeeDetails(
 
             employee_uuid=str(uuid.uuid4()),
-            user_uuid=request.user_uuid,
+            user_uuid=payload.user_uuid,
             employee_id=employee_id,
 
-            first_name=request.first_name,
-            middle_name=request.middle_name,
-            last_name=request.last_name,
-            date_of_birth=request.date_of_birth,
+            first_name=payload.first_name,
+            middle_name=payload.middle_name,
+            last_name=payload.last_name,
+            date_of_birth=payload.date_of_birth,
             work_email=work_email,
-            contact_number=request.contact_number,
+            contact_number=payload.contact_number,
 
-            department_uuid=request.department_uuid,
-            designation_uuid=request.designation_uuid,
-            reporting_manager_uuid=request.reporting_manager_uuid,
+            department_uuid=payload.department_uuid,
+            designation_uuid=payload.designation_uuid,
+            reporting_manager_uuid=reporting_manager_employee_id,
 
-            employment_type=request.employment_type,
-            joining_date=request.joining_date,
-            location=request.location,
-            work_mode=request.work_mode,
-            employment_status=request.employment_status,
+            employment_type=payload.employment_type,
+            joining_date=payload.joining_date,
+            location=payload.location,
+            work_mode=payload.work_mode,
+            employment_status=payload.employment_status,
 
-            blood_group=request.blood_group,
-            gender=request.gender,
-            marital_status=request.marital_status,
+            blood_group=payload.blood_group,
+            gender=payload.gender,
+            marital_status=payload.marital_status,
 
-            total_experience=request.total_experience,
-
+            total_experience=payload.total_experience,
+            created_by=current_user_id,
             created_at=datetime.datetime.utcnow(),
             updated_at=datetime.datetime.utcnow()
         )
 
+        print("Employee object to be created", employee)
         employee = await self.dao.create_employee(db, employee)
-
+        print("Employee created in DB", employee)
         return CreatePermanentEmployeeResponse(
             employee_uuid=employee.employee_uuid,
             employee_id=employee.employee_id,
@@ -166,13 +188,11 @@ class PermanentEmployeeDetailsService:
             "marital_status": employee.marital_status,
             "total_experience": employee.total_experience
         }
-    
+  
     async def get_all_employees(self, db: AsyncSession):
-
         employees = await self.dao.get_all_employees(db)
-
+        
         response = []
-
         for emp in employees:
             response.append({
                 "user_uuid": emp.user_uuid,
@@ -198,8 +218,7 @@ class PermanentEmployeeDetailsService:
             })
 
         return response
-    
-    # async def update_employee(
+        # async def update_employee(
     #     self,
     #     db: AsyncSession,
     #     employee_uuid: str,
@@ -275,7 +294,10 @@ class PermanentEmployeeDetailsService:
             employee.designation_uuid = request.designation_uuid
 
         if request.reporting_manager_uuid is not None:
-            employee.reporting_manager_uuid = request.reporting_manager_uuid
+            employee.reporting_manager_uuid = await self.resolve_reporting_manager_employee_id(
+                db,
+                request.reporting_manager_uuid
+            )
 
         if request.employment_type is not None:
             employee.employment_type = request.employment_type
@@ -324,20 +346,62 @@ class PermanentEmployeeDetailsService:
 
         return {"message": "Employee deleted successfully"}
 
-    async def bulk_direct_upload(self, db, file, uploaded_by):
+    CURRENCIES = ["INR", "USD", "EUR", "GBP", "AED", "SGD", "AUD", "CAD"]
+    EMPLOYEE_TYPES = ["Full-Time", "Part-Time", "Intern", "Contractor", "Freelance"]
+    WORK_MODES = ["Office", "Remote", "Hybrid"]
+    EMPLOYMENT_STATUSES = [
+        "Probation",
+        "Active",
+        "Resigned",
+        "Terminated",
+        "Absconded",
+        "Exited",
+        "On-Notice",
+    ]
+    BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
+    GENDERS = ["Male", "Female", "Other"]
+    MARITAL_STATUSES = ["Single", "Married", "Divorced", "Widowed"]
 
+   
+
+    def get_employee_id(self, manager_value):
+        if not manager_value:
+            return None
+        value = str(manager_value).strip()
+        if " - " in value:
+            return value.split(" - ", 1)[0].strip()
+        return value
+
+
+    async def bulk_direct_upload(self, db, file, current_user_id):
         data = parse_excel(file)
 
         success_count = 0
         failed_records = []
 
         for index, row in enumerate(data):
-
             try:
+                # Convert date fields from DD/MM/YYYY to YYYY-MM-DD
+                for field in ["joining_date", "date_of_birth"]:
+                    if row.get(field):
+                        value = row.get(field)
+
+                        # If Excel parser returns string like 13/05/2026
+                        if isinstance(value, str):
+                            try:
+                                row[field] = datetime.strptime(
+                                    value.strip(),
+                                    "%d/%m/%Y"
+                                ).date()
+                            except ValueError:
+                                # If already in another valid format, leave as-is
+                                pass
+
                 user_uuid = str(generate_uuid7())
                 employee_uuid = str(generate_uuid7())
 
-                # Get UUIDs
+                employee_id = row.get("employee_id")
+                work_email = row.get("work_email")
                 department_uuid = await self.dao.get_department_uuid(
                     db,
                     row.get("department")
@@ -348,47 +412,60 @@ class PermanentEmployeeDetailsService:
                     row.get("designation")
                 )
 
-                # Insert Offer Letter
+                reporting_manager_employee_id = self.get_employee_id(
+                    row.get("reporting_manager_uuid")
+                )
+
                 await self.dao.insert_offer_letter(
                     db,
                     row,
                     user_uuid,
-                    uploaded_by
+                    current_user_id,
+                    reporting_manager_employee_id
                 )
 
-                # Insert Employee
                 await self.dao.insert_employee(
                     db,
                     row,
                     user_uuid,
                     employee_uuid,
+                    employee_id,
+                    work_email,
                     department_uuid,
-                    designation_uuid
+                    designation_uuid,
+                    reporting_manager_employee_id,
+                    current_user_id,
                 )
 
                 success_count += 1
 
             except Exception as e:
-
-                failed_records.append({
-                    "row": index + 1,
-                    "reason": str(e)
-                })
+                failed_records.append(
+                    {
+                        "row": index + 2,
+                        "reason": str(e),
+                    }
+                )
 
         return {
             "message": "Bulk upload completed",
             "success_count": success_count,
             "failed_count": len(failed_records),
-            "failed_records": failed_records
+            "failed_records": failed_records,
         }
     async def download_bulk_template(self, db):
-
         departments = await self.dao.get_departments(db)
         designations = await self.dao.get_designations(db)
+        country_codes = await self.dao.get_country_codes(db)
+        employees = await self.dao.get_employees_for_dropdown(db)
 
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Employee Upload"
+        manager_values = []
+        for emp in employees:
+            employee_id, first_name, middle_name, last_name = emp
+            name = " ".join(
+                part for part in [first_name, middle_name, last_name] if part
+            ).strip()
+            manager_values.append(f"{employee_id} - {name}")
 
         headers = [
             "first_name",
@@ -398,15 +475,14 @@ class PermanentEmployeeDetailsService:
             "country_code",
             "contact_number",
             "employee_type",
-            "package",
             "currency",
             "joining_date",
             "cc_emails",
             "total_ctc",
             "job_id",
-            "employee_id",
             "date_of_birth",
             "work_email",
+            "employee_id",
             "department",
             "designation",
             "reporting_manager_uuid",
@@ -417,82 +493,115 @@ class PermanentEmployeeDetailsService:
             "blood_group",
             "gender",
             "marital_status",
-            "total_experience"
+            "total_experience",
         ]
 
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Employee Upload"
         ws.append(headers)
 
-        # Master Sheet
         master = wb.create_sheet("Master")
-        master["A1"] = "Departments"
 
-        # Fill Departments
-        for i, dept in enumerate(departments, start=2):
-            master[f"A{i}"] = dept[1]
+        master_data = {
+            "CountryCodes": country_codes,
+            "EmployeeTypes": self.EMPLOYEE_TYPES,
+            "Currencies": self.CURRENCIES,
+            "Managers": manager_values,
+            "EmploymentTypes": self.EMPLOYEE_TYPES,
+            "WorkModes": self.WORK_MODES,
+            "EmploymentStatuses": self.EMPLOYMENT_STATUSES,
+            "BloodGroups": self.BLOOD_GROUPS,
+            "Genders": self.GENDERS,
+            "MaritalStatuses": self.MARITAL_STATUSES,
+        }
 
-        # Group Designations
-        dept_map = {}
+        col = 1
+        for range_name, values in master_data.items():
+            master.cell(row=1, column=col, value=range_name)
+            for i, value in enumerate(values, start=2):
+                master.cell(row=i, column=col, value=value)
 
-        for des in designations:
-            dept_uuid = des[2]
-            dept_map.setdefault(dept_uuid, []).append(des[1])
-
-        col = 2
-
-        for dept in departments:
-
-            dept_name = dept[1]
-            safe_name = dept_name.replace(" ", "_")
-
-            master.cell(row=1, column=col, value=safe_name)
-
-            designations_list = dept_map.get(dept[0], [])
-
-            for i, des in enumerate(designations_list, start=2):
-                master.cell(row=i, column=col, value=des)
-
-            # Named Range
-            if designations_list:
-
-                start_row = 2
-                end_row = len(designations_list) + 1
-
-                column_letter = get_column_letter(col)
-
-                defined_name = DefinedName(
-                    safe_name,
-                    attr_text=f"Master!${column_letter}${start_row}:${column_letter}${end_row}"
+            if values:
+                col_letter = get_column_letter(col)
+                wb.defined_names.add(
+                    DefinedName(
+                        range_name,
+                        attr_text=f"Master!${col_letter}$2:${col_letter}${len(values)+1}",
+                    )
                 )
-
-                wb.defined_names.add(defined_name)
-
             col += 1
 
-        # Department Dropdown
-        dept_dropdown = DataValidation(
-            type="list",
-            formula1="=Master!$A$2:$A$100",
-            allow_blank=True
-        )
+        dept_map = {}
+        for designation_uuid, designation_name, department_uuid in designations:
+            dept_map.setdefault(department_uuid, []).append(designation_name)
 
-        ws.add_data_validation(dept_dropdown)
+        for department_uuid, department_name in departments:
+            safe_name = department_name.replace(" ", "_")
+            master.cell(row=1, column=col, value=safe_name)
 
-        # Designation Dropdown
-        des_dropdown = DataValidation(
-            type="list",
-            formula1='=INDIRECT(SUBSTITUTE($Q2," ","_"))',
-            allow_blank=True
-        )
+            des_list = dept_map.get(department_uuid, [])
+            for i, des in enumerate(des_list, start=2):
+                master.cell(row=i, column=col, value=des)
 
-        ws.add_data_validation(des_dropdown)
+            if des_list:
+                col_letter = get_column_letter(col)
+                wb.defined_names.add(
+                    DefinedName(
+                        safe_name,
+                        attr_text=f"Master!${col_letter}$2:${col_letter}${len(des_list)+1}",
+                    )
+                )
+            col += 1
 
-        # Apply dropdown for multiple rows
-        for row in range(2, 200):
-            dept_dropdown.add(f"Q{row}")
-            des_dropdown.add(f"R{row}")
+        dept_names = [dept[1] for dept in departments]
+        master.cell(row=1, column=col, value="Departments")
+        for i, dept_name in enumerate(dept_names, start=2):
+            master.cell(row=i, column=col, value=dept_name)
 
-        # Hide Master Sheet (Optional)
-        # master.sheet_state = "hidden"
+        if dept_names:
+            col_letter = get_column_letter(col)
+            wb.defined_names.add(
+                DefinedName(
+                    "Departments",
+                    attr_text=f"Master!${col_letter}$2:${col_letter}${len(dept_names)+1}",
+                )
+            )
+
+        header_to_col = {header: i + 1 for i, header in enumerate(headers)}
+
+        def add_dropdown(header, range_name):
+            col_idx = header_to_col[header]
+            col_letter = get_column_letter(col_idx)
+            dv = DataValidation(type="list", formula1=f"={range_name}", allow_blank=True)
+            ws.add_data_validation(dv)
+            dv.add(f"{col_letter}2:{col_letter}500")
+
+        add_dropdown("country_code", "CountryCodes")
+        add_dropdown("employee_type", "EmployeeTypes")
+        add_dropdown("currency", "Currencies")
+        add_dropdown("reporting_manager_uuid", "Managers")
+        add_dropdown("employment_type", "EmploymentTypes")
+        add_dropdown("work_mode", "WorkModes")
+        add_dropdown("employment_status", "EmploymentStatuses")
+        add_dropdown("blood_group", "BloodGroups")
+        add_dropdown("gender", "Genders")
+        add_dropdown("marital_status", "MaritalStatuses")
+        add_dropdown("department", "Departments")
+
+        dept_col = get_column_letter(header_to_col["department"])
+        des_col = get_column_letter(header_to_col["designation"])
+
+        for row in range(2, 501):
+            dv = DataValidation(
+                type="list",
+                formula1=f'=INDIRECT(SUBSTITUTE(${dept_col}{row}," ","_"))',
+                allow_blank=True,
+            )
+            ws.add_data_validation(dv)
+            dv.add(f"{des_col}{row}")
+
+        master.sheet_state = "hidden"
 
         stream = BytesIO()
         wb.save(stream)
@@ -503,5 +612,5 @@ class PermanentEmployeeDetailsService:
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={
                 "Content-Disposition": "attachment; filename=employee_template.xlsx"
-            }
+            },
         )

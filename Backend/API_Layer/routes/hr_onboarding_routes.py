@@ -28,7 +28,7 @@ def extract_experience_documents(experience_data):
  
 @router.get("/hr/{user_uuid}")
 async def get_full_onboarding_details(user_uuid: str, request: Request, db: AsyncSession = Depends(get_db)):
-    current_user_id = int(request.state.user.get("user_id"))
+    current_user_id = int(request.state.user.get("employee_id"))
     service = HrOnboardingService(db)
     data = await service.get_full_onboarding_details(user_uuid, current_user_id)
     if not data:

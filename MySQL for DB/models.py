@@ -711,6 +711,9 @@
 #         server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
 #     )
 
+from fastapi import param_functions
+from Backend.API_Layer.interfaces import offer_request_interfaces
+from Backend.API_Layer.interfaces import offer_request_interfaces
 class Designations(Base):
     __tablename__ = "designations"
 
@@ -2088,3 +2091,4 @@ class EmployeeTasks(Base):
         "OfferLetterDetails",
         backref="employee_tasks"
     )
+

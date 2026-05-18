@@ -23,6 +23,8 @@ class EmploymentStatus(str, Enum):
     RESIGNED = "Resigned"
     TERMINATED = "Terminated"
     ABSCONDED = "Absconded"
+    EXITED = "Exited"
+    ON_NOTICE = "On-Notice"
 
 
 class Gender(str, Enum):

@@ -1,3 +1,4 @@
+from Backend.API_Layer.interfaces import exit_final_settlement_interface
 from datetime import date
 
 from fastapi import HTTPException
@@ -11,6 +12,20 @@ class HrBulkJoinService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.dao = HrBulkJoinDAO(self.db)
+
+    async def resolve_reporting_manager(self, reporting_manager):
+        manager = await self.dao.get_employee_by_manager_value(reporting_manager)
+
+        if not manager:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid reporting manager selected"
+            )
+
+        return {
+            "employee_id": manager.employee_id,
+            "name": f"{manager.first_name} {manager.last_name}".strip()
+        }
 
     # ✅ Status Logic
     def get_joining_status(self, new_joining_date, is_reassigned=False):
@@ -69,11 +84,16 @@ class HrBulkJoinService:
 
         print("FINAL STATUS FROM FUNCTION :", status)
 
+        reporting_manager = await self.resolve_reporting_manager(
+            payload.reporting_manager
+        )
+
         updated_rows = await self.dao.update_joining_date_for_verified(
             payload.user_emails_list,
             payload.joining_date,
             payload,
-            status
+            status,
+            reporting_manager["employee_id"]
         )
 
         print("UPDATED ROWS :", updated_rows)
@@ -91,7 +111,7 @@ class HrBulkJoinService:
                 location=payload.location,
                 reporting_time=payload.reporting_time,
                 department=payload.department,
-                reporting_manager=payload.reporting_manager,
+                reporting_manager=reporting_manager["name"],
                 custom_message=payload.custom_message
             )
 
@@ -134,10 +154,15 @@ class HrBulkJoinService:
 
         print("FINAL STATUS FROM FUNCTION :", status)
 
+        reporting_manager = await self.resolve_reporting_manager(
+            payload.reporting_manager
+        )
+
         await self.dao.update_joining_date_for_user(
             payload.user_uuid,
             payload,
-            status
+            status,
+            reporting_manager["employee_id"]
         )
 
         print("DATABASE UPDATED SUCCESSFULLY")
@@ -153,7 +178,7 @@ class HrBulkJoinService:
             reporting_time=payload.reporting_time,
             location=payload.location,
             department=payload.department,
-            reporting_manager=payload.reporting_manager,
+            reporting_manager=reporting_manager["name"],
             custom_message=payload.joining_comments
         )
 
@@ -164,36 +189,31 @@ class HrBulkJoinService:
         }
     
 
-    # ✅ Get employees under reporting manager
-    async def get_employees_under_manager(
-        self,
-        user_uuid: str
-    ):
-        # Step 1 — Find manager
-        manager = await self.dao.get_user_by_uuid(user_uuid)
+    async def get_employees_under_manager(self, employee_id: str):
+        """
+        Given a manager's employee_id, return all employees
+        whose reporting_manager_uuid equals that employee_id.
+        """
+        employees = await self.dao.get_employees_under_manager(employee_id)
 
-        if not manager:
+        if not employees:
             raise HTTPException(
                 status_code=404,
-                detail="Manager not found"
+                detail=f"No employees found under manager ID: {employee_id}"
             )
 
-        # Step 2 — Manager full name
-        manager_name = (
-            f"{manager.first_name} {manager.last_name}"
-        ).strip()
-
-        # Step 3 — Fetch employees
-        employees = await self.dao.get_employees_under_manager(
-            manager_name
-        )
-
-        # Step 4 — Response
         return [
             {
-                "user_uuid": offer.user_uuid,
-                "name": f"{offer.first_name} {offer.last_name}".strip(),
-                "employee_id": employee.employee_id
+                "employee_id": employee.employee_id,
+                "user_uuid": employee.user_uuid,
+                "name": " ".join(
+                    part for part in [
+                        employee.first_name,
+                        employee.middle_name,
+                        employee.last_name
+                    ]
+                    if part
+                ).strip()
             }
-            for offer, employee in employees
+            for employee in employees
         ]

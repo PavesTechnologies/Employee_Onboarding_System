@@ -1,15 +1,15 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
 from typing import List
 
-from ...DAL.models.models import OfferLetterDetails, EmployeeDetails
+from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ...DAL.models.models import EmployeeDetails, OfferLetterDetails
 
 
 class HrBulkJoinDAO:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    # ✅ Get only verified users
     async def get_verified_users_by_emails(self, email_list: List[str]):
         query = select(OfferLetterDetails).where(
             OfferLetterDetails.mail.in_(email_list),
@@ -18,7 +18,6 @@ class HrBulkJoinDAO:
         result = await self.db.execute(query)
         return result.scalars().all()
 
-    # ✅ Count verified users
     async def count_verified_by_emails(self, email_list: List[str]):
         query = select(OfferLetterDetails).where(
             OfferLetterDetails.mail.in_(email_list),
@@ -27,43 +26,22 @@ class HrBulkJoinDAO:
         result = await self.db.execute(query)
         return len(result.scalars().all())
 
-    # ✅ Update joining details for multiple users
-    # async def update_joining_date_for_verified(
-    #     self,
-    #     email_list: List[str],
-    #     joining_date,
-    #     payload
-    # ):
-    #     stmt = (
-    #         update(OfferLetterDetails)
-    #         .where(OfferLetterDetails.mail.in_(email_list))
-    #         .values(
-    #             joining_date=joining_date,
-    #             reporting_manager=payload.reporting_manager,
-    #             joining_comments=getattr(payload, "joining_comments", None),
-    #             status="joining"
-    #         )
-    #     )
-
-    #     result = await self.db.execute(stmt)
-    #     await self.db.commit()
-    #     return result.rowcount
-
     async def update_joining_date_for_verified(
         self,
         email_list: List[str],
         joining_date,
         payload,
-        status   # ✅ pass from service
+        status,
+        reporting_manager
     ):
         stmt = (
             update(OfferLetterDetails)
             .where(OfferLetterDetails.mail.in_(email_list))
             .values(
                 joining_date=joining_date,
-                reporting_manager=payload.reporting_manager,
+                reporting_manager=reporting_manager,
                 joining_comments=getattr(payload, "joining_comments", None),
-                status=status   # ✅ dynamic
+                status=status
             )
         )
 
@@ -71,19 +49,19 @@ class HrBulkJoinDAO:
         await self.db.commit()
         return result.rowcount
 
-    # ✅ Update joining details for single user
     async def update_joining_date_for_user(
         self,
         user_uuid: str,
         payload,
-        status: str
+        status: str,
+        reporting_manager
     ):
         stmt = (
             update(OfferLetterDetails)
             .where(OfferLetterDetails.user_uuid == user_uuid)
             .values(
                 joining_date=payload.new_joining_date,
-                reporting_manager=payload.reporting_manager,
+                reporting_manager=reporting_manager,
                 joining_comments=payload.joining_comments,
                 status=status
             )
@@ -93,7 +71,6 @@ class HrBulkJoinDAO:
         await self.db.commit()
         return result.rowcount
 
-    # ✅ Get user by UUID
     async def get_user_by_uuid(self, user_uuid: str):
         query = select(OfferLetterDetails).where(
             OfferLetterDetails.user_uuid == user_uuid
@@ -101,23 +78,47 @@ class HrBulkJoinDAO:
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
-    # ✅ Get employees under manager
-    # ✅ Get employees under manager with employee_id
-    async def get_employees_under_manager(
-        self,
-        manager_name: str
-    ):
+    async def get_employee_by_manager_value(self, reporting_manager: str):
+        if reporting_manager is None:
+            return None
+
+        manager_value = str(reporting_manager).strip()
+        if not manager_value:
+            return None
+
+        filters = [
+            EmployeeDetails.employee_id == manager_value,
+            EmployeeDetails.employee_uuid == manager_value,
+            EmployeeDetails.user_uuid == manager_value
+        ]
+
+        if manager_value.isdigit():
+            filters.insert(0, EmployeeDetails.id == int(manager_value))
+
+        for filter_condition in filters:
+            query = select(EmployeeDetails).where(filter_condition)
+            result = await self.db.execute(query)
+            employee = result.scalar_one_or_none()
+            if employee:
+                return employee
+
+        return None
+
+    async def get_employees_under_manager(self, manager_employee_id: str):
+        """
+        Fetch all employees whose reporting_manager_uuid
+        contains the manager's employee_id.
+        Example:
+            manager_employee_id = "5100001"
+            reporting_manager_uuid = "5100001"
+        """
         query = (
-            select(OfferLetterDetails, EmployeeDetails)
-            .join(
-                EmployeeDetails,
-                OfferLetterDetails.user_uuid == EmployeeDetails.user_uuid
-            )
+            select(EmployeeDetails)
             .where(
-                OfferLetterDetails.reporting_manager == manager_name
+                EmployeeDetails.reporting_manager_uuid == manager_employee_id
             )
+            .order_by(EmployeeDetails.first_name)
         )
 
         result = await self.db.execute(query)
-
-        return result.all()
+        return result.scalars().all()

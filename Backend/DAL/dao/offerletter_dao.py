@@ -52,7 +52,7 @@ class OfferLetterDAO:
 
         return offer
 
-    async def create_offer(self, uuid: str, request_data: OfferCreateRequest, current_user_id: int) -> OfferLetterDetails:
+    async def create_offer(self, uuid: str, request_data: OfferCreateRequest, current_user_id: str) -> OfferLetterDetails:
         """
         Create a single offer with immediate commit.
         Use for single offer creation.
@@ -90,7 +90,7 @@ class OfferLetterDAO:
          
         return new_offer
 
-    async def create_offer_no_commit(self, uuid: str, request_data: OfferCreateRequest, current_user_id: int) -> OfferLetterDetails:
+    async def create_offer_no_commit(self, uuid: str, request_data: OfferCreateRequest, current_user_id: str) -> OfferLetterDetails:
         """
         Create a single offer WITHOUT committing.
         Use inside a transaction context for bulk operations.
@@ -143,7 +143,7 @@ class OfferLetterDAO:
         result = await self.db.execute(select(OfferLetterDetails))
         return result.scalars().all()
 
-    async def get_offer_by_user_id(self, user_id: int):
+    async def get_offer_by_user_id(self, user_id: str):
         start = time.perf_counter()
 
         stmt = (
@@ -269,7 +269,7 @@ class OfferLetterDAO:
     self,
     user_uuid: str,
     request_data: OfferCreateRequest,
-    current_user_id: int,
+    current_user_id: str,
 ) -> bool:
     # 1. Update the main OfferLetterDetails record
         stmt = (
@@ -318,7 +318,7 @@ class OfferLetterDAO:
         return True
 
     
-    async def fetch_created_offerletters(self, created_by: int):
+    async def fetch_created_offerletters(self, created_by: str):
         """
         Returns all offer letters:
         - status = 'created'
@@ -336,7 +336,7 @@ class OfferLetterDAO:
         result = await self.db.execute(query)
         return result.scalars().all()
 
-    async def update_offerletter_status(self, user_uuid: str, new_status: str, current_user_id: int):
+    async def update_offerletter_status(self, user_uuid: str, new_status: str, current_user_id: str):
         """
         Update only the status of an offer letter by UUID.
         """

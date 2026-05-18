@@ -54,3 +54,18 @@ class DashboardResponse(BaseModel):
     documents: Documents
     aging: Aging
     recent_activity: List[Activity]
+
+
+class CelebrationItem(BaseModel):
+    name: str
+    date: str
+
+
+class WorkAnniversaryItem(CelebrationItem):
+    anniversaryYear: int
+
+
+class CelebrationsResponse(BaseModel):
+    birthdays: List[CelebrationItem]
+    workAnniversaries: List[WorkAnniversaryItem]
+    newJoinees: List[CelebrationItem]
