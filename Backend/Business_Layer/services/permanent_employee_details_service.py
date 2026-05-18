@@ -175,26 +175,26 @@ class PermanentEmployeeDetailsService:
 
         for emp in employees:
             response.append({
-                "user_uuid": emp.user_uuid,
-                "employee_uuid": emp.employee_uuid,
-                "employee_id": emp.employee_id,
-                "first_name": emp.first_name,
-                "middle_name": emp.middle_name,
-                "last_name": emp.last_name,
-                "date_of_birth": emp.date_of_birth,
-                "work_email": emp.work_email,
-                "contact_number": emp.contact_number,
-                "department_uuid": emp.department_uuid,
-                "designation_uuid": emp.designation_uuid,
-                "reporting_manager_uuid": emp.reporting_manager_uuid,
-                "employment_type": emp.employment_type,
-                "joining_date": emp.joining_date,
-                "location": emp.location,
-                "work_mode": emp.work_mode,
-                "employment_status": emp.employment_status,
-                "blood_group": emp.blood_group,
-                "gender": emp.gender,
-                "marital_status": emp.marital_status
+                               "user_uuid": emp["user_uuid"],  # Now this works!
+                "employee_uuid": emp["employee_uuid"],
+                "employee_id": emp.get("employee_id"),
+                "first_name": emp.get("first_name"),
+                "middle_name": emp.get("middle_name"),
+                "last_name": emp.get("last_name"),
+                "date_of_birth": str(emp["date_of_birth"]) if emp.get("date_of_birth") else None,
+                "work_email": emp.get("work_email"),
+                "contact_number": emp.get("contact_number"),
+                "department_uuid": emp.get("department_uuid"),
+                "designation_uuid": emp.get("designation_uuid"),
+                "reporting_manager_uuid": emp.get("reporting_manager_uuid"),
+                "employment_type": emp.get("employment_type"),
+                "joining_date": str(emp["joining_date"]) if emp.get("joining_date") else None,
+                "location": emp.get("location"),
+                "work_mode": emp.get("work_mode"),
+                "employment_status": emp.get("employment_status"),
+                "blood_group": emp.get("blood_group"),
+                "gender": emp.get("gender"),
+                "marital_status": emp.get("marital_status"),
             })
 
         return response
