@@ -186,6 +186,7 @@ class PermanentEmployeeDetailsService:
                 "contact_number": emp.contact_number,
                 "department_uuid": emp.department_uuid,
                 "designation_uuid": emp.designation_uuid,
+                "reporting_manager_uuid": emp.reporting_manager_uuid,
                 "employment_type": emp.employment_type,
                 "joining_date": emp.joining_date,
                 "location": emp.location,
