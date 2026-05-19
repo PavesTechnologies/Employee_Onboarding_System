@@ -76,7 +76,8 @@ class HrBulkJoinDAO:
             OfferLetterDetails.user_uuid == user_uuid
         )
         result = await self.db.execute(query)
-        return result.scalar_one_or_none()
+        print(result.scalars().all())
+        return result.scalars().all()
 
     async def get_employee_by_manager_value(self, reporting_manager: str):
         if reporting_manager is None:
