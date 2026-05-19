@@ -195,7 +195,7 @@ class PermanentEmployeeDetailsService:
         response = []
         for emp in employees:
             response.append({
-                "user_uuid": emp["user_uuid"],  # Now this works!
+                               "user_uuid": emp["user_uuid"],  # Now this works!
                 "employee_uuid": emp["employee_uuid"],
                 "employee_id": emp.get("employee_id"),
                 "first_name": emp.get("first_name"),
@@ -206,6 +206,7 @@ class PermanentEmployeeDetailsService:
                 "contact_number": emp.get("contact_number"),
                 "department_uuid": emp.get("department_uuid"),
                 "designation_uuid": emp.get("designation_uuid"),
+                "reporting_manager_uuid": emp.get("reporting_manager_uuid"),
                 "employment_type": emp.get("employment_type"),
                 "joining_date": str(emp["joining_date"]) if emp.get("joining_date") else None,
                 "location": emp.get("location"),
@@ -213,7 +214,7 @@ class PermanentEmployeeDetailsService:
                 "employment_status": emp.get("employment_status"),
                 "blood_group": emp.get("blood_group"),
                 "gender": emp.get("gender"),
-                "marital_status": emp.get("marital_status")
+                "marital_status": emp.get("marital_status"),
             })
 
         return response

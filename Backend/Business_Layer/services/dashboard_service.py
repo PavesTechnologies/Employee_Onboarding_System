@@ -12,3 +12,9 @@ class DashboardService:
             start_date=start_date,
             end_date=end_date
         )
+
+    async def get_celebrations(self, start_date, end_date):
+        return await self.dao.get_celebrations(
+            start_date=start_date,
+            end_date=end_date
+        )

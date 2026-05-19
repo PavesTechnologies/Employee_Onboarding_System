@@ -118,6 +118,7 @@ class PermanentEmployeeDetailsDAO:
             EmployeeDetails.contact_number,
             EmployeeDetails.department_uuid,
             EmployeeDetails.designation_uuid,
+            EmployeeDetails.reporting_manager_uuid,
             EmployeeDetails.employment_type,
             EmployeeDetails.joining_date,
             EmployeeDetails.location,
