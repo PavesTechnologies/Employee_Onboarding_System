@@ -189,22 +189,12 @@ class HrBulkJoinService:
         }
     
 
-<<<<<<< Updated upstream
     async def get_employees_under_manager(self, employee_id: str):
         """
         Given a manager's employee_id, return all employees
         whose reporting_manager_uuid equals that employee_id.
         """
         employees = await self.dao.get_employees_under_manager(employee_id)
-=======
-    # ✅ Get employees under reporting manager
-    async def get_employees_under_manager(
-        self,
-        employee_id: str
-    ):
-        # Step 1 — Find manager
-        manager = await self.dao.get_user_by_uuid(employee_id)
->>>>>>> Stashed changes
 
         if not employees:
             raise HTTPException(

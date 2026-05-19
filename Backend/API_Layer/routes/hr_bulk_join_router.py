@@ -77,14 +77,8 @@ async def get_employees_under_manager(
     try:
         service = HrBulkJoinService(db)
 
-<<<<<<< Updated upstream
         employees = await service.get_employees_under_manager(employee_id)
-=======
-        employees = await service.get_employees_under_manager(
-            employee_id
-        )
 
->>>>>>> Stashed changes
         return {
             "employees": employees
         }
