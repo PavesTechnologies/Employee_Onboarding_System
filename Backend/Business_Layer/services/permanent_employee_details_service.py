@@ -374,6 +374,7 @@ class PermanentEmployeeDetailsService:
 
 
     async def bulk_direct_upload(self, db, file, current_user_id):
+        
         data = parse_excel(file)
 
         success_count = 0

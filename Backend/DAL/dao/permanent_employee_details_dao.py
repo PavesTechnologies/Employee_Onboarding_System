@@ -6,16 +6,25 @@ from sqlalchemy.orm import load_only
 
 class PermanentEmployeeDetailsDAO:
 
+    # async def get_last_employee(self, db: AsyncSession):
+
+    #     result = await db.execute(
+    #         select(EmployeeDetails)
+    #         .order_by(EmployeeDetails.id.desc())
+    #         .limit(1)
+    #     )
+
+    #     return result.scalars().first()
     async def get_last_employee(self, db: AsyncSession):
 
         result = await db.execute(
             select(EmployeeDetails)
-            .order_by(EmployeeDetails.id.desc())
+            .where(EmployeeDetails.employee_id.isnot(None))
+            .order_by(EmployeeDetails.employee_id.desc())
             .limit(1)
         )
 
         return result.scalars().first()
-
 
     async def get_employee_by_user_uuid(self, db: AsyncSession, user_uuid: str):
 
