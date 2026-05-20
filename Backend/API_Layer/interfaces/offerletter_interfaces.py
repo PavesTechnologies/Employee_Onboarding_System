@@ -2,6 +2,7 @@
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, EmailStr, Field, field_validator
 from typing import List, Optional
+from datetime import date
 
 class CompensationComponent(BaseModel):
     name: str
@@ -75,6 +76,9 @@ class OfferLetterDetailsResponse(BaseModel):
     total_ctc: float | None = None
     created_by: Optional[str] = None
     status : Optional[str] = None
+    employee_type: Optional[str] = None
+    reporting_manager: Optional[str] = None
+    joining_date: Optional[date] = None
 
     cc_emails: Optional[List[EmailStr]] = None
     compensation_components: List[CompensationComponentResponse] = Field(default_factory=list)

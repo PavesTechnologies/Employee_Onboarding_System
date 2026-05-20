@@ -36,6 +36,11 @@ class DashboardDAO:
                 func.sum(case((OfferLetterDetails.status == "Submitted", 1), else_=0)).label("submitted"),
                 func.sum(case((OfferLetterDetails.status == "Verified", 1), else_=0)).label("verified"),
                 func.sum(case((OfferLetterDetails.status == "Rejected", 1), else_=0)).label("rejected"),
+                func.sum(case((OfferLetterDetails.status=="Completed",1),else_=0)).label("completed"),
+                func.sum(case((OfferLetterDetails.status=="Rescheduled",1),else_=0)).label("rescheduled"),
+                func.sum(case((OfferLetterDetails.status=="Joining Pending",1),else_=0)).label("joining_pending"),
+                func.sum(case((OfferLetterDetails.status=="Joining",1),else_=0)).label("joining"),
+                func.sum(case((OfferLetterDetails.status=="Rejected",1),else_=0)).label("rejected"),
             )
         )
 
@@ -48,6 +53,10 @@ class DashboardDAO:
         submitted = result.submitted or 0
         verified = result.verified or 0
         rejected = result.rejected or 0
+        completed_employees = result.completed or 0
+        rescheduled = result.rescheduled or 0
+        joining_pending = result.joining_pending or 0
+        joining = result.joining or 0
 
         # =========================
         # 2. COMPLETED
@@ -195,7 +204,11 @@ class DashboardDAO:
                 "offers_accepted": accepted,
                 "offers_submitted": submitted,
                 "offers_verified": verified,
-                "offers_rejected": rejected
+                "offers_rejected": rejected,
+                "offers_completed":completed_employees,
+                "offers_rescheduled":rescheduled,
+                "offers_joining_pending":joining_pending,
+                "offers_joining":joining
             },
             "pipeline": {
                 "created": created,

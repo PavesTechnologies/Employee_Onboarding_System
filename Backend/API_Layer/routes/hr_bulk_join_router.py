@@ -78,6 +78,7 @@ async def get_employees_under_manager(
         service = HrBulkJoinService(db)
 
         employees = await service.get_employees_under_manager(employee_id)
+
         return {
             "employees": employees
         }

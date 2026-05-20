@@ -144,8 +144,8 @@ class PermanentEmployeeDetailsService:
 
             total_experience=payload.total_experience,
             created_by=current_user_id,
-            created_at=datetime.datetime.utcnow(),
-            updated_at=datetime.datetime.utcnow()
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
         )
 
         print("Employee object to be created", employee)
