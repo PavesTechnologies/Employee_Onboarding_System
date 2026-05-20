@@ -1050,6 +1050,8 @@ class OfferLetterService:
                 if not offer:
                     raise HTTPException(status_code=404, detail="Offer letter not found")
 
+                offer_status = offer.get("status") if isinstance(offer, dict) else getattr(offer, "status", None)
+
                 # 🚨 Check approval request existence
                 approval_request = await self.dao.get_approval_request_by_user_uuid(user_uuid)
 
@@ -1060,7 +1062,7 @@ class OfferLetterService:
                     )
 
                 # ✅ Apply status-based delete rules
-                if offer.status not in ["Rejected", "Created"]:
+                if offer_status not in ["Rejected", "Created"]:
                     raise HTTPException(
                         status_code=400,
                         detail="Offer letter cannot be deleted due to its current status",

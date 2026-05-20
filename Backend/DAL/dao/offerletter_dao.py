@@ -433,16 +433,7 @@ class OfferLetterDAO:
         """
         Delete an offer letter by user UUID.
         """
-
-        # 1. Fetch record
         result = await self.db.execute(
-            select(OfferLetterDetails).where(OfferLetterDetails.user_uuid == user_uuid)
+            delete(OfferLetterDetails).where(OfferLetterDetails.user_uuid == user_uuid)
         )
-        offer = result.scalar_one_or_none()
-
-        if not offer:
-            return None
-
-        # 2. Delete the record
-        await self.db.delete(offer)
-        return True
+        return result.rowcount > 0
