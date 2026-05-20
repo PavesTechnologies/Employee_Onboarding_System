@@ -29,29 +29,79 @@ class OfferLetterDAO:
         ]
         return ",".join(cleaned_emails) if cleaned_emails else None
 
+    # async def get_offer_by_user_uuid(self, user_uuid: str):
+    #     result = await self.db.execute(
+    #         select(OfferLetterDetails).where(
+    #             OfferLetterDetails.user_uuid == user_uuid
+    #         )
+    #     )
+    #     offer = result.scalar_one_or_none()
+
+    #     if offer and offer.cc_emails:
+    #         offer.cc_emails = [
+    #             mail.strip()
+    #             for mail in offer.cc_emails.split(",")
+    #             if mail.strip()
+    #         ]
+    #     else:
+    #         if offer:
+    #             offer.cc_emails = []
+
+    #     if offer:
+    #         self.db.expunge(offer)  # Detach from session to avoid faulty sync of the list to the DB
+
+    #     return offer
+
     async def get_offer_by_user_uuid(self, user_uuid: str):
+
         result = await self.db.execute(
             select(OfferLetterDetails).where(
                 OfferLetterDetails.user_uuid == user_uuid
             )
         )
+
         offer = result.scalar_one_or_none()
 
-        if offer and offer.cc_emails:
-            offer.cc_emails = [
+        if not offer:
+            return None
+
+        # Normalize cc_emails
+        cc_emails = (
+            [
                 mail.strip()
                 for mail in offer.cc_emails.split(",")
                 if mail.strip()
             ]
-        else:
-            if offer:
-                offer.cc_emails = []
+            if offer.cc_emails
+            else []
+        )
 
-        if offer:
-            self.db.expunge(offer)  # Detach from session to avoid faulty sync of the list to the DB
+        return {
+            "user_uuid": offer.user_uuid,
 
-        return offer
+            "first_name": offer.first_name,
+            "middle_name": offer.middle_name,
+            "last_name": offer.last_name,
 
+            "mail": offer.mail,
+            "country_code": offer.country_code,
+            "contact_number": offer.contact_number,
+
+            "designation": offer.designation,
+
+            # REQUIRED NEW FIELDS
+            "employee_type": offer.employee_type,
+            "reporting_manager": offer.reporting_manager,
+            "joining_date": offer.joining_date,
+
+            "currency": offer.currency,
+            "total_ctc": offer.total_ctc,
+
+            "created_by": offer.created_by,
+            "status": offer.status,
+
+            "cc_emails": cc_emails
+        }
     async def create_offer(self, uuid: str, request_data: OfferCreateRequest, current_user_id: str) -> OfferLetterDetails:
         """
         Create a single offer with immediate commit.
