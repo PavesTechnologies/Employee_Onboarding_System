@@ -54,6 +54,10 @@ class GenderDeptStats(BaseModel):
 class EmploymentDeptStats(BaseModel):
     dept: str
     full: int
+    partTime: int
+    intern: int
+    contract: int
+    freelance: int
 
 
 # -------- DASHBOARD --------
