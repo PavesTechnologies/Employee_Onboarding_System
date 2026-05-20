@@ -11,7 +11,7 @@ from ..utils.role_based import require_roles
 
 router = APIRouter()
 ## COUNTRY ROUTES START ##
-@router.post("/country", response_model= CreateCountryResponse, dependencies=[Depends(require_roles("HR", "Admin"))])
+@router.post("/country", response_model= CreateCountryResponse)
 async def create_country(
     calling_code: str,
     db: AsyncSession = Depends(get_db)
