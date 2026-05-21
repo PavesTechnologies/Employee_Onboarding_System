@@ -24,12 +24,23 @@ class PermanentEmployeeDetailsService:
     def __init__(self):
         self.dao = PermanentEmployeeDetailsDAO()
 
+    # async def generate_employee_id(self, db: AsyncSession):
+
+    #     last_employee = await self.dao.get_last_employee(db)
+
+    #     if last_employee and last_employee.employee_id:
+    #         new_employee_id = int(last_employee.employee_id) + 1
+    #     else:
+    #         new_employee_id = 5100001
+
+    #     return str(new_employee_id)
+
     async def generate_employee_id(self, db: AsyncSession):
 
-        last_employee = await self.dao.get_last_employee(db)
+        last_employee_id = await self.dao.get_last_employee(db)
 
-        if last_employee and last_employee.employee_id:
-            new_employee_id = int(last_employee.employee_id) + 1
+        if last_employee_id:
+            new_employee_id = last_employee_id + 1
         else:
             new_employee_id = 5100001
 
