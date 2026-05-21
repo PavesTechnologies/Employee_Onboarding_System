@@ -1,4 +1,4 @@
-from sqlalchemy import func, select, text
+from sqlalchemy import Integer, cast, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from Backend.DAL.models.models import EmployeeDetails
@@ -6,16 +6,23 @@ from sqlalchemy.orm import load_only
 
 class PermanentEmployeeDetailsDAO:
 
+    # async def get_last_employee(self, db: AsyncSession):
+
+    #     result = await db.execute(
+    #         select(EmployeeDetails)
+    #         .order_by(EmployeeDetails.id.desc())
+    #         .limit(1)
+    #     )
+
+    #     return result.scalars().first()
     async def get_last_employee(self, db: AsyncSession):
 
         result = await db.execute(
-            select(EmployeeDetails)
-            .order_by(EmployeeDetails.id.desc())
-            .limit(1)
+            select(func.max(cast(EmployeeDetails.employee_id, Integer)))
+            .where(EmployeeDetails.employee_id.isnot(None))
         )
 
-        return result.scalars().first()
-
+        return result.scalar()
 
     async def get_employee_by_user_uuid(self, db: AsyncSession, user_uuid: str):
 
