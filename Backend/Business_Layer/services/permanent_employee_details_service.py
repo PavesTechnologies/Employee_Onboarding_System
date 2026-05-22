@@ -225,6 +225,7 @@ class PermanentEmployeeDetailsService:
                 "blood_group": emp.get("blood_group"),
                 "gender": emp.get("gender"),
                 "marital_status": emp.get("marital_status"),
+                "total_experience": emp.get("total_experience")
             })
 
         return response
