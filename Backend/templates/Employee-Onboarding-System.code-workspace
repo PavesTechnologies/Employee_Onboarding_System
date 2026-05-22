@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "Employee-Onboarding-System",
+			"path": "../.."
+		},
+		{
+			"name": "intranet-fe",
+			"path": "../../../../intranet-fe"
+		}
+	],
+	"settings": {}
+}

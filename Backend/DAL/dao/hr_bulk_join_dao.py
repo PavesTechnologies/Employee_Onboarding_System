@@ -37,6 +37,7 @@ class HrBulkJoinDAO:
         stmt = (
             update(OfferLetterDetails)
             .where(OfferLetterDetails.mail.in_(email_list))
+            .where(OfferLetterDetails.status == "Verified")
             .values(
                 joining_date=joining_date,
                 reporting_manager=reporting_manager,
@@ -76,8 +77,7 @@ class HrBulkJoinDAO:
             OfferLetterDetails.user_uuid == user_uuid
         )
         result = await self.db.execute(query)
-        print(result.scalars().all())
-        return result.scalars().all()
+        return result.scalar_one_or_none()
 
     async def get_employee_by_manager_value(self, reporting_manager: str):
         if reporting_manager is None:
