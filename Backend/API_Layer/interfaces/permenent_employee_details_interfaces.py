@@ -154,3 +154,9 @@ class UpdatePermanentEmployeeRequest(BaseModel):
     marital_status: Optional[MaritalStatus] = None
 
     total_experience: Optional[float] = None
+
+    @validator("department_uuid", "designation_uuid", pre=True)
+    def normalize_optional_foreign_key(cls, value):
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value

@@ -1,4 +1,3 @@
-import datetime
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from Backend.Business_Layer.utils.excel_parcer import parse_excel
@@ -326,7 +325,7 @@ class PermanentEmployeeDetailsService:
         if request.total_experience is not None:
             employee.total_experience = request.total_experience
 
-        employee.updated_at = datetime.datetime.utcnow()
+        employee.updated_at = datetime.utcnow()
 
         employee = await self.dao.update_employee(db, employee)
 
