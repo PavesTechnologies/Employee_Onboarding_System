@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...DAL.dao.hr_bulk_join_dao import HrBulkJoinDAO
+from ...Business_Layer.services.document_service import DocumentService
 from Backend.Business_Layer.utils.email_utils import send_joining_email
 
 
@@ -50,7 +51,69 @@ class HrBulkJoinService:
         print("RETURNING STATUS : Joining")
         return "Joining"
 
+    def build_joining_pdf_data(
+        self,
+        user,
+        joining_date,
+        location: str,
+        reporting_time: str,
+        department: str,
+        reporting_manager_name: str,
+        custom_message: str | None = None
+    ):
+        return {
+            "user_uuid": user.user_uuid,
+            "first_name": user.first_name,
+            "middle_name": user.middle_name,
+            "last_name": user.last_name,
+            "mail": user.mail,
+            "country_code": user.country_code,
+            "contact_number": user.contact_number,
+            "designation": user.designation,
+            "department": department,
+            "joining_date": joining_date.strftime("%d %B %Y"),
+            "reporting_time": reporting_time,
+            "location": location,
+            "reporting_manager": reporting_manager_name,
+            "custom_message": custom_message
+        }
+
     # ✅ First-time Bulk Joining
+    async def generate_bulk_join_preview(self, payload):
+
+        if not payload.user_emails_list:
+            raise HTTPException(
+                status_code=400,
+                detail="No users selected"
+            )
+
+        verified_users = await self.dao.get_verified_users_by_emails(
+            payload.user_emails_list
+        )
+
+        if not verified_users:
+            raise HTTPException(
+                status_code=400,
+                detail="No VERIFIED candidates found"
+            )
+
+        user = verified_users[0]
+        reporting_manager = await self.resolve_reporting_manager(
+            payload.reporting_manager
+        )
+
+        joining_pdf_data = self.build_joining_pdf_data(
+            user=user,
+            joining_date=payload.joining_date,
+            location=payload.location,
+            reporting_time=payload.reporting_time,
+            department=payload.department,
+            reporting_manager_name=reporting_manager["name"],
+            custom_message=payload.custom_message
+        )
+
+        return DocumentService().generate_joining_pdf(joining_pdf_data)
+
     async def process_bulk_join(self, payload, current_user_id: int):
 
         print("\n========== BULK JOIN API CALLED ==========")
@@ -99,10 +162,24 @@ class HrBulkJoinService:
         print("UPDATED ROWS :", updated_rows)
 
         joining_date_str = payload.joining_date.strftime("%d %B %Y")
+        document_service = DocumentService()
 
         for user in verified_users:
 
             print(f"SENDING EMAIL TO : {user.mail}")
+            joining_pdf_data = self.build_joining_pdf_data(
+                user=user,
+                joining_date=payload.joining_date,
+                location=payload.location,
+                reporting_time=payload.reporting_time,
+                department=payload.department,
+                reporting_manager_name=reporting_manager["name"],
+                custom_message=payload.custom_message
+            )
+            pdf_path = document_service.generate_joining_pdf(joining_pdf_data)
+
+            with open(pdf_path, "rb") as pdf_file:
+                pdf_bytes = pdf_file.read()
 
             send_joining_email(
                 to_email=user.mail,
@@ -112,7 +189,9 @@ class HrBulkJoinService:
                 reporting_time=payload.reporting_time,
                 department=payload.department,
                 reporting_manager=reporting_manager["name"],
-                custom_message=payload.custom_message
+                custom_message=payload.custom_message,
+                attachment_bytes=pdf_bytes,
+                attachment_filename=f"joining_letter_{user.user_uuid}.pdf"
             )
 
         skipped = len(payload.user_emails_list) - updated_rows
@@ -168,6 +247,20 @@ class HrBulkJoinService:
         print("DATABASE UPDATED SUCCESSFULLY")
 
         joining_date_str = payload.new_joining_date.strftime("%d %B %Y")
+        document_service = DocumentService()
+        joining_pdf_data = self.build_joining_pdf_data(
+            user=user,
+            joining_date=payload.new_joining_date,
+            location=payload.location,
+            reporting_time=payload.reporting_time,
+            department=payload.department,
+            reporting_manager_name=reporting_manager["name"],
+            custom_message=payload.joining_comments
+        )
+        pdf_path = document_service.generate_joining_pdf(joining_pdf_data)
+
+        with open(pdf_path, "rb") as pdf_file:
+            pdf_bytes = pdf_file.read()
 
         print(f"SENDING EMAIL TO : {user.mail}")
 
@@ -179,7 +272,9 @@ class HrBulkJoinService:
             location=payload.location,
             department=payload.department,
             reporting_manager=reporting_manager["name"],
-            custom_message=payload.joining_comments
+            custom_message=payload.joining_comments,
+            attachment_bytes=pdf_bytes,
+            attachment_filename=f"joining_letter_{user.user_uuid}.pdf"
         )
 
         return {

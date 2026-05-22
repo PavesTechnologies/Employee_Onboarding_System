@@ -233,7 +233,9 @@ def send_joining_email(
     reporting_time: str,
     department: str ,
     reporting_manager: str ,
-    custom_message: str | None = None
+    custom_message: str | None = None,
+    attachment_bytes: bytes | None = None,
+    attachment_filename: str | None = None
 ):
     subject = "Joining Letter – Welcome Aboard"
 
@@ -302,6 +304,14 @@ def send_joining_email(
     msg["From"] = EMAIL_USER
     msg["To"] = to_email
     msg.set_content(html_body, subtype='html')
+
+    if attachment_bytes:
+        msg.add_attachment(
+            attachment_bytes,
+            maintype="application",
+            subtype="pdf",
+            filename=attachment_filename or "joining_letter.pdf"
+        )
 
     try:
         with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as smtp:
