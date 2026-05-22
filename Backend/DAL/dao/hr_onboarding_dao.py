@@ -152,8 +152,7 @@ class HrOnboardingDAO:
                     isouter=True
                 )
                 .where(
-                    OfferLetterDetails.user_uuid == user_uuid,
-                    OfferLetterDetails.created_by == current_user_id
+                    OfferLetterDetails.user_uuid == user_uuid
                 )
             )
             row = res.first()
