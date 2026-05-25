@@ -47,7 +47,7 @@ async def submit_onboarding(
     return {"message": "Onboarding submitted successfully"}
  
  
-@router.get("/view_documents", dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.get("/view_documents", dependencies=[Depends(require_roles("HR", "ADMIN", "REPORTING_MANAGER","GENERAL"))]) 
 async def view_onboarding_documents(file_path: str, db: AsyncSession = Depends(get_db)):
     try:
         file_path = unquote(file_path)

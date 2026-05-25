@@ -184,8 +184,16 @@ class IdentityService:
             )
 
         return rows
-    async def update_employee_identity_document(self, document_uuid, request_data):
+    async def update_employee_identity_document(
+        self,
+        document_uuid,
+        mapping_uuid,
+        identity_file_number,
+        expiry_date=None,
+        file=None
+    ):
         try:
+
             existing = await self.dao.get_employee_identity_document_by_uuid(
                 document_uuid
             )
@@ -197,11 +205,18 @@ class IdentityService:
                 )
 
             return await self.dao.update_employee_identity_document(
-                document_uuid,
-                request_data
+                document_uuid=document_uuid,
+                mapping_uuid=mapping_uuid,
+                identity_file_number=identity_file_number,
+                expiry_date=expiry_date,
+                file=file
             )
 
         except HTTPException as he:
             raise he
+
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(
+                status_code=500,
+                detail=str(e)
+            )
