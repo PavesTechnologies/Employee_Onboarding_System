@@ -223,6 +223,9 @@ class OfferLetterService:
         if not offers:
             return None
         return offers
+
+    async def get_offer_by_user_id(self, user_id: str):
+        return await self.dao.get_offer_by_user_id(user_id)
    
     async def update_offer_by_uuid(self, user_uuid: str, request_data: OfferCreateRequest, current_user_id: str):
         try:
