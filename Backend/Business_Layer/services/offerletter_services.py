@@ -219,10 +219,13 @@ class OfferLetterService:
         return await self.dao.get_all_offers()
     
     async def get_offer_by_uuid(self, user_uuid: str):
-        offers = await self.dao.get_offer_by_uuid(user_uuid)
+        offers = await self.dao.get_offer_by_user_uuid(user_uuid)
         if not offers:
             return None
         return offers
+
+    async def get_offer_by_user_id(self, user_id: str):
+        return await self.dao.get_offer_by_user_id(user_id)
    
     async def update_offer_by_uuid(self, user_uuid: str, request_data: OfferCreateRequest, current_user_id: str):
         try:
@@ -258,8 +261,8 @@ class OfferLetterService:
         except Exception as e:
             await self.db.rollback()
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")    
-    async def get_offer_by_user_id(self, user_id: str):
-        return await self.dao.get_offer_by_user_id(user_id)
+    async def get_offer_by_user_uuid(self, user_uuid: str):
+        return await self.dao.get_offer_by_user_uuid(user_uuid)
 
     async def get_created_offerletters(self, current_user_id: str):
         """
