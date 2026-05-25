@@ -207,7 +207,7 @@ async def get_employee_education_document_by_uuid(uuid: str, db: AsyncSession = 
 
         
 # delete employee education document by uuid
-@router.delete("/employee-education-document/{uuid}", response_model=DeleteEmpEducResponse, dependencies=[Depends(require_roles("HR", "ADMIN"))])
+@router.delete("/employee-education-document/{uuid}", response_model=DeleteEmpEducResponse, dependencies=[Depends(require_roles("HR", "ADMIN", "GENERAL"))])
 async def delete_employee_education_document_by_uuid(uuid: str, db: AsyncSession = Depends(get_db)):
     try:
         education_service = EducationDocService(db)
