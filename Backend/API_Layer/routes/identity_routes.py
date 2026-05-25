@@ -159,14 +159,42 @@ async def get_identities_by_country(country_uuid: str, db: AsyncSession = Depend
         raise HTTPException(status_code=500, detail=str(e))
     
 
-@router.put("/employee-document/{document_uuid}", response_model=EmployeeIdentityDocumentUpdateResponse)
-async def update_employee_identity_document(document_uuid: str, request_data: EmployeeIdentityDocumentUpdateRequest, db: AsyncSession = Depends(get_db)):
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    UploadFile,
+    File,
+    Form
+)
+
+@router.put(
+    "/employee-document/{document_uuid}",
+    response_model=EmployeeIdentityDocumentUpdateResponse
+)
+async def update_employee_identity_document(
+    document_uuid: str,
+
+    mapping_uuid: str = Form(...),
+
+    identity_file_number: str = Form(...),
+
+    expiry_date: str = Form(None),
+
+    file: UploadFile = File(None),
+
+    db: AsyncSession = Depends(get_db)
+):
     try:
+
         identity_service = IdentityService(db)
 
         await identity_service.update_employee_identity_document(
-            document_uuid,
-            request_data
+            document_uuid=document_uuid,
+            mapping_uuid=mapping_uuid,
+            identity_file_number=identity_file_number,
+            expiry_date=expiry_date,
+            file=file
         )
 
         return EmployeeIdentityDocumentUpdateResponse(
@@ -176,5 +204,9 @@ async def update_employee_identity_document(document_uuid: str, request_data: Em
 
     except HTTPException as he:
         raise he
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )

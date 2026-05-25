@@ -64,6 +64,24 @@ app.add_middleware(
 # app.add_middleware(DBSessionMiddleware)
 
 
+def _patch_schema_node(node: dict) -> None:
+    """Pydantic v2 emits contentMediaType for bytes/UploadFile instead of
+    format:binary. Swagger UI only renders a file-chooser for format:binary,
+    so we swap the property everywhere it appears in the schema tree."""
+    if not isinstance(node, dict):
+        return
+    if node.get("contentMediaType") == "application/octet-stream":
+        node.pop("contentMediaType")
+        node["format"] = "binary"
+    for prop in node.get("properties", {}).values():
+        _patch_schema_node(prop)
+    if "items" in node:
+        _patch_schema_node(node["items"])
+    for composite_key in ("allOf", "anyOf", "oneOf"):
+        for sub in node.get(composite_key, []):
+            _patch_schema_node(sub)
+
+
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
@@ -84,6 +102,8 @@ def custom_openapi():
         for method in openapi_schema["paths"][path]:
             if method in ["get", "post", "put", "delete"]:
                 openapi_schema["paths"][path][method]["security"] = [{"BearerAuth": []}]
+    for schema in openapi_schema.get("components", {}).get("schemas", {}).values():
+        _patch_schema_node(schema)
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 

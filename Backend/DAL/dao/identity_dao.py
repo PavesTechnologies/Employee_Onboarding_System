@@ -1,9 +1,11 @@
 import dbm
-from http.client import HTTPException
+from fastapi import HTTPException
 from tracemalloc import start
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.models import IdentityType, CountryIdentityMapping, EmployeeIdentityDocument, OfferLetterDetails
 from sqlalchemy import select, update, exists, delete
+from uuid import uuid4
+from Backend.DAL.utils.storage_utils import S3StorageService
 
 import time
 class IdentityDAO:
@@ -251,7 +253,15 @@ class IdentityDAO:
 
         return result.scalar_one_or_none()
 
-    async def update_employee_identity_document(self, document_uuid, request_data):
+    async def update_employee_identity_document(
+        self,
+        document_uuid,
+        mapping_uuid,
+        identity_file_number,
+        expiry_date=None,
+        file=None
+    ):
+
         result = await self.db.execute(
             select(EmployeeIdentityDocument).where(
                 EmployeeIdentityDocument.document_uuid == document_uuid
@@ -266,12 +276,29 @@ class IdentityDAO:
                 detail="Employee Identity Document Not Found"
             )
 
-        document.mapping_uuid = request_data.mapping_uuid
-        document.identity_file_number = request_data.identity_file_number
-        document.expiry_date = request_data.expiry_date
-        document.file_path = request_data.file_path
+        # ✅ UPDATE NORMAL FIELDS
+        document.mapping_uuid = mapping_uuid
+
+        document.identity_file_number = identity_file_number
+
+        document.expiry_date = expiry_date
+
+        # ✅ ONLY IF NEW FILE PROVIDED
+        if file:
+
+            storage_service = S3StorageService()
+
+            uploaded_file_path = await storage_service.upload_file(
+                file=file,
+                folder="identity_documents",
+                original_filename=file.filename,
+                employee_uuid=document.user_uuid
+            )
+
+            document.file_path = uploaded_file_path
 
         await self.db.commit()
+
         await self.db.refresh(document)
 
-        return document    
+        return document

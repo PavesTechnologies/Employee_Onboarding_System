@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import date
-from typing import List
+from typing import List, Annotated, Optional
 from Backend.API_Layer.interfaces.employee_experience_interfaces import (
     ExperienceCreateRequest,
     ExperienceResponse,
@@ -32,8 +32,8 @@ async def create_experience(
     is_current: bool = Form(False),
     notice_period_days: int | None = Form(None, ge=0, le=120),
 
-    doc_types: List[str] = Form(...),
-    files: List[UploadFile] = File(...),
+    doc_types: Annotated[List[str], Form(description="Document type identifiers (one per file)")] = ...,
+    files: Annotated[List[UploadFile], File(description="Upload documents (one per doc_type)")] = ...,
 
     db: AsyncSession = Depends(get_db),
 ):
@@ -155,8 +155,8 @@ async def update_experience(
     is_current: bool = Form(False),
     notice_period_days: int | None = Form(None, ge=0, le=120),
 
-    doc_types: List[str]|None = Form([]),
-    files: List[UploadFile] | None = File(None),
+    doc_types: Annotated[Optional[List[str]], Form(description="Document type identifiers")] = None,
+    files: Annotated[Optional[List[UploadFile]], File(description="Upload documents")] = None,
 
     db: AsyncSession = Depends(get_db),
 ):

@@ -1,11 +1,32 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
+# =========================================================
+# permanent_employee_details_router.py
+# =========================================================
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    UploadFile,
+    File,
+    Request
+)
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from Backend.API_Layer.interfaces.permenent_employee_details_interfaces import CreatePermanentEmployeeRequest, CreatePermanentEmployeeResponse, UpdatePermanentEmployeeRequest
-from Backend.Business_Layer.services.permanent_employee_details_service import PermanentEmployeeDetailsService
+from Backend.API_Layer.interfaces\
+.permenent_employee_details_interfaces import (
+    CreatePermanentEmployeeRequest,
+    CreatePermanentEmployeeResponse,
+    UpdatePermanentEmployeeRequest
+)
 
-from ...DAL.utils.dependencies import get_db
-from Backend.API_Layer.utils.role_based import require_roles
+from Backend.Business_Layer.services\
+.permanent_employee_details_service import (
+    PermanentEmployeeDetailsService
+)
+
+from Backend.DAL.utils.dependencies import get_db
+
 from Backend.DAL.utils.database import get_read_db
 
 
@@ -17,17 +38,31 @@ router = APIRouter(
 service = PermanentEmployeeDetailsService()
 
 
-@router.post("/", response_model=CreatePermanentEmployeeResponse)
+# =========================================================
+# CREATE EMPLOYEE
+# =========================================================
+
+@router.post(
+    "/",
+    response_model=CreatePermanentEmployeeResponse
+)
 async def create_employee(
-        payload: CreatePermanentEmployeeRequest,
-        request: Request,
-        db: AsyncSession = Depends(get_db)
+    payload: CreatePermanentEmployeeRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
 ):
 
     try:
-        current_user_id = request.state.user.get("employee_id")
-        print("Current user id",current_user_id)
-        return await service.create_employee(db, payload, current_user_id)
+
+        current_user_id = (
+            request.state.user.get("employee_id")
+        )
+
+        return await service.create_employee(
+            db,
+            payload,
+            current_user_id
+        )
 
     except ValueError as e:
 
@@ -35,25 +70,48 @@ async def create_employee(
             status_code=400,
             detail=str(e)
         )
-    
+
+
+# =========================================================
+# GET EMPLOYEE
+# =========================================================
+
 @router.get("/{employee_uuid}")
 async def get_employee(
     employee_uuid: str,
     db: AsyncSession = Depends(get_db)
-    ):
+):
+
     try:
-        return await service.get_employee_by_uuid(db, employee_uuid)
+
+        return await service.get_employee_by_uuid(
+            db,
+            employee_uuid
+        )
 
     except ValueError as e:
+
         raise HTTPException(
             status_code=404,
             detail=str(e)
         )
+
+
+# =========================================================
+# GET ALL EMPLOYEES
+# =========================================================
+
 @router.get("/")
 async def get_all_employees(
     db: AsyncSession = Depends(get_db)
 ):
+
     return await service.get_all_employees(db)
+
+
+# =========================================================
+# UPDATE EMPLOYEE
+# =========================================================
 
 @router.put("/{employee_uuid}")
 async def update_employee(
@@ -61,57 +119,125 @@ async def update_employee(
     request: UpdatePermanentEmployeeRequest,
     db: AsyncSession = Depends(get_db)
 ):
+
     try:
-        return await service.update_employee(db, employee_uuid, request)
+
+        return await service.update_employee(
+            db,
+            employee_uuid,
+            request
+        )
 
     except ValueError as e:
+
         raise HTTPException(
             status_code=404,
             detail=str(e)
         )
-            
+
+
+# =========================================================
+# DELETE EMPLOYEE
+# =========================================================
+
 @router.delete("/{employee_uuid}")
 async def delete_employee(
     employee_uuid: str,
     db: AsyncSession = Depends(get_db)
 ):
+
     try:
-        return await service.delete_employee(db, employee_uuid)
+
+        return await service.delete_employee(
+            db,
+            employee_uuid
+        )
 
     except ValueError as e:
+
         raise HTTPException(
             status_code=404,
             detail=str(e)
         )
+
+
+# =========================================================
+# CURRENT EMPLOYEE
+# =========================================================
+
 def get_current_employee_id(request: Request) -> str:
-    employee_id = request.state.user.get("employee_id")
+
+    employee_id = request.state.user.get(
+        "employee_id"
+    )
+
     if not employee_id:
-        raise HTTPException(status_code=401, detail="Employee ID missing in token")
+
+        raise HTTPException(
+            status_code=401,
+            detail="Employee ID missing in token"
+        )
+
     return str(employee_id)
+
+
+# =========================================================
+# BULK DIRECT UPLOAD
+# =========================================================
+
 @router.post("/bulk-direct-upload")
 async def bulk_direct_upload(
-    request : Request,
+    request: Request,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
 ):
-    try:
-        current_user_id = get_current_employee_id(request)
-        print("Uploaded by",current_user_id)
-        return await service.bulk_direct_upload(db, file, current_user_id)
-    except HTTPException as he:
-        raise he
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
+    try:
+
+        current_user_id = get_current_employee_id(
+            request
+        )
+
+        return await service.bulk_direct_upload(
+            db,
+            file,
+            current_user_id
+        )
+
+    except HTTPException as he:
+
+        raise he
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+# =========================================================
+# DOWNLOAD TEMPLATE
+# =========================================================
 
 @router.get("/bulk-template/")
 async def download_bulk_template(
     db: AsyncSession = Depends(get_read_db),
 ):
-    try:
-        return await service.download_bulk_template(db)
-    except HTTPException as he:
-        raise he
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
+    try:
+
+        return await service.download_bulk_template(
+            db
+        )
+
+    except HTTPException as he:
+
+        raise he
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )

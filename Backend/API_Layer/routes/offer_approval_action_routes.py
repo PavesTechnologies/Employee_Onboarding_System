@@ -1,4 +1,5 @@
-from http.client import HTTPException
+
+from fastapi import HTTPException
 from Backend.API_Layer.interfaces.offer_approve_action_interfaces import OfferApproveActionRequest, OfferApproveActionResponse
 from Backend.API_Layer.interfaces.offer_request_approve_resign import OfferReassignApprovalRequest, OfferReassignApprovalResponse
 from Backend.Business_Layer.utils.ums_users_list import fetch_admin_users_reformed
@@ -28,10 +29,7 @@ async def get_offer_approval_status(
     auth_header = request.headers.get("Authorization")
 
     if not auth_header:
-        raise HTTPException(
-            status_code=401,
-            detail="Authorization token missing"
-        )
+        raise HTTPException(status_code=401,detail="Authorization token missing")
     
     service = OfferApprovalActionService(db)
     return await service.get_offer_status(user_uuid=user_uuid, auth_header=auth_header)
