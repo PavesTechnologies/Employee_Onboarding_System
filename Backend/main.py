@@ -1,5 +1,11 @@
 # from apscheduler.schedulers.background import BackgroundScheduler
+from Backend.API_Layer.routes import hr_bulk_join_router
+from fastapi import HTTPException, Depends, APIRouter
+from back_fill import backfill_old_employee_records
+from Backend.DAL.utils.dependencies import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import FastAPI, Response
+
 from fastapi.openapi.utils import get_openapi
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import os
@@ -221,3 +227,21 @@ def generate_offer():
             "Content-Disposition": "inline; filename=offer_letter.pdf"
         }
     )
+
+@app.post("/backfill-old-employees")
+async def backfill_old_employees(
+    db: AsyncSession = Depends(get_db)
+):
+
+    try:
+
+        result = await backfill_old_employee_records(db)
+
+        return result
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
