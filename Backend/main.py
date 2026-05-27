@@ -48,11 +48,11 @@ from Backend.API_Layer.routes import exit_documents_routes
 
 app = FastAPI(
     title="Employee Onboarding System API",
-    docs_url="/eos/docs",
-    openapi_url="/eos/openapi.json"
+    docs_url="/ems/docs",
+    openapi_url="/ems/openapi.json"
 )
 
-api_router = APIRouter(prefix="/eos")
+api_router = APIRouter(prefix="/ems")
 
 app.add_middleware(JWTMiddleware)
 # Configure CORS

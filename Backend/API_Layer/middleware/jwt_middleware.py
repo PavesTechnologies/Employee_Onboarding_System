@@ -8,7 +8,7 @@ class JWTMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
         # Add paths you want to skip
-        self.open_endpoints = ["/docs","/eos/docs","/eos/openapi.json","/openapi.json", "/eos/redoc", "/eos/offerresponse" ,"/eos/masters/country", "/  eos/employee-upload", "/eos/identity/country-mapping", "/eos/experience/", "/eos/otp/send","/eos/otp/verifyOtp","/eos/education/employee-education-document","/eos/masters/education-level","/eos/education/country-mapping","/eos/education/employee-education-document","/eos/token-verification/", "/eos/docusign", "/eos/employee-upload/identity-documents", "/eos/employee-details","/eos/hr/candidate/submit","/eos/masters/contacts","/eos/generate-offer", "/eos/education/degree-master", "/eos/bank","/eos/pf","/eos/offerletters/offer/"]
+        self.open_endpoints = ["/docs","/ems/docs","/ems/openapi.json","/openapi.json", "/ems/redoc", "/ems/offerresponse" ,"/ems/masters/country", "/  ems/employee-upload", "/ems/identity/country-mapping", "/ems/experience/", "/ems/otp/send","/ems/otp/verifyOtp","/ems/education/employee-education-document","/ems/masters/education-level","/ems/education/country-mapping","/ems/education/employee-education-document","/ems/token-verification/", "/ems/docusign", "/ems/employee-upload/identity-documents", "/ems/employee-details","/ems/hr/candidate/submit","/ems/masters/contacts","/ems/generate-offer", "/ems/education/degree-master", "/ems/bank","/ems/pf","/ems/offerletters/offer/"]
         
     async def dispatch(self, request: Request, call_next):
         # Allow preflight OPTIONS requests to pass through
