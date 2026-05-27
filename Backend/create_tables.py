@@ -4,14 +4,15 @@ from  DAL.models.models import Base
 
 
 async def create_all_tables():
-    DB_HOST = "paves-intranet-demo.czsgackimf7p.ap-south-1.rds.amazonaws.com"
+    DB_HOST = "paves-intranet-db-dev.czsgackimf7p.ap-south-1.rds.amazonaws.com"
     DB_PORT = "3306"
     DB_USER = "admin_paves"
     DB_NAME = "eos"
     DB_PASSWORD = "PavesAdmin"
+    DB_DRIVER = "mysql+asyncmy"
 
     DATABASE_URL = (
-        f"mysql+aiomysql://{DB_USER}:{DB_PASSWORD}"
+        f"{DB_DRIVER}://{DB_USER}:{DB_PASSWORD}"
         f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
 
