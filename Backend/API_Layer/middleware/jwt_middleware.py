@@ -8,7 +8,7 @@ class JWTMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
         # Add paths you want to skip
-        self.open_endpoints = ["/docs", "/openapi.json", "/redoc", "/offerresponse" ,"/masters/country", "/employee-upload", "/identity/country-mapping", "/experience/", "/otp/send","/otp/verifyOtp","education/employee-education-document","/masters/education-level","/education/country-mapping","/education/employee-education-document","/token-verification/", "/docusign", "/employee-upload/identity-documents", "/employee-details","/hr/candidate/submit","/masters/contacts","/generate-offer", "/education/degree-master", "/bank","/pf","/offerletters/offer/"]
+        self.open_endpoints = ["/docs","/eos/docs","/eos/openapi.json","/openapi.json", "/eos/redoc", "/eos/offerresponse" ,"/eos/masters/country", "/  eos/employee-upload", "/eos/identity/country-mapping", "/eos/experience/", "/eos/otp/send","/eos/otp/verifyOtp","/eos/education/employee-education-document","/eos/masters/education-level","/eos/education/country-mapping","/eos/education/employee-education-document","/eos/token-verification/", "/eos/docusign", "/eos/employee-upload/identity-documents", "/eos/employee-details","/eos/hr/candidate/submit","/eos/masters/contacts","/eos/generate-offer", "/eos/education/degree-master", "/eos/bank","/eos/pf","/eos/offerletters/offer/"]
         
     async def dispatch(self, request: Request, call_next):
         # Allow preflight OPTIONS requests to pass through
