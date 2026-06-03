@@ -291,12 +291,6 @@ class HrBulkJoinService:
         """
         employees = await self.dao.get_employees_under_manager(employee_id)
 
-        if not employees:
-            raise HTTPException(
-                status_code=404,
-                detail=f"No employees found under manager ID: {employee_id}"
-            )
-
         return [
             {
                 "employee_id": employee.employee_id,
