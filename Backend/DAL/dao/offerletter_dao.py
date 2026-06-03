@@ -149,6 +149,7 @@ class OfferLetterDAO:
         new_offer = OfferLetterDetails(
             user_uuid=uuid,
             first_name=request_data.first_name,
+            middle_name=request_data.middle_name,
             last_name=request_data.last_name,
             mail=request_data.mail,
             country_code=request_data.country_code,
@@ -156,11 +157,26 @@ class OfferLetterDAO:
             contact_number=request_data.contact_number,
             designation=request_data.designation,
             employee_type=request_data.employee_type,
-            package=request_data.package,
+            total_ctc=request_data.total_ctc,
             currency=request_data.currency,
             cc_emails=self._cc_emails_to_db(request_data.cc_emails),
         )
         self.db.add(new_offer)
+
+        # ensure offer exists before children
+        await self.db.flush()
+
+        # save compensation components
+        for comp in request_data.compensation_components:
+            row = OfferCompensation(
+                offer_uuid=uuid,
+                name=comp.name,
+                type=comp.type,
+                frequency=comp.frequency,
+                amount=comp.amount
+            )
+            self.db.add(row)
+
         # Don't commit - let the caller handle it
         return new_offer
 
