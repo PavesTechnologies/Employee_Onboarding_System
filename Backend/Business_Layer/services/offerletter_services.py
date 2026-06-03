@@ -1,11 +1,15 @@
 # Backend/Business_Layer/services/offerletter_service.py
 import asyncio
 import json
+import logging
+import re
 from unittest import result
 from fastapi import HTTPException
 import base64
 import os
 from fastapi.responses import StreamingResponse
+from io import BytesIO
+import pandas as pd
 import requests
 from httpx import AsyncClient
 import httpx
@@ -14,6 +18,7 @@ from sqlalchemy.exc import IntegrityError
 from ...API_Layer.interfaces.offerletter_interfaces import(
     BulkSendOfferLettersRequest,
     OfferCreateRequest,
+    CompensationComponent,
     BulkSendOfferLettersResult,
     BulkSendOfferLettersResponse
 )
@@ -33,42 +38,83 @@ from ..utils.validation_utils import (
 DOCUSIGN_BASE_URL = get_env_var("DOCUSIGN_BASE_URL")
 DOCUSIGN_ACCOUNT_ID = get_env_var("DOCUSIGN_ACCOUNT_ID")
 DOCUSIGN_TEMPLATE_ID = get_env_var("DOCUSIGN_TEMPLATE_ID")
+
+logger = logging.getLogger(__name__)
+
+# Maps internal field names → possible Excel column header spellings (lowercase)
+_COLUMN_ALIASES: dict[str, list[str]] = {
+    "first_name":     ["first name", "firstname", "first_name"],
+    "middle_name":    ["middle name", "middlename", "middle_name"],
+    "last_name":      ["last name", "lastname", "last_name"],
+    "mail":           ["email", "mail", "e-mail", "email address"],
+    "country_code":   ["country code", "countrycode", "country_code", "calling code"],
+    "contact_number": ["contact number", "phone number", "phone", "mobile", "contact_number"],
+    "designation":    ["designation", "position", "job title", "role"],
+    "employee_type":  ["employee type", "employment type", "type", "employee_type"],
+    "cc_emails":      ["cc mails", "cc emails", "cc mail", "cc_emails", "cc_mail"],
+    "total_ctc":      ["annual ctc", "annual_ctc", "total ctc", "total_ctc", "ctc"],
+    "currency":       ["currency", "currency code"],
+}
+
+# Fields that MUST be present in the uploaded file
+_REQUIRED_EXCEL_FIELDS: list[str] = [
+    "first_name", "last_name", "mail",
+    "country_code", "contact_number",
+    "designation", "employee_type",
+]
+
+# All lowercase aliases that identify non-compensation columns
+_NON_COMP_LOWER: frozenset[str] = frozenset(
+    alias.lower()
+    for aliases in _COLUMN_ALIASES.values()
+    for alias in aliases
+)
+
+
 class OfferLetterService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.dao = OfferLetterDAO(self.db)
 
- 
+
+    async def create_offer_internal(self, request_data: OfferCreateRequest, current_user_id: str) -> str:
+        """
+        Core offer-creation business logic shared by single and bulk create.
+        Validates all fields, checks for duplicates, and inserts via DAO.
+        Does NOT commit – the caller is responsible for committing or rolling back.
+        """
+        # --- VALIDATION ---
+        validate_name(request_data.first_name)
+        if request_data.middle_name:
+            validate_name(request_data.middle_name)
+        validate_name(request_data.last_name)
+        mail = validate_email(request_data.mail)
+        validate_country(request_data.country_code)
+        validate_phone_number(
+            request_data.country_code, request_data.contact_number, type="contact_number"
+        )
+        validate_designation(request_data.designation)
+        validate_currency(request_data.currency)
+
+        # --- DUPLICATE CHECK ---
+        existing_offer = await self.dao.get_offer_by_email(mail)
+        if existing_offer:
+            raise HTTPException(status_code=400, detail="Offer already exists for this email")
+
+        # --- INSERT ---
+        uuid = generate_uuid7()
+        await self.dao.create_offer(uuid, request_data, current_user_id)
+        return uuid
+
     async def create_offer(self, request_data: OfferCreateRequest, current_user_id: str):
         """
         Business logic for creating a new offer letter.
         Includes validation of all user input fields.
         """
         try:
-            # --- VALIDATION SECTION ---
-            first_name = validate_name(request_data.first_name)
-            middle_name = validate_name(request_data.middle_name) if request_data.middle_name else None
-            last_name = validate_name(request_data.last_name)
-            mail = validate_email(request_data.mail)
-            country_code = validate_country(request_data.country_code)
-            contact_number = validate_phone_number(request_data.country_code, request_data.contact_number, type = 'contact_number')
-            designation = validate_designation(request_data.designation)
-            currency = validate_currency(request_data.currency)
-            # package = validate_package(request_data.package)
-            # --- DUPLICATE CHECK ---
-            existing_offer = await self.dao.get_offer_by_email(mail)
-            if existing_offer:
-                raise HTTPException(status_code=400, detail="Offer already exists for this email")
-
-            # --- CREATE OFFER ---
-            uuid = generate_uuid7()
-            new_offer = await self.dao.create_offer(uuid, request_data, current_user_id)
+            uuid = await self.create_offer_internal(request_data, current_user_id)
             await self.db.commit()
-            # await self.create_docusign_draft(uuid)
-
             return uuid
-        
-        
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
         
@@ -85,9 +131,18 @@ class OfferLetterService:
         if df.empty:
             raise HTTPException(status_code=400, detail="Uploaded Excel file is empty.")
 
+        # Rename columns using aliases
+        df.columns = df.columns.str.lower().str.strip()
+        def rename_col(col):
+            for std_name, aliases in _COLUMN_ALIASES.items():
+                if col in aliases:
+                    return std_name
+            return col
+        df.rename(columns=rename_col, inplace=True)
+
         required_columns = {
             'first_name', 'last_name', 'mail', 'country_code',
-            'contact_number', 'designation','employee_type', 'package', 'currency'
+            'contact_number', 'designation','employee_type', 'total_ctc', 'currency'
         }
         if not required_columns.issubset(df.columns):
             missing = required_columns - set(df.columns)
@@ -97,7 +152,7 @@ class OfferLetterService:
             )
 
         total_rows = len(df)
-        df = df.dropna(subset=required_columns)
+        df = df.dropna(subset=list(required_columns))
         skipped_rows = total_rows - len(df)
 
         # --- 2️⃣ Validate All Rows First ---
@@ -113,10 +168,30 @@ class OfferLetterService:
                 country_code = validate_country(str(row['country_code']).strip())
                 contact_number = validate_phone_number(str(row['country_code']).strip(), str(row['contact_number']).strip(), type = 'contact_number')
                 designation = validate_designation(str(row['designation']).strip())
-                package = validate_package(str(row['package']).strip())
                 currency = validate_currency(str(row['currency']).strip())
 
-                print(first_name, last_name, mail, country_code, str(row['contact_number']), designation, package, currency)
+                total_ctc_val = str(row['total_ctc']).strip()
+                try:
+                    total_ctc = float(total_ctc_val)
+                except ValueError:
+                    raise ValueError(f"Invalid total_ctc: {total_ctc_val}")
+
+                # Optional fields
+                middle_name = str(row.get('middle_name', '')).strip() if pd.notna(row.get('middle_name')) and str(row.get('middle_name', '')).strip() else None
+                cc_emails_str = str(row.get('cc_emails', '')).strip() if pd.notna(row.get('cc_emails')) else None
+                cc_emails = [e.strip() for e in cc_emails_str.split(',') if e.strip()] if cc_emails_str else None
+
+                # JSON Compensation components (optional in excel, defaults to empty list)
+                compensation_components = []
+                comp_str = str(row.get('compensation_components', '')).strip() if pd.notna(row.get('compensation_components')) else ''
+                if comp_str:
+                    try:
+                        import json
+                        comp_data = json.loads(comp_str)
+                        compensation_components = [CompensationComponent(**c) for c in comp_data]
+                    except Exception as e:
+                        raise ValueError(f"Invalid compensation components format: {str(e)}")
+
                 # Check for duplicates within the batch
                 if mail in seen_emails:
                     failed_offers.append({
@@ -130,15 +205,17 @@ class OfferLetterService:
                 
                 request_data = OfferCreateRequest(
                     first_name=first_name,
+                    middle_name=middle_name,
                     last_name=last_name,
                     mail=mail,
                     country_code=country_code,
                     contact_number=contact_number,
                     designation=designation,
                     employee_type = str(row['employee_type']).strip(),
-                    package=package,
-                    currency=currency
-                    
+                    currency=currency,
+                    total_ctc=total_ctc,
+                    compensation_components=compensation_components,
+                    cc_emails=cc_emails
                 )
                 valid_offers.append((index, request_data))
 

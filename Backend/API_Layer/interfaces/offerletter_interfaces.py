@@ -52,6 +52,7 @@ class OfferUpdateResponse(BaseModel):
     offer_id: str
 
 class BulkOfferCreateResponse(BaseModel):
+    message: Optional[str] = None
     total_rows: int
     processed_rows: int
     successful_count: int
@@ -59,6 +60,7 @@ class BulkOfferCreateResponse(BaseModel):
     successful_offers: list[dict]
     failed_offers: list[dict]
     skipped_rows: int
+    success_offer_ids: List[str] = Field(default_factory=list)
 
 class OfferLetterDetailsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
