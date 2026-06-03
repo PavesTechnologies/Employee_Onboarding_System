@@ -56,9 +56,31 @@ api_router = APIRouter(prefix="/ems")
 
 app.add_middleware(JWTMiddleware)
 # Configure CORS
+cors_allowed_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ALLOWED_ORIGINS",
+        ",".join(
+            [
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "http://localhost:5174",
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:5173",
+                "http://127.0.0.1:5174",
+                "http://13.204.95.26",
+                "http://13.204.95.26:3000",
+                "http://13.204.95.26:5173",
+                "http://13.204.95.26:8000",
+            ]
+        ),
+    ).split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
