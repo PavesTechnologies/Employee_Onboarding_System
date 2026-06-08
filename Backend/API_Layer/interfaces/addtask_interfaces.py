@@ -42,6 +42,7 @@ class EmployeeTaskCreateResponse(BaseModel):
     task_title: str
     status: str
 
+
 # ============================================================
 # UPDATE REQUEST MODEL
 # ============================================================
@@ -79,18 +80,23 @@ class EmployeeTaskUpdateResponse(BaseModel):
     task_title: str
     status: str
 
+
 # ============================================================
 # GET TASK ITEM RESPONSE
 # Reusing Create Request Model
 # ============================================================
 class EmployeeTaskItemResponse(EmployeeTaskCreateRequest):
     task_uuid: str
+
     class Config:
         from_attributes = True
+
+
 class EmployeeTaskListResponse(BaseModel):
     message: str
     total_tasks: int
     tasks: List[EmployeeTaskItemResponse]
+
 
 class EmployeeTaskListResponse(BaseModel):
     tasks: List[EmployeeTaskItemResponse]

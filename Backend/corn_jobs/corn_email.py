@@ -6,7 +6,9 @@ EMAIL_USER = get_env_var("EMAIL_USER")
 EMAIL_PASSWORD = get_env_var("EMAIL_PASSWORD")
 EMAIL_HOST = get_env_var("EMAIL_HOST")
 EMAIL_PORT = int(get_env_var("EMAIL_PORT"))
-def send_joinning_email(to_email: str, subject: str , body: str):
+
+
+def send_joinning_email(to_email: str, subject: str, body: str):
 
     msg = EmailMessage()
     msg["Subject"] = subject

@@ -13,7 +13,6 @@ from Backend.DAL.models.models import (
     PersonalDetails,
 )
 
-
 AGE_BUCKETS = (
     ("18-21", 18, 21),
     ("22-25", 22, 25),
@@ -117,20 +116,42 @@ def department_name(dept):
 
 
 def employee_type_for(emp, offer):
-    return (offer.employee_type if offer and offer.employee_type else None) or emp.employment_type
+    return (
+        offer.employee_type if offer and offer.employee_type else None
+    ) or emp.employment_type
 
 
 # ---------------- DEMOGRAPHICS ----------------
 async def get_demographics(db: AsyncSession):
 
     stmt = (
-        select(EmployeeDetails, OfferLetterDetails, PersonalDetails, Countries, Departments, Designations)
+        select(
+            EmployeeDetails,
+            OfferLetterDetails,
+            PersonalDetails,
+            Countries,
+            Departments,
+            Designations,
+        )
         .select_from(EmployeeDetails)
-        .outerjoin(OfferLetterDetails, EmployeeDetails.user_uuid == OfferLetterDetails.user_uuid)
-        .outerjoin(PersonalDetails, EmployeeDetails.user_uuid == PersonalDetails.user_uuid)
-        .outerjoin(Countries, PersonalDetails.nationality_country_uuid == Countries.country_uuid)
-        .outerjoin(Departments, EmployeeDetails.department_uuid == Departments.department_uuid)
-        .outerjoin(Designations, EmployeeDetails.designation_uuid == Designations.designation_uuid)
+        .outerjoin(
+            OfferLetterDetails,
+            EmployeeDetails.user_uuid == OfferLetterDetails.user_uuid,
+        )
+        .outerjoin(
+            PersonalDetails, EmployeeDetails.user_uuid == PersonalDetails.user_uuid
+        )
+        .outerjoin(
+            Countries,
+            PersonalDetails.nationality_country_uuid == Countries.country_uuid,
+        )
+        .outerjoin(
+            Departments, EmployeeDetails.department_uuid == Departments.department_uuid
+        )
+        .outerjoin(
+            Designations,
+            EmployeeDetails.designation_uuid == Designations.designation_uuid,
+        )
     )
 
     result = await db.execute(stmt)
@@ -154,14 +175,20 @@ async def get_demographics(db: AsyncSession):
         if gender:
             gender_counter[gender.capitalize()] += 1
 
-        nationality_counter[country.country_name if country and country.country_name else "Unknown"] += 1
+        nationality_counter[
+            country.country_name if country and country.country_name else "Unknown"
+        ] += 1
 
-        employment_type, _employment_key = normalize_employment_type(employee_type_for(emp, offer))
+        employment_type, _employment_key = normalize_employment_type(
+            employee_type_for(emp, offer)
+        )
         if employment_type:
             employment_counter[employment_type] += 1
             worker_counter[worker_type_for_employment(employment_type)] += 1
 
-        age_group = age_bucket_for((personal.date_of_birth if personal else None) or emp.date_of_birth)
+        age_group = age_bucket_for(
+            (personal.date_of_birth if personal else None) or emp.date_of_birth
+        )
         if age_group and gender in {"male", "female"}:
             age_groups[age_group][gender] += 1
 
@@ -171,12 +198,14 @@ async def get_demographics(db: AsyncSession):
 
     return {
         "total": len(data),
-
         "gender": [{"label": k, "value": v} for k, v in gender_counter.items()],
-        "employmentType": [{"label": k, "value": v} for k, v in employment_counter.items()],
+        "employmentType": [
+            {"label": k, "value": v} for k, v in employment_counter.items()
+        ],
         "workerType": [{"label": k, "value": v} for k, v in worker_counter.items()],
-        "nationality": [{"label": k, "value": v} for k, v in nationality_counter.items()],
-
+        "nationality": [
+            {"label": k, "value": v} for k, v in nationality_counter.items()
+        ],
         "ageGroups": [{"group": k, **v} for k, v in age_groups.items()],
         "experience": [{"range": k, "value": v} for k, v in experience_counter.items()],
     }
@@ -188,9 +217,17 @@ async def get_worker_department(db: AsyncSession):
     stmt = (
         select(EmployeeDetails, OfferLetterDetails, Departments, Designations)
         .select_from(EmployeeDetails)
-        .outerjoin(OfferLetterDetails, EmployeeDetails.user_uuid == OfferLetterDetails.user_uuid)
-        .outerjoin(Departments, EmployeeDetails.department_uuid == Departments.department_uuid)
-        .outerjoin(Designations, EmployeeDetails.designation_uuid == Designations.designation_uuid)
+        .outerjoin(
+            OfferLetterDetails,
+            EmployeeDetails.user_uuid == OfferLetterDetails.user_uuid,
+        )
+        .outerjoin(
+            Departments, EmployeeDetails.department_uuid == Departments.department_uuid
+        )
+        .outerjoin(
+            Designations,
+            EmployeeDetails.designation_uuid == Designations.designation_uuid,
+        )
     )
 
     result = await db.execute(stmt)
@@ -200,7 +237,9 @@ async def get_worker_department(db: AsyncSession):
 
     for emp, offer, dept, _designation in data:
         dept_name = department_name(dept)
-        employment_type, _employment_key = normalize_employment_type(employee_type_for(emp, offer))
+        employment_type, _employment_key = normalize_employment_type(
+            employee_type_for(emp, offer)
+        )
         worker_type = worker_type_for_employment(employment_type)
         if worker_type == "Permanent":
             dept_map[dept_name]["permanent"] += 1
@@ -216,9 +255,16 @@ async def get_gender_department(db: AsyncSession):
     stmt = (
         select(EmployeeDetails, PersonalDetails, Departments, Designations)
         .select_from(EmployeeDetails)
-        .outerjoin(PersonalDetails, EmployeeDetails.user_uuid == PersonalDetails.user_uuid)
-        .outerjoin(Departments, EmployeeDetails.department_uuid == Departments.department_uuid)
-        .outerjoin(Designations, EmployeeDetails.designation_uuid == Designations.designation_uuid)
+        .outerjoin(
+            PersonalDetails, EmployeeDetails.user_uuid == PersonalDetails.user_uuid
+        )
+        .outerjoin(
+            Departments, EmployeeDetails.department_uuid == Departments.department_uuid
+        )
+        .outerjoin(
+            Designations,
+            EmployeeDetails.designation_uuid == Designations.designation_uuid,
+        )
     )
 
     result = await db.execute(stmt)
@@ -243,9 +289,17 @@ async def get_employment_department(db: AsyncSession):
     stmt = (
         select(EmployeeDetails, OfferLetterDetails, Departments, Designations)
         .select_from(EmployeeDetails)
-        .outerjoin(OfferLetterDetails, EmployeeDetails.user_uuid == OfferLetterDetails.user_uuid)
-        .outerjoin(Departments, EmployeeDetails.department_uuid == Departments.department_uuid)
-        .outerjoin(Designations, EmployeeDetails.designation_uuid == Designations.designation_uuid)
+        .outerjoin(
+            OfferLetterDetails,
+            EmployeeDetails.user_uuid == OfferLetterDetails.user_uuid,
+        )
+        .outerjoin(
+            Departments, EmployeeDetails.department_uuid == Departments.department_uuid
+        )
+        .outerjoin(
+            Designations,
+            EmployeeDetails.designation_uuid == Designations.designation_uuid,
+        )
     )
 
     result = await db.execute(stmt)
@@ -262,7 +316,9 @@ async def get_employment_department(db: AsyncSession):
     )
 
     for emp, offer, dept, _designation in data:
-        _employment_type, employment_key = normalize_employment_type(employee_type_for(emp, offer))
+        _employment_type, employment_key = normalize_employment_type(
+            employee_type_for(emp, offer)
+        )
         if employment_key in dept_map[department_name(dept)]:
             dept_map[department_name(dept)][employment_key] += 1
 

@@ -10,10 +10,7 @@ class OfferApprovalRequestDAO:
         self.db = db
 
     async def create_approval_request(
-        self,
-        user_uuid: str,
-        request_by: int,
-        action_taker_id: int
+        self, user_uuid: str, request_by: int, action_taker_id: int
     ):
         """
         Insert a new offer approval request
@@ -25,11 +22,11 @@ class OfferApprovalRequestDAO:
             new_request = OfferApprovalRequest(
                 user_uuid=user_uuid,
                 request_by=request_by,
-                action_taker_id=action_taker_id
+                action_taker_id=action_taker_id,
             )
 
             self.db.add(new_request)
-            await self.db.flush()  
+            await self.db.flush()
             # flush is IMPORTANT → generates new_request.id without commit
 
             # 2️⃣ Create OfferApprovalAction using generated request_id
@@ -37,7 +34,7 @@ class OfferApprovalRequestDAO:
                 request_id=new_request.id,
                 action="Pending",
                 comment=None,
-                action_time=datetime.utcnow()
+                action_time=datetime.utcnow(),
             )
 
             self.db.add(new_action)
@@ -54,28 +51,26 @@ class OfferApprovalRequestDAO:
             await self.db.rollback()
             raise e
 
-        
     async def get_request_by_id(self, request_id: int):
         query = select(OfferApprovalRequest).where(
             OfferApprovalRequest.id == request_id
         )
         result = await self.db.execute(query)
         return result.scalars().first()
-    
+
     async def get_requests_by_user_uuid(self, user_uuid: str):
         query = select(OfferApprovalRequest).where(
             OfferApprovalRequest.user_uuid == user_uuid
         )
         result = await self.db.execute(query)
         return result.scalars().all()
-    
+
     async def check_request_exists_by_user_uuid(self, user_uuid: str):
         query = select(OfferApprovalRequest).where(
             OfferApprovalRequest.user_uuid == user_uuid
         )
         result = await self.db.execute(query)
         return result.scalars().first()
-    
 
     async def get_by_user_uuid(self, user_uuid: str):
         query = select(OfferApprovalRequest).where(
@@ -85,10 +80,7 @@ class OfferApprovalRequestDAO:
         return result.scalars().first()
 
     async def update_approval_request(
-        self,
-        user_uuid: str,
-        request_by: int,
-        action_taker_id: int
+        self, user_uuid: str, request_by: int, action_taker_id: int
     ) -> bool:
         """
         Update existing offer approval request
@@ -97,10 +89,7 @@ class OfferApprovalRequestDAO:
             stmt = (
                 update(OfferApprovalRequest)
                 .where(OfferApprovalRequest.user_uuid == user_uuid)
-                .values(
-                    request_by=request_by,
-                    action_taker_id=action_taker_id
-                )
+                .values(request_by=request_by, action_taker_id=action_taker_id)
             )
 
             result = await self.db.execute(stmt)
@@ -114,7 +103,7 @@ class OfferApprovalRequestDAO:
         except Exception:
             await self.db.rollback()
             raise
-        
+
     async def get_by_user_uuid(self, user_uuid: str):
         stmt = select(OfferApprovalRequest).where(
             OfferApprovalRequest.user_uuid == user_uuid
@@ -133,9 +122,8 @@ class OfferApprovalRequestDAO:
         except Exception:
             await self.db.rollback()
             return False
-        
+
     async def get_all_requests(self):
         stmt = select(OfferApprovalRequest)
         result = await self.db.execute(stmt)
         return result.scalars().all()
-    

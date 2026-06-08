@@ -13,29 +13,16 @@ class ExitDocumentsService:
         self.dao = ExitDocumentsDAO()
         self.storage = get_storage_service()
 
-
     async def generate_single_document(
-        self,
-        db,
-        exit_uuid,
-        user_id,
-        doc_type,
-        template
+        self, db, exit_uuid, user_id, doc_type, template
     ):
 
-        exit_data = await self.dao.get_exit(
-            db,
-            exit_uuid
-        )
+        exit_data = await self.dao.get_exit(db, exit_uuid)
 
         if not exit_data:
-            raise HTTPException(
-                status_code=404,
-                detail="Exit record not found"
-            )
+            raise HTTPException(status_code=404, detail="Exit record not found")
 
         context = {
-
             "first_name": exit_data.first_name,
             "last_name": exit_data.last_name,
             "employee_id": exit_data.employee_id,
@@ -43,21 +30,18 @@ class ExitDocumentsService:
             "joining_date": "",
             "last_working_day": exit_data.last_working_day,
             "date": datetime.today().date(),
-            "net_payable": ""
+            "net_payable": "",
         }
 
         file_name = f"{doc_type}_{exit_data.employee_id}.pdf"
 
-        pdf_bytes = generate_pdf(
-            template,
-            context
-        )
+        pdf_bytes = generate_pdf(template, context)
 
         s3_path = await self.storage.upload_file(
             pdf_bytes,
             folder="exit_documents",
             employee_uuid=exit_data.employee_uuid,
-            custom_filename=file_name
+            custom_filename=file_name,
         )
 
         record = await self.dao.create_document(
@@ -67,53 +51,31 @@ class ExitDocumentsService:
             doc_type,
             file_name,
             s3_path,
-            user_id
+            user_id,
         )
 
         return record
 
-
     async def get_documents(self, db, exit_uuid):
 
-        return await self.dao.get_documents(
-            db,
-            exit_uuid
-        )
-
+        return await self.dao.get_documents(db, exit_uuid)
 
     async def get_document(self, db, document_uuid):
 
-        return await self.dao.get_document(
-            db,
-            document_uuid
-        )
-
+        return await self.dao.get_document(db, document_uuid)
 
     async def download_document(self, db, document_uuid):
 
-        document = await self.dao.get_document(
-            db,
-            document_uuid
-        )
+        document = await self.dao.get_document(db, document_uuid)
 
-        url = await self.storage.get_presigned_url(
-            document.file_path,
-            download=True
-        )
+        url = await self.storage.get_presigned_url(document.file_path, download=True)
 
         return {"download_url": url}
 
-
     async def view_document(self, db, document_uuid):
 
-        document = await self.dao.get_document(
-            db,
-            document_uuid
-        )
+        document = await self.dao.get_document(db, document_uuid)
 
-        url = await self.storage.get_presigned_url(
-            document.file_path,
-            download=False
-        )
+        url = await self.storage.get_presigned_url(document.file_path, download=False)
 
         return {"view_url": url}

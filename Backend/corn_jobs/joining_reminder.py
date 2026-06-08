@@ -1,10 +1,10 @@
 import datetime
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from  Backend.DAL.dao.offerletter_dao import OfferLetterDAO
+from Backend.DAL.dao.offerletter_dao import OfferLetterDAO
 from Backend.DAL.utils.database import AsyncSessionLocal
-from  .corn_email import send_joinning_email as send_email
+from .corn_email import send_joinning_email as send_email
+
 # import asyncio
+
 
 async def send_joining_date_reminders():
 
@@ -18,7 +18,7 @@ async def send_joining_date_reminders():
         users = await dao.get_upcoming_joinings()  # if you add this method
 
         if not users:
-         return
+            return
 
         subject = "Upcoming Employee Joinings (Next 3 Days)"
 
@@ -50,7 +50,8 @@ async def send_joining_date_reminders():
         except Exception as e:
             print(f"❌ Email failed: {e}")
 
-#may be used in future if we want to run the job in the main filed
+
+# may be used in future if we want to run the job in the main filed
 # def run_job():
 #     loop = asyncio.get_event_loop()
 #     loop.create_task(send_joining_date_reminders())

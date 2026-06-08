@@ -7,9 +7,7 @@ TEMPLATE_DIR = os.path.join("Backend", "templates")
 
 def generate_pdf(template_name, context):
 
-    env = Environment(
-        loader=FileSystemLoader(TEMPLATE_DIR)
-    )
+    env = Environment(loader=FileSystemLoader(TEMPLATE_DIR))
 
     template = env.get_template(template_name)
 

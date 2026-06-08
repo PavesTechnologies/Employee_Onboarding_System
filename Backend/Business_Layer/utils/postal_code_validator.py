@@ -20,7 +20,6 @@ POSTAL_CODE_REGEX = {
     "PK": r"^\d{5}$",  # Pakistan
     "BD": r"^\d{4}$",  # Bangladesh
     "LK": r"^\d{5}$",  # Sri Lanka
-
     # Europe
     "GB": r"^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$",  # United Kingdom
     "DE": r"^\d{5}$",  # Germany
@@ -42,19 +41,16 @@ POSTAL_CODE_REGEX = {
     "RO": r"^\d{6}$",  # Romania
     "GR": r"^\d{3}\s?\d{2}$",  # Greece
     "HU": r"^\d{4}$",  # Hungary
-
     # North America
     "US": r"^\d{5}(-\d{4})?$",  # United States
     "CA": r"^[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d$",  # Canada
     "MX": r"^\d{5}$",  # Mexico
-
     # South America
     "BR": r"^\d{5}-\d{3}$",  # Brazil
     "AR": r"^[A-Z]?\d{4}[A-Z]{0,3}$",  # Argentina
     "CL": r"^\d{7}$",  # Chile
     "CO": r"^\d{6}$",  # Colombia
     "PE": r"^\d{5}$",  # Peru
-
     # Middle East
     "TR": r"^\d{5}$",  # Turkey
     "IL": r"^\d{7}$",  # Israel
@@ -63,13 +59,14 @@ POSTAL_CODE_REGEX = {
     "OM": r"^\d{3}$",  # Oman (3 digits)
     "BH": r"^\d{3,4}$",  # Bahrain
     "JO": r"^\d{5}$",  # Jordan
-
     # Africa
     "ZA": r"^\d{4}$",  # South Africa
     "EG": r"^\d{5}$",  # Egypt
     "NG": r"^\d{6}$",  # Nigeria
     "KE": r"^\d{5}$",  # Kenya
 }
+
+
 def validate_postal_code(calling_code: str, postal_code: str) -> bool:
     try:
         code = int(calling_code)

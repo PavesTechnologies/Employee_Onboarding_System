@@ -2,27 +2,25 @@
 import asyncio
 import json
 import logging
-import re
-from unittest import result
 from fastapi import HTTPException
 import base64
 import os
 from fastapi.responses import StreamingResponse
-from io import BytesIO
 import pandas as pd
 import requests
-from httpx import AsyncClient
 import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
-from ...API_Layer.interfaces.offerletter_interfaces import(
+from ...API_Layer.interfaces.offerletter_interfaces import (
     BulkSendOfferLettersRequest,
     OfferCreateRequest,
     CompensationComponent,
     BulkSendOfferLettersResult,
-    BulkSendOfferLettersResponse
+    BulkSendOfferLettersResponse,
 )
-from Backend.API_Layer.utils.docusign_token_genearation_utils import generate_docusign_access_token
+from Backend.API_Layer.utils.docusign_token_genearation_utils import (
+    generate_docusign_access_token,
+)
 from ...DAL.dao.offerletter_dao import OfferLetterDAO
 from ..utils.uuid_generator import generate_uuid7
 from ...config.env_loader import get_env_var
@@ -32,9 +30,9 @@ from ..utils.validation_utils import (
     validate_country,
     validate_phone_number,
     validate_designation,
-    validate_package,
-    validate_currency
+    validate_currency,
 )
+
 DOCUSIGN_BASE_URL = get_env_var("DOCUSIGN_BASE_URL")
 DOCUSIGN_ACCOUNT_ID = get_env_var("DOCUSIGN_ACCOUNT_ID")
 DOCUSIGN_TEMPLATE_ID = get_env_var("DOCUSIGN_TEMPLATE_ID")
@@ -43,31 +41,39 @@ logger = logging.getLogger(__name__)
 
 # Maps internal field names → possible Excel column header spellings (lowercase)
 _COLUMN_ALIASES: dict[str, list[str]] = {
-    "first_name":     ["first name", "firstname", "first_name"],
-    "middle_name":    ["middle name", "middlename", "middle_name"],
-    "last_name":      ["last name", "lastname", "last_name"],
-    "mail":           ["email", "mail", "e-mail", "email address"],
-    "country_code":   ["country code", "countrycode", "country_code", "calling code"],
-    "contact_number": ["contact number", "phone number", "phone", "mobile", "contact_number"],
-    "designation":    ["designation", "position", "job title", "role"],
-    "employee_type":  ["employee type", "employment type", "type", "employee_type"],
-    "cc_emails":      ["cc mails", "cc emails", "cc mail", "cc_emails", "cc_mail"],
-    "total_ctc":      ["annual ctc", "annual_ctc", "total ctc", "total_ctc", "ctc"],
-    "currency":       ["currency", "currency code"],
+    "first_name": ["first name", "firstname", "first_name"],
+    "middle_name": ["middle name", "middlename", "middle_name"],
+    "last_name": ["last name", "lastname", "last_name"],
+    "mail": ["email", "mail", "e-mail", "email address"],
+    "country_code": ["country code", "countrycode", "country_code", "calling code"],
+    "contact_number": [
+        "contact number",
+        "phone number",
+        "phone",
+        "mobile",
+        "contact_number",
+    ],
+    "designation": ["designation", "position", "job title", "role"],
+    "employee_type": ["employee type", "employment type", "type", "employee_type"],
+    "cc_emails": ["cc mails", "cc emails", "cc mail", "cc_emails", "cc_mail"],
+    "total_ctc": ["annual ctc", "annual_ctc", "total ctc", "total_ctc", "ctc"],
+    "currency": ["currency", "currency code"],
 }
 
 # Fields that MUST be present in the uploaded file
 _REQUIRED_EXCEL_FIELDS: list[str] = [
-    "first_name", "last_name", "mail",
-    "country_code", "contact_number",
-    "designation", "employee_type",
+    "first_name",
+    "last_name",
+    "mail",
+    "country_code",
+    "contact_number",
+    "designation",
+    "employee_type",
 ]
 
 # All lowercase aliases that identify non-compensation columns
 _NON_COMP_LOWER: frozenset[str] = frozenset(
-    alias.lower()
-    for aliases in _COLUMN_ALIASES.values()
-    for alias in aliases
+    alias.lower() for aliases in _COLUMN_ALIASES.values() for alias in aliases
 )
 
 
@@ -76,8 +82,9 @@ class OfferLetterService:
         self.db = db
         self.dao = OfferLetterDAO(self.db)
 
-
-    async def create_offer_internal(self, request_data: OfferCreateRequest, current_user_id: str) -> str:
+    async def create_offer_internal(
+        self, request_data: OfferCreateRequest, current_user_id: str
+    ) -> str:
         """
         Core offer-creation business logic shared by single and bulk create.
         Validates all fields, checks for duplicates, and inserts via DAO.
@@ -91,7 +98,9 @@ class OfferLetterService:
         mail = validate_email(request_data.mail)
         validate_country(request_data.country_code)
         validate_phone_number(
-            request_data.country_code, request_data.contact_number, type="contact_number"
+            request_data.country_code,
+            request_data.contact_number,
+            type="contact_number",
         )
         validate_designation(request_data.designation)
         validate_currency(request_data.currency)
@@ -99,14 +108,18 @@ class OfferLetterService:
         # --- DUPLICATE CHECK ---
         existing_offer = await self.dao.get_offer_by_email(mail)
         if existing_offer:
-            raise HTTPException(status_code=400, detail="Offer already exists for this email")
+            raise HTTPException(
+                status_code=400, detail="Offer already exists for this email"
+            )
 
         # --- INSERT ---
         uuid = generate_uuid7()
         await self.dao.create_offer(uuid, request_data, current_user_id)
         return uuid
 
-    async def create_offer(self, request_data: OfferCreateRequest, current_user_id: str):
+    async def create_offer(
+        self, request_data: OfferCreateRequest, current_user_id: str
+    ):
         """
         Business logic for creating a new offer letter.
         Includes validation of all user input fields.
@@ -117,8 +130,7 @@ class OfferLetterService:
             return uuid
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
-    
+
     async def create_bulk_offers(self, df, current_user_id: str):
         """
         Bulk create offers with proper transaction handling and duplicate detection.
@@ -133,22 +145,31 @@ class OfferLetterService:
 
         # Rename columns using aliases
         df.columns = df.columns.str.lower().str.strip()
+
         def rename_col(col):
             for std_name, aliases in _COLUMN_ALIASES.items():
                 if col in aliases:
                     return std_name
             return col
+
         df.rename(columns=rename_col, inplace=True)
 
         required_columns = {
-            'first_name', 'last_name', 'mail', 'country_code',
-            'contact_number', 'designation','employee_type', 'total_ctc', 'currency'
+            "first_name",
+            "last_name",
+            "mail",
+            "country_code",
+            "contact_number",
+            "designation",
+            "employee_type",
+            "total_ctc",
+            "currency",
         }
         if not required_columns.issubset(df.columns):
             missing = required_columns - set(df.columns)
             raise HTTPException(
                 status_code=400,
-                detail=f"Missing columns in Excel file: {', '.join(missing)}"
+                detail=f"Missing columns in Excel file: {', '.join(missing)}",
             )
 
         total_rows = len(df)
@@ -158,51 +179,79 @@ class OfferLetterService:
         # --- 2️⃣ Validate All Rows First ---
         valid_offers = []
         seen_emails = set()
-        
+
         for index, row in df.iterrows():
             try:
                 # Validate each field
-                first_name = validate_name(str(row['first_name']).strip())
-                last_name = validate_name(str(row['last_name']).strip())
-                mail = validate_email(str(row['mail']).strip())
-                country_code = validate_country(str(row['country_code']).strip())
-                contact_number = validate_phone_number(str(row['country_code']).strip(), str(row['contact_number']).strip(), type = 'contact_number')
-                designation = validate_designation(str(row['designation']).strip())
-                currency = validate_currency(str(row['currency']).strip())
+                first_name = validate_name(str(row["first_name"]).strip())
+                last_name = validate_name(str(row["last_name"]).strip())
+                mail = validate_email(str(row["mail"]).strip())
+                country_code = validate_country(str(row["country_code"]).strip())
+                contact_number = validate_phone_number(
+                    str(row["country_code"]).strip(),
+                    str(row["contact_number"]).strip(),
+                    type="contact_number",
+                )
+                designation = validate_designation(str(row["designation"]).strip())
+                currency = validate_currency(str(row["currency"]).strip())
 
-                total_ctc_val = str(row['total_ctc']).strip()
+                total_ctc_val = str(row["total_ctc"]).strip()
                 try:
                     total_ctc = float(total_ctc_val)
                 except ValueError:
                     raise ValueError(f"Invalid total_ctc: {total_ctc_val}")
 
                 # Optional fields
-                middle_name = str(row.get('middle_name', '')).strip() if pd.notna(row.get('middle_name')) and str(row.get('middle_name', '')).strip() else None
-                cc_emails_str = str(row.get('cc_emails', '')).strip() if pd.notna(row.get('cc_emails')) else None
-                cc_emails = [e.strip() for e in cc_emails_str.split(',') if e.strip()] if cc_emails_str else None
+                middle_name = (
+                    str(row.get("middle_name", "")).strip()
+                    if pd.notna(row.get("middle_name"))
+                    and str(row.get("middle_name", "")).strip()
+                    else None
+                )
+                cc_emails_str = (
+                    str(row.get("cc_emails", "")).strip()
+                    if pd.notna(row.get("cc_emails"))
+                    else None
+                )
+                cc_emails = (
+                    [e.strip() for e in cc_emails_str.split(",") if e.strip()]
+                    if cc_emails_str
+                    else None
+                )
 
                 # JSON Compensation components (optional in excel, defaults to empty list)
                 compensation_components = []
-                comp_str = str(row.get('compensation_components', '')).strip() if pd.notna(row.get('compensation_components')) else ''
+                comp_str = (
+                    str(row.get("compensation_components", "")).strip()
+                    if pd.notna(row.get("compensation_components"))
+                    else ""
+                )
                 if comp_str:
                     try:
                         import json
+
                         comp_data = json.loads(comp_str)
-                        compensation_components = [CompensationComponent(**c) for c in comp_data]
+                        compensation_components = [
+                            CompensationComponent(**c) for c in comp_data
+                        ]
                     except Exception as e:
-                        raise ValueError(f"Invalid compensation components format: {str(e)}")
+                        raise ValueError(
+                            f"Invalid compensation components format: {str(e)}"
+                        )
 
                 # Check for duplicates within the batch
                 if mail in seen_emails:
-                    failed_offers.append({
-                        "row": index + 2,
-                        "email": mail,
-                        "error": "Duplicate email within this batch"
-                    })
+                    failed_offers.append(
+                        {
+                            "row": index + 2,
+                            "email": mail,
+                            "error": "Duplicate email within this batch",
+                        }
+                    )
                     continue
 
                 seen_emails.add(mail)
-                
+
                 request_data = OfferCreateRequest(
                     first_name=first_name,
                     middle_name=middle_name,
@@ -211,44 +260,43 @@ class OfferLetterService:
                     country_code=country_code,
                     contact_number=contact_number,
                     designation=designation,
-                    employee_type = str(row['employee_type']).strip(),
+                    employee_type=str(row["employee_type"]).strip(),
                     currency=currency,
                     total_ctc=total_ctc,
                     compensation_components=compensation_components,
-                    cc_emails=cc_emails
+                    cc_emails=cc_emails,
                 )
                 valid_offers.append((index, request_data))
 
             except ValueError as ve:
-                failed_offers.append({
-                    "row": index + 2,
-                    "error": str(ve)
-                })
+                failed_offers.append({"row": index + 2, "error": str(ve)})
             except Exception as e:
-                failed_offers.append({
-                    "row": index + 2,
-                    "error": f"Unexpected error: {str(e)}"
-                })
+                failed_offers.append(
+                    {"row": index + 2, "error": f"Unexpected error: {str(e)}"}
+                )
 
         # --- 3️⃣ Check for existing emails in DB ---
         if valid_offers:
             emails_to_check = [offer[1].mail for offer in valid_offers]
             existing_emails = await self.dao.get_offers_by_emails(emails_to_check)
-            
+
             if existing_emails:
                 existing_email_set = set(existing_emails)
                 # Add failed entries for existing emails
                 for offer_index, offer_data in valid_offers:
                     if offer_data.mail in existing_email_set:
-                        failed_offers.append({
-                            "row": offer_index + 2,
-                            "email": offer_data.mail,
-                            "error": "Offer already exists for this email"
-                        })
-                
+                        failed_offers.append(
+                            {
+                                "row": offer_index + 2,
+                                "email": offer_data.mail,
+                                "error": "Offer already exists for this email",
+                            }
+                        )
+
                 # Filter out offers with existing emails
                 valid_offers = [
-                    offer for offer in valid_offers 
+                    offer
+                    for offer in valid_offers
                     if offer[1].mail not in existing_email_set
                 ]
 
@@ -260,24 +308,22 @@ class OfferLetterService:
                     new_offer = await self.dao.create_offer_no_commit(
                         uuid, request_data, current_user_id
                     )
-                    successful_offers.append({
-                        "email": request_data.mail,
-                        "offer_id": new_offer.user_uuid
-                    })
-                
+                    successful_offers.append(
+                        {"email": request_data.mail, "offer_id": new_offer.user_uuid}
+                    )
+
                 # IMPORTANT: Do NOT commit here - let the route handle it
                 # This allows the route to handle transaction boundaries
-                
+
             except IntegrityError as ie:
                 # This shouldn't happen if we validated properly
                 raise HTTPException(
-                    status_code=409, 
-                    detail=f"Database constraint violation: {str(ie.orig)}"
+                    status_code=409,
+                    detail=f"Database constraint violation: {str(ie.orig)}",
                 )
             except Exception as e:
                 raise HTTPException(
-                    status_code=500, 
-                    detail=f"Error preparing bulk offers: {str(e)}"
+                    status_code=500, detail=f"Error preparing bulk offers: {str(e)}"
                 )
 
         # --- 5️⃣ Return Summary (Route will commit) ---
@@ -288,13 +334,12 @@ class OfferLetterService:
             "failed_count": len(failed_offers),
             "successful_offers": successful_offers,
             "failed_offers": failed_offers,
-            "skipped_rows": skipped_rows
+            "skipped_rows": skipped_rows,
         }
 
-         
     async def get_all_offers(self):
         return await self.dao.get_all_offers()
-    
+
     async def get_offer_by_uuid(self, user_uuid: str):
         offers = await self.dao.get_offer_by_user_uuid(user_uuid)
         if not offers:
@@ -303,8 +348,10 @@ class OfferLetterService:
 
     async def get_offer_by_user_id(self, user_id: str):
         return await self.dao.get_offer_by_user_id(user_id)
-   
-    async def update_offer_by_uuid(self, user_uuid: str, request_data: OfferCreateRequest, current_user_id: str):
+
+    async def update_offer_by_uuid(
+        self, user_uuid: str, request_data: OfferCreateRequest, current_user_id: str
+    ):
         try:
             # Check if offer exists first
             offer = await self.dao.get_offer_by_uuid(user_uuid)
@@ -314,22 +361,30 @@ class OfferLetterService:
             # --- VALIDATIONS (Keep consistent with POST) ---
             validate_name(request_data.first_name)
             validate_email(request_data.mail)
-            validate_phone_number(request_data.country_code, request_data.contact_number, type='contact_number')
+            validate_phone_number(
+                request_data.country_code,
+                request_data.contact_number,
+                type="contact_number",
+            )
             # Add total_ctc or compensation validation if needed
 
             # Email uniqueness check
-            if request_data.mail != offer['mail']:
+            if request_data.mail != offer["mail"]:
                 existing = await self.dao.get_offer_by_email(request_data.mail)
                 if existing:
-                    raise HTTPException(status_code=409, detail="Email already belongs to another offer")
+                    raise HTTPException(
+                        status_code=409, detail="Email already belongs to another offer"
+                    )
 
             # --- UPDATE EXECUTION ---
-            success = await self.dao.update_offer_by_uuid(user_uuid, request_data, current_user_id)
-            
+            success = await self.dao.update_offer_by_uuid(
+                user_uuid, request_data, current_user_id
+            )
+
             if success:
-                await self.db.commit() # Commit both Detail and Compensation changes
+                await self.db.commit()  # Commit both Detail and Compensation changes
                 return True
-            
+
             return False
 
         except HTTPException:
@@ -337,7 +392,10 @@ class OfferLetterService:
             raise
         except Exception as e:
             await self.db.rollback()
-            raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")    
+            raise HTTPException(
+                status_code=500, detail=f"Internal Server Error: {str(e)}"
+            )
+
     async def get_offer_by_user_uuid(self, user_uuid: str):
         return await self.dao.get_offer_by_user_uuid(user_uuid)
 
@@ -352,14 +410,15 @@ class OfferLetterService:
         records = await self.dao.fetch_created_offerletters(current_user_id)
 
         return records
-    
 
-    async def create_offerletter_draft_with_pandadoc(self, payload: dict, user_uuid: str):
+    async def create_offerletter_draft_with_pandadoc(
+        self, payload: dict, user_uuid: str
+    ):
         """
         Create a PandaDoc draft, extract its ID, store it in DB.
         """
         print("create_offerletter_draft_with_pandadoc service started")
-        
+
         # -------------------- Load ENV Variables --------------------
         try:
             api_key = get_env_var("PANDADOC_API_KEY")
@@ -374,7 +433,6 @@ class OfferLetterService:
             print("Error loading env variables:", e)
             raise
 
-
         # -------------------- Prepare PandaDoc Body --------------------
         print("Preparing PandaDoc document body")
 
@@ -386,7 +444,7 @@ class OfferLetterService:
                     "email": payload["email"],
                     "first_name": payload["first_name"],
                     "last_name": payload["last_name"],
-                    "role": "Candidate"
+                    "role": "Candidate",
                 }
             ],
             "tokens": [
@@ -398,15 +456,15 @@ class OfferLetterService:
                 {"name": "package", "value": payload["package"]},
                 {"name": "currency", "value": payload["currency"]},
                 {"name": "user_uuid", "value": payload["user_uuid"]},
-                {"name": "company_name", "value": payload["company_name"]}
+                {"name": "company_name", "value": payload["company_name"]},
             ],
-            "send_document": False
+            "send_document": False,
         }
 
         # -------------------- Prepare Headers --------------------
         headers = {
             "Authorization": f"API-Key {api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
         print("Headers prepared, sending request to PandaDoc")
@@ -417,7 +475,9 @@ class OfferLetterService:
                 response = await client.post(api_url, json=doc_body, headers=headers)
 
             if response.status_code not in (200, 201):
-                raise Exception(f"PandaDoc Error: {response.status_code} - {response.text}")
+                raise Exception(
+                    f"PandaDoc Error: {response.status_code} - {response.text}"
+                )
 
             print("PandaDoc request successful:", response.text)
             response_json = response.json()
@@ -432,8 +492,7 @@ class OfferLetterService:
             # -------------------- Save Draft ID in DB --------------------
             print("Updating PandaDoc draft ID in database...")
             await self.dao.update_pandadoc_draft_id(
-                user_uuid=user_uuid,
-                draft_id=draft_id
+                user_uuid=user_uuid, draft_id=draft_id
             )
             print("Draft ID stored in DB successfully")
 
@@ -443,7 +502,6 @@ class OfferLetterService:
             print("Unexpected error during PandaDoc request:", str(e))
             raise
 
-    
     async def poll_pandadoc_draft_status(self, user_uuid: str) -> dict:
         """
         Poll PandaDoc until document status becomes `document.draft`.
@@ -456,7 +514,9 @@ class OfferLetterService:
         draft_id = await self.dao.get_pandadoc_draft_id(user_uuid)
 
         if not draft_id:
-            raise HTTPException(status_code=400, detail="Draft ID not found for this offer letter")
+            raise HTTPException(
+                status_code=400, detail="Draft ID not found for this offer letter"
+            )
 
         print(f"[PandaDoc Poll] Starting poll for draft_id: {draft_id}")
 
@@ -466,10 +526,10 @@ class OfferLetterService:
 
         headers = {
             "Authorization": f"API-Key {api_key}",  # your PandaDoc key
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
-        max_attempts = 25    # total ~50 seconds (25 × 2s)
+        max_attempts = 25  # total ~50 seconds (25 × 2s)
         attempt = 0
 
         async with httpx.AsyncClient() as client:
@@ -499,9 +559,8 @@ class OfferLetterService:
         # 4️⃣ Fail after timeout
         raise HTTPException(
             status_code=504,
-            detail=f"PandaDoc draft not ready after polling for {draft_id}"
+            detail=f"PandaDoc draft not ready after polling for {draft_id}",
         )
-    
 
     async def send_pandadoc_offerletter(self, user_uuid: str) -> dict:
         """
@@ -514,16 +573,18 @@ class OfferLetterService:
         draft_id = await self.dao.get_pandadoc_draft_id(user_uuid)
 
         if not draft_id:
-            raise HTTPException(status_code=400, detail="Draft ID not found for this offer letter")
+            raise HTTPException(
+                status_code=400, detail="Draft ID not found for this offer letter"
+            )
 
         print(f"[PandaDoc Send] Sending document for draft_id: {draft_id}")
 
         # 2️⃣ PandaDoc Send URL
-        send_url = get_env_var('PANDADOC_SEND_API_URL').format(draft_id=draft_id)
+        send_url = get_env_var("PANDADOC_SEND_API_URL").format(draft_id=draft_id)
 
         # 3️⃣ Build request
         payload = {
-            "silent": False,   # Candidate receives email
+            "silent": False,  # Candidate receives email
             "subject": "Your Offer Letter",
             "message": "Please review and sign your offer letter.",
         }
@@ -531,7 +592,7 @@ class OfferLetterService:
         api_key = get_env_var("PANDADOC_API_KEY")
         headers = {
             "Authorization": f"API-Key {api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
         # 4️⃣ Make API call
@@ -542,8 +603,7 @@ class OfferLetterService:
             if response.status_code not in (200, 202):
                 print("PandaDoc send error response:", response.text)
                 raise HTTPException(
-                    status_code=500,
-                    detail=f"PandaDoc send error: {response.text}"
+                    status_code=500, detail=f"PandaDoc send error: {response.text}"
                 )
 
             print(f"[PandaDoc Send] Document sent for draft {draft_id}")
@@ -551,20 +611,23 @@ class OfferLetterService:
 
         except httpx.RequestError as req_err:
             print("[PandaDoc Send] RequestError:", str(req_err))
-            raise HTTPException(status_code=500, detail=f"HTTP RequestError: {str(req_err)}")
+            raise HTTPException(
+                status_code=500, detail=f"HTTP RequestError: {str(req_err)}"
+            )
 
         except Exception as e:
             print("[PandaDoc Send] Unexpected error:", str(e))
             raise HTTPException(status_code=500, detail=f"Unexpected Error: {str(e)}")
-        
 
-    async def send_bulk_offerletters(self, request_data: BulkSendOfferLettersRequest, current_user_id: str):
+    async def send_bulk_offerletters(
+        self, request_data: BulkSendOfferLettersRequest, current_user_id: str
+    ):
         """
         Business logic for sending multiple offer letters using PandaDoc.
         Fetches offer details, sends each offer letter, updates status, and
         returns a detailed summary for each UUID.
         """
-        print('bulk send service started')
+        print("bulk send service started")
         uuids = request_data.user_uuid_list
 
         try:
@@ -573,23 +636,27 @@ class OfferLetterService:
 
             # --- 1️⃣ Basic Checks ---
             if not request_data:
-                raise HTTPException(status_code=400, detail="No offerletter UUIDs provided.")
+                raise HTTPException(
+                    status_code=400, detail="No offerletter UUIDs provided."
+                )
 
             total_requests = len(uuids)
-            print(f'Total offer letters to send: {total_requests}')
-            print('the uuids: ', *uuids)
+            print(f"Total offer letters to send: {total_requests}")
+            print("the uuids: ", *uuids)
 
             # --- 2️⃣ Process Each Offer Letter ---
             for user_uuid in uuids:
 
                 # Fetch DB record using DAO function EXACTLY as written
                 record = await self.dao.get_offer_by_uuid(user_uuid)
-                print('record fetched for uuid', user_uuid, ':', record)
+                print("record fetched for uuid", user_uuid, ":", record)
                 if not record:
-                    failed.append({
-                        "offerletter_uuid": user_uuid,
-                        "error": "Offer letter not found in database"
-                    })
+                    failed.append(
+                        {
+                            "offerletter_uuid": user_uuid,
+                            "error": "Offer letter not found in database",
+                        }
+                    )
                     continue
 
                 # Build payload for PandaDoc
@@ -603,124 +670,174 @@ class OfferLetterService:
                     "package": record.package,
                     "currency": record.currency,
                     "user_uuid": user_uuid,
-                    "company_name" : "Paves Global Infotech"
+                    "company_name": "Paves Global Infotech",
                 }
-                print('payload for uuid', user_uuid, ':', payload)
+                print("payload for uuid", user_uuid, ":", payload)
 
                 # --- 3️⃣ Call PandaDoc ---
-                print('Sending offer letter via PandaDoc for uuid', user_uuid)
-                # create draft endpoint calling 
+                print("Sending offer letter via PandaDoc for uuid", user_uuid)
+                # create draft endpoint calling
                 try:
-                    print('About to call create_offerletter_draft_with_pandadoc for uuid', user_uuid)
-                    await self.create_offerletter_draft_with_pandadoc(payload, user_uuid)
-                    print('PandaDoc draft call completed successfully')
+                    print(
+                        "About to call create_offerletter_draft_with_pandadoc for uuid",
+                        user_uuid,
+                    )
+                    await self.create_offerletter_draft_with_pandadoc(
+                        payload, user_uuid
+                    )
+                    print("PandaDoc draft call completed successfully")
 
                     # poll draft status endpoint calling
                     try:
-                        print('About to call poll_pandadoc_draft_status for uuid', user_uuid)
+                        print(
+                            "About to call poll_pandadoc_draft_status for uuid",
+                            user_uuid,
+                        )
                         await self.poll_pandadoc_draft_status(user_uuid)
-                        print('PandaDoc poll call completed successfully')
+                        print("PandaDoc poll call completed successfully")
 
                         # send document endpoint calling
                         try:
-                            print('About to call send_pandadoc_offerletter for uuid', user_uuid)
+                            print(
+                                "About to call send_pandadoc_offerletter for uuid",
+                                user_uuid,
+                            )
                             await self.send_pandadoc_offerletter(user_uuid)
-                            print('PandaDoc send call completed successfully')
+                            print("PandaDoc send call completed successfully")
 
                             # --- 4️⃣ Update Offer Letter Status ---
-                            print('About to update offer letter status in DB for uuid', user_uuid)
+                            print(
+                                "About to update offer letter status in DB for uuid",
+                                user_uuid,
+                            )
                             try:
                                 await self.dao.update_offerletter_status(
-                                    user_uuid = user_uuid,
-                                    new_status = "Offered",
-                                    current_user_id = current_user_id
+                                    user_uuid=user_uuid,
+                                    new_status="Offered",
+                                    current_user_id=current_user_id,
                                 )
-                                print('Offer letter status updated successfully for uuid', user_uuid)
+                                print(
+                                    "Offer letter status updated successfully for uuid",
+                                    user_uuid,
+                                )
 
                                 # --- 5️⃣ Append to successful ---
-                                successful.append({
-                                    "offerletter_uuid": user_uuid,
-                                    "email": record.mail,
-                                    "status": "success",
-                                    "message": "Offer letter sent successfully"
-                                })
-                                print('Offer letter sent and recorded as successful for uuid', user_uuid)
+                                successful.append(
+                                    {
+                                        "offerletter_uuid": user_uuid,
+                                        "email": record.mail,
+                                        "status": "success",
+                                        "message": "Offer letter sent successfully",
+                                    }
+                                )
+                                print(
+                                    "Offer letter sent and recorded as successful for uuid",
+                                    user_uuid,
+                                )
 
                             except Exception as dao_e:
-                                print('Error updating offer letter status for uuid', user_uuid, '-', str(dao_e))
-                                failed.append({
-                                    "offerletter_uuid": user_uuid,
-                                    "email": record.mail,
-                                    "error": f"DB update error: {dao_e}"
-                                })
+                                print(
+                                    "Error updating offer letter status for uuid",
+                                    user_uuid,
+                                    "-",
+                                    str(dao_e),
+                                )
+                                failed.append(
+                                    {
+                                        "offerletter_uuid": user_uuid,
+                                        "email": record.mail,
+                                        "error": f"DB update error: {dao_e}",
+                                    }
+                                )
                                 continue  # skip adding to successful if update failed
                         except Exception as e:
-                            print('Error sending offer letter for uuid', user_uuid, '-', str(e))
-                            failed.append({
-                                "offerletter_uuid": user_uuid,
-                                "email": record.mail,
-                                "error": str(e)
-                            })
+                            print(
+                                "Error sending offer letter for uuid",
+                                user_uuid,
+                                "-",
+                                str(e),
+                            )
+                            failed.append(
+                                {
+                                    "offerletter_uuid": user_uuid,
+                                    "email": record.mail,
+                                    "error": str(e),
+                                }
+                            )
 
                     except Exception as e:
-                        print('Error polling offer letter for uuid', user_uuid, '-', str(e))
-                        failed.append({
-                            "offerletter_uuid": user_uuid,
-                            "email": record.mail,
-                            "error": str(e)
-                        })
+                        print(
+                            "Error polling offer letter for uuid",
+                            user_uuid,
+                            "-",
+                            str(e),
+                        )
+                        failed.append(
+                            {
+                                "offerletter_uuid": user_uuid,
+                                "email": record.mail,
+                                "error": str(e),
+                            }
+                        )
 
                 except Exception as e:
-                    print('Error drafting offer letter for uuid', user_uuid, '-', str(e))
-                    failed.append({
-                        "offerletter_uuid": user_uuid,
-                        "email": record.mail,
-                        "error": str(e)
-                    })
+                    print(
+                        "Error drafting offer letter for uuid", user_uuid, "-", str(e)
+                    )
+                    failed.append(
+                        {
+                            "offerletter_uuid": user_uuid,
+                            "email": record.mail,
+                            "error": str(e),
+                        }
+                    )
 
             # --- 6️⃣ Build Final Summary ---
-            print('Building final summary')
+            print("Building final summary")
 
             # Convert successful + failed into `BulkSendOfferLettersResult` list
             results = []
 
             for s in successful:
-                results.append(BulkSendOfferLettersResult(
-                    user_uuid=s["offerletter_uuid"],
-                    status=s["status"],
-                    mail_sent_to=s["email"],
-                    pandadoc_status="document_created_and_sent",
-                    message=s["message"],
-                    error=None
-                ))
+                results.append(
+                    BulkSendOfferLettersResult(
+                        user_uuid=s["offerletter_uuid"],
+                        status=s["status"],
+                        mail_sent_to=s["email"],
+                        pandadoc_status="document_created_and_sent",
+                        message=s["message"],
+                        error=None,
+                    )
+                )
 
             for f in failed:
-                results.append(BulkSendOfferLettersResult(
-                    user_uuid=f["offerletter_uuid"],
-                    status="failed",
-                    mail_sent_to=f.get("email"),
-                    pandadoc_status=None,
-                    message=None,
-                    error=f.get("error")
-                ))
+                results.append(
+                    BulkSendOfferLettersResult(
+                        user_uuid=f["offerletter_uuid"],
+                        status="failed",
+                        mail_sent_to=f.get("email"),
+                        pandadoc_status=None,
+                        message=None,
+                        error=f.get("error"),
+                    )
+                )
 
             summary = BulkSendOfferLettersResponse(
                 total_requests=total_requests,
                 successful=len(successful),
                 failed=len(failed),
-                results=results
+                results=results,
             )
 
-            print('Final summary prepared:', summary.dict())
+            print("Final summary prepared:", summary.dict())
             return summary
-
 
         except HTTPException as he:
             raise he
         except Exception as e:
-            print('Unexpected error in send_bulk_offerletters:', str(e))
+            print("Unexpected error in send_bulk_offerletters:", str(e))
             raise HTTPException(status_code=500, detail=str(e))
-        
+
     # async def send_bulk_offerletters_via_docusign(
     #     self,
     #     request_data,
@@ -757,7 +874,6 @@ class OfferLetterService:
     #                 if record.cc_emails:
     #                     cc_emails = [e.strip() for e in record.cc_emails.split(",") if e.strip()]
 
-
     #                 # Build template roles
     #                 template_roles = [
 
@@ -780,7 +896,6 @@ class OfferLetterService:
     #                     }
     #                 ]
 
-
     #                 # ✅ Manager (CC) — First CC email
     #                 if cc_emails:
     #                     template_roles.append({
@@ -788,7 +903,6 @@ class OfferLetterService:
     #                         "name": "Manager",
     #                         "email": cc_emails[0]
     #                     })
-
 
     #                 # Final payload
     #                 payload = {
@@ -890,13 +1004,8 @@ class OfferLetterService:
     #         print("❗ Unexpected error in bulk DocuSign service:", str(e))
     #         raise HTTPException(status_code=500, detail=str(e))
 
-
-    
-
     async def send_bulk_offerletters_via_docusign_pdf(
-        self,
-        request_data,
-        current_user_id: str
+        self, request_data, current_user_id: str
     ):
 
         print("🚀 Sending generated PDF via DocuSign")
@@ -912,7 +1021,7 @@ class OfferLetterService:
 
         headers = {
             "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
         for user_uuid in uuids:
@@ -930,7 +1039,7 @@ class OfferLetterService:
             first_name = record.get("first_name")
             last_name = record.get("last_name")
             cc_raw = record.get("cc_emails")
-            
+
             print("👤 Employee:", email)
 
             if not email:
@@ -953,9 +1062,7 @@ class OfferLetterService:
             print("👥 Managers:", cc_emails)
             # 4️⃣ PDF path
             pdf_path = os.path.join(
-                os.getcwd(),
-                "generated_pdfs",
-                f"offer_{user_uuid}.pdf"
+                os.getcwd(), "generated_pdfs", f"offer_{user_uuid}.pdf"
             )
 
             print("📂 Checking PDF path:", pdf_path)
@@ -975,7 +1082,7 @@ class OfferLetterService:
                 "documentBase64": pdf_base64,
                 "name": "Offer Letter",
                 "fileExtension": "pdf",
-                "documentId": "1"
+                "documentId": "1",
             }
 
             # 7️⃣ Fixed flow: 1 Manager -> 1 Employee
@@ -985,41 +1092,44 @@ class OfferLetterService:
             if cc_emails:
                 manager_email = cc_emails[0].strip()
 
-                signers.append({
-                    "email": manager_email,
-                    "name": "Approving Manager",
-                    "recipientId": "1",
-                    "routingOrder": "1",
-                    "tabs": {
-                        "signHereTabs": [{
-                            "documentId": "1",
-                            "pageNumber": "5",
-                            "xPosition": "120",
-                            "yPosition": "300"
-                            
-                            
-                            
-                        }]
+                signers.append(
+                    {
+                        "email": manager_email,
+                        "name": "Approving Manager",
+                        "recipientId": "1",
+                        "routingOrder": "1",
+                        "tabs": {
+                            "signHereTabs": [
+                                {
+                                    "documentId": "1",
+                                    "pageNumber": "5",
+                                    "xPosition": "120",
+                                    "yPosition": "300",
+                                }
+                            ]
+                        },
                     }
-                })
+                )
 
             # Employee second
-            signers.append({
-                "email": email.strip(),
-                "name": f"{first_name} {last_name}",
-                "recipientId": "2" if cc_emails else "1",
-                "routingOrder": "2" if cc_emails else "1",
-                "tabs": {
-                    "signHereTabs": [{
-                         "documentId": "1",
-                         "pageNumber": "5",
-                         "xPosition": "420",
-                         "yPosition": "300"
-                       
-             
-                    }]
+            signers.append(
+                {
+                    "email": email.strip(),
+                    "name": f"{first_name} {last_name}",
+                    "recipientId": "2" if cc_emails else "1",
+                    "routingOrder": "2" if cc_emails else "1",
+                    "tabs": {
+                        "signHereTabs": [
+                            {
+                                "documentId": "1",
+                                "pageNumber": "5",
+                                "xPosition": "420",
+                                "yPosition": "300",
+                            }
+                        ]
+                    },
                 }
-            })
+            )
 
             print(json.dumps(signers, indent=2))
             print("🧾 Total Signers:", len(signers))
@@ -1032,7 +1142,7 @@ class OfferLetterService:
             #         "email": manager_email,
             #         "name": f"Manager {idx+1}",
             #         "recipientId": str(routing_order),
-                    
+
             #         "routingOrder": str(routing_order),
             #         "tabs": {
             #             "signHereTabs": [
@@ -1053,7 +1163,7 @@ class OfferLetterService:
             #     "email": email,
             #     "name": f"{first_name} {last_name}",
             #     "recipientId": str(routing_order),
-                
+
             #     "routingOrder": str(routing_order),
             #     "tabs": {
             #         "signHereTabs": [
@@ -1074,10 +1184,8 @@ class OfferLetterService:
             envelope_definition = {
                 "emailSubject": "Please sign the offer letter",
                 "documents": [document],
-                "recipients": {
-                    "signers": signers
-                },
-                "status": "sent"
+                "recipients": {"signers": signers},
+                "status": "sent",
             }
 
             # 9️⃣ API call
@@ -1086,11 +1194,7 @@ class OfferLetterService:
             print("📤 Sending request to DocuSign...")
             print("🌐 URL:", url)
 
-            response = requests.post(
-                url,
-                json=envelope_definition,
-                headers=headers
-            )
+            response = requests.post(url, json=envelope_definition, headers=headers)
 
             print("📥 DocuSign Status Code:", response.status_code)
             print("📥 DocuSign Response:", response.text)
@@ -1110,129 +1214,133 @@ class OfferLetterService:
             await self.dao.update_offerletter_status(
                 user_uuid=user_uuid,
                 new_status="Offered",
-                current_user_id=current_user_id
+                current_user_id=current_user_id,
             )
 
         return {"message": "Offer letters sent via DocuSign"}
+
     async def delete_offer_letter(self, user_uuid: str) -> str:
-            """
-            Delete offer only when:
-            1. status = Rejected
-            2. status = Created AND approval action = REJECTED
-            3. status = Created AND approval not started
+        """
+        Delete offer only when:
+        1. status = Rejected
+        2. status = Created AND approval action = REJECTED
+        3. status = Created AND approval not started
 
-            Block when approval exists.
-            """
+        Block when approval exists.
+        """
 
-            try:
-                # 🔎 Fetch offer
-                offer = await self.dao.get_offer_by_uuid(user_uuid)
-                if not offer:
-                    raise HTTPException(status_code=404, detail="Offer letter not found")
+        try:
+            # 🔎 Fetch offer
+            offer = await self.dao.get_offer_by_uuid(user_uuid)
+            if not offer:
+                raise HTTPException(status_code=404, detail="Offer letter not found")
 
-                offer_status = offer.get("status") if isinstance(offer, dict) else getattr(offer, "status", None)
+            offer_status = (
+                offer.get("status")
+                if isinstance(offer, dict)
+                else getattr(offer, "status", None)
+            )
 
-                # 🚨 Check approval request existence
-                approval_request = await self.dao.get_approval_request_by_user_uuid(user_uuid)
+            # 🚨 Check approval request existence
+            approval_request = await self.dao.get_approval_request_by_user_uuid(
+                user_uuid
+            )
 
-                if approval_request:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Approval already initiated for this offer. Delete approval request first.",
-                    )
+            if approval_request:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Approval already initiated for this offer. Delete approval request first.",
+                )
 
-                # ✅ Apply status-based delete rules
-                if offer_status not in ["Rejected", "Created"]:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Offer letter cannot be deleted due to its current status",
-                    )
+            # ✅ Apply status-based delete rules
+            if offer_status not in ["Rejected", "Created"]:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Offer letter cannot be deleted due to its current status",
+                )
 
-                # 🗑 Delete offer
-                await self.dao.delete_offer_letter(user_uuid)
+            # 🗑 Delete offer
+            await self.dao.delete_offer_letter(user_uuid)
 
-                # 💾 Commit once in service
-                await self.db.commit()
+            # 💾 Commit once in service
+            await self.db.commit()
 
-                return "Offer letter deleted successfully"
+            return "Offer letter deleted successfully"
 
-            except HTTPException:
-                raise
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
     async def create_docusign_draft(self, user_uuid: str):
 
-                record = await self.dao.get_offer_by_uuid(user_uuid)
+        record = await self.dao.get_offer_by_uuid(user_uuid)
 
+        if not record:
+            raise HTTPException(status_code=404, detail="Offer not found")
 
+        middle_name = record.get("middle_name")
+        full_name = f"{record['first_name']} {middle_name + ' ' if middle_name else ''}{record['last_name']}"
 
-                if not record:
-                    raise HTTPException(status_code=404, detail="Offer not found")
+        cc_emails = []
+        if record.get("cc_emails"):
 
-                middle_name = record.get('middle_name')
-                full_name = f"{record['first_name']} {middle_name + ' ' if middle_name else ''}{record['last_name']}"
+            cc_emails = [e.strip() for e in record["cc_emails"].split(",") if e.strip()]
 
-                cc_emails = []
-                if record.get("cc_emails"):
-                    
-                    cc_emails = [e.strip() for e in record["cc_emails"].split(",") if e.strip()]
+        template_roles = [
+            {
+                "roleName": "Employee",
+                "name": full_name,
+                "email": record["mail"],
+                "tabs": {
+                    "textTabs": [
+                        {"tabLabel": "EF", "value": full_name},
+                        {"tabLabel": "EE", "value": record["mail"]},
+                        {"tabLabel": "ET", "value": record["designation"]},
+                        {"tabLabel": "EC", "value": record["country_code"]},
+                        {"tabLabel": "EN", "value": record["contact_number"]},
+                    ]
+                },
+            }
+        ]
 
-                template_roles = [
-                    {
-                        "roleName": "Employee",
-                        "name": full_name,
-                        "email": record["mail"],
-                        "tabs": {
-                            "textTabs": [
-                                {"tabLabel": "EF", "value": full_name},
-                                {"tabLabel": "EE", "value": record["mail"]},
-                                {"tabLabel": "ET", "value": record["designation"]},
-                                {"tabLabel": "EC", "value": record["country_code"]},
-                                {"tabLabel": "EN", "value": record["contact_number"]}
-                            ]
-                        }
-                    }
-                ]
+        if cc_emails:
+            template_roles.append(
+                {"roleName": "Manager", "name": "Manager", "email": cc_emails[0]}
+            )
 
-                if cc_emails:
-                    template_roles.append({
-                        "roleName": "Manager",
-                        "name": "Manager",
-                        "email": cc_emails[0]
-                    })
+        payload = {
+            "templateId": DOCUSIGN_TEMPLATE_ID,
+            "templateRoles": template_roles,
+            "status": "created",
+        }
 
-                payload = {
-                    "templateId": DOCUSIGN_TEMPLATE_ID,
-                    "templateRoles": template_roles,
-                    "status": "created"  
-                }
+        token_data = generate_docusign_access_token()
+        access_token = token_data["access_token"]
 
-                token_data = generate_docusign_access_token()
-                access_token = token_data["access_token"]
+        url = f"{DOCUSIGN_BASE_URL}/v2.1/accounts/{DOCUSIGN_ACCOUNT_ID}/envelopes"
 
-                url = f"{DOCUSIGN_BASE_URL}/v2.1/accounts/{DOCUSIGN_ACCOUNT_ID}/envelopes"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+        }
 
-                headers = {
-                    "Authorization": f"Bearer {access_token}",
-                    "Content-Type": "application/json"
-                }
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()
 
-                response = requests.post(url, json=payload, headers=headers)
-                response.raise_for_status()
+        envelope_id = response.json().get("envelopeId")
 
-                envelope_id = response.json().get("envelopeId")
+        if not envelope_id:
+            raise Exception("Envelope ID not returned")
 
-                if not envelope_id:
-                    raise Exception("Envelope ID not returned")
+        # 🔥 Store envelope id
+        await self.dao.update_pandadoc_draft_id(
+            user_uuid=user_uuid, draft_id=envelope_id
+        )
 
-                # 🔥 Store envelope id
-                await self.dao.update_pandadoc_draft_id(
-                    user_uuid=user_uuid,
-                    draft_id=envelope_id
-                )
-
-    async def get_docusign_preview(self, user_uuid: str, signer_email: str | None = None):
+    async def get_docusign_preview(
+        self, user_uuid: str, signer_email: str | None = None
+    ):
         """
         Generate and return the DocuSign preview URL for the offer letter.
         Steps:
@@ -1245,7 +1353,10 @@ class OfferLetterService:
             envelope_id = await self.dao.get_pandadoc_draft_id(user_uuid)
 
             if not envelope_id:
-                raise HTTPException(status_code=404, detail="DocuSign envelope not found for this offer letter")
+                raise HTTPException(
+                    status_code=404,
+                    detail="DocuSign envelope not found for this offer letter",
+                )
 
             print(f"[DocuSign Preview] Fetching preview for envelope_id: {envelope_id}")
 
@@ -1256,13 +1367,21 @@ class OfferLetterService:
             record = await self.dao.get_offer_by_uuid(user_uuid)
 
             employee_email = record["mail"].strip()
-            middle_name = record.get('middle_name')
+            middle_name = record.get("middle_name")
             employee_name = f"{record['first_name']} {middle_name + ' ' if middle_name else ''}{record['last_name']}"
             cc_raw = record.get("cc_mails")
             if isinstance(cc_raw, str):
-                manager_emails = [manager_email.strip() for manager_email in cc_raw.split(",") if manager_email.strip()]
+                manager_emails = [
+                    manager_email.strip()
+                    for manager_email in cc_raw.split(",")
+                    if manager_email.strip()
+                ]
             elif cc_raw:
-                manager_emails = [manager_email.strip() for manager_email in cc_raw if manager_email and manager_email.strip()]
+                manager_emails = [
+                    manager_email.strip()
+                    for manager_email in cc_raw
+                    if manager_email and manager_email.strip()
+                ]
             else:
                 manager_emails = []
 
@@ -1282,12 +1401,12 @@ class OfferLetterService:
                 "email": recipient_email,
                 "userName": recipient_name,
                 "clientUserId": recipient_email,  # Essential to avoid Editor Mode
-                "recipientId": recipient_id
+                "recipientId": recipient_id,
             }
 
             headers = {
                 "Authorization": f"Bearer {access_token}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             }
 
             url = f"{DOCUSIGN_BASE_URL}/v2.1/accounts/{DOCUSIGN_ACCOUNT_ID}/envelopes/{envelope_id}/views/recipient"
@@ -1307,39 +1426,27 @@ class OfferLetterService:
         except Exception as e:
             print(f"[DocuSign Preview] Error obtaining preview: {str(e)}")
             raise HTTPException(status_code=500, detail=str(e))
+
     async def get_final_offer_preview(self, user_uuid: str):
 
         try:
             envelope_id = await self.dao.get_pandadoc_draft_id(user_uuid)
- 
+
             if not envelope_id:
-                raise HTTPException(
-                    status_code=404,
-                    detail="Envelope not found"
-                )
+                raise HTTPException(status_code=404, detail="Envelope not found")
 
             token_data = generate_docusign_access_token()
             access_token = token_data["access_token"]
 
             url = f"{DOCUSIGN_BASE_URL}/v2.1/accounts/{DOCUSIGN_ACCOUNT_ID}/envelopes/{envelope_id}/documents/1"
 
-            headers = {
-                "Authorization": f"Bearer {access_token}"
-            }
+            headers = {"Authorization": f"Bearer {access_token}"}
 
             response = requests.get(url, headers=headers, stream=True)
 
             response.raise_for_status()
 
-            return StreamingResponse(
-                response.raw,
-                media_type="application/pdf"
-            )
+            return StreamingResponse(response.raw, media_type="application/pdf")
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-    
-
-
-
-    

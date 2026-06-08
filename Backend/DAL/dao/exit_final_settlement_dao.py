@@ -6,18 +6,13 @@ from Backend.DAL.models.models import ExitFinalSettlement, EmployeeExit
 
 class ExitFinalSettlementDAO:
 
-
     async def create_settlement(self, db, data):
 
         net_payable = (
-            data.last_salary +
-            data.leave_encashment +
-            data.bonus -
-            data.deductions
+            data.last_salary + data.leave_encashment + data.bonus - data.deductions
         )
 
         settlement = ExitFinalSettlement(
-
             settlement_uuid=str(generate_uuid7()),
             exit_uuid=data.exit_uuid,
             employee_uuid=data.employee_uuid,
@@ -25,7 +20,7 @@ class ExitFinalSettlementDAO:
             leave_encashment=data.leave_encashment,
             bonus=data.bonus,
             deductions=data.deductions,
-            net_payable=net_payable
+            net_payable=net_payable,
         )
 
         db.add(settlement)
@@ -33,7 +28,6 @@ class ExitFinalSettlementDAO:
         await db.refresh(settlement)
 
         return settlement
-
 
     async def get_settlement(self, db, exit_uuid):
 
@@ -44,7 +38,6 @@ class ExitFinalSettlementDAO:
         result = await db.execute(query)
 
         return result.scalars().first()
-
 
     async def approve_settlement(self, db, settlement_uuid, user_id, remarks):
 
@@ -78,7 +71,6 @@ class ExitFinalSettlementDAO:
         await db.commit()
 
         return settlement
-
 
     async def mark_paid(self, db, settlement_uuid):
 

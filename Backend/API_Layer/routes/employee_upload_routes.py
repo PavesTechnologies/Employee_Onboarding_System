@@ -1,18 +1,25 @@
 from datetime import date
-from fastapi import APIRouter, Depends, HTTPException, Request, Form, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Form, File, UploadFile
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.utils.dependencies import get_db
-from ..interfaces.employee_details_interfaces import CreateAddressRequest, CreateAddressResponse, EmployeeIdentityResponse, PersonalDetailsRequest, PersonalDetailsResponse, PersonalDetails , CreateRelationRequest, CreateRelationResponse
+from ..interfaces.employee_details_interfaces import (
+    CreateAddressRequest,
+    CreateAddressResponse,
+    EmployeeIdentityResponse,
+    PersonalDetailsRequest,
+    PersonalDetailsResponse,
+    CreateRelationRequest,
+    CreateRelationResponse,
+)
 from ...Business_Layer.services.employee_upload_service import EmployeeUploadService
-from ..utils.role_based import require_roles
 
 router = APIRouter()
 
+
 @router.post("/personal-details", response_model=PersonalDetailsResponse)
 async def create_personal_details(
-    request_data: PersonalDetailsRequest,
-    db: AsyncSession = Depends(get_db)
+    request_data: PersonalDetailsRequest, db: AsyncSession = Depends(get_db)
 ):
     try:
         employee_service = EmployeeUploadService(db)
@@ -20,50 +27,53 @@ async def create_personal_details(
 
         return PersonalDetailsResponse(
             personal_uuid=result.personal_uuid,
-            message="Personal Details Created Successfully"
+            message="Personal Details Created Successfully",
         )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))  # 👈 show real error
- 
+
     ## Addresses Routes ##
 
-@router.post("/address", response_model = CreateAddressResponse)
-async def create_address(request_data: CreateAddressRequest, db: AsyncSession = Depends(get_db)):
+
+@router.post("/address", response_model=CreateAddressResponse)
+async def create_address(
+    request_data: CreateAddressRequest, db: AsyncSession = Depends(get_db)
+):
     try:
         address_service = EmployeeUploadService(db)
         result = await address_service.create_address(request_data)
         return CreateAddressResponse(
-            address_uuid = result.address_uuid,
-            message = "Address Created Successfully"
+            address_uuid=result.address_uuid, message="Address Created Successfully"
         )
     except HTTPException as he:
         raise he
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))    
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-
-@router.put("/address/{address_uuid}", response_model = CreateAddressResponse)   
-async def update_address(address_uuid: str, request_data: CreateAddressRequest, db: AsyncSession = Depends(get_db)):
+@router.put("/address/{address_uuid}", response_model=CreateAddressResponse)
+async def update_address(
+    address_uuid: str,
+    request_data: CreateAddressRequest,
+    db: AsyncSession = Depends(get_db),
+):
     try:
         address_service = EmployeeUploadService(db)
         result = await address_service.update_address(address_uuid, request_data)
         if result is None:
             raise HTTPException(status_code=404, detail="Address not found")
         return CreateAddressResponse(
-            address_uuid = result.address_uuid,
-            message = "Address Updated Successfully"
+            address_uuid=result.address_uuid, message="Address Updated Successfully"
         )
     except HTTPException as he:
         raise he
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))        
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-    
-      
     # Employee Identity Document Routes #
+
+
 @router.post("/identity-documents", response_model=EmployeeIdentityResponse)
 async def create_employee_identity(
     mapping_uuid: str = Form(...),
@@ -81,21 +91,22 @@ async def create_employee_identity(
             user_uuid=user_uuid,
             identity_file_number=identity_file_number,
             expiry_date=expiry_date,
-            file=file
+            file=file,
         )
 
         return EmployeeIdentityResponse(
             identity_uuid=result.document_uuid,
             identity_file_number=result.identity_file_number,
             file_path=result.file_path,
-            message="Employee Identity Document Created Successfully"
+            message="Employee Identity Document Created Successfully",
         )
 
     except HTTPException as he:
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+
 # @router.put("/identity-documents/{identity_uuid}", response_model=EmployeeIdentityResponse)
 # async def update_employee_identity(
 #     identity_uuid: str,
@@ -130,6 +141,7 @@ async def create_employee_identity(
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.put("/identity-documents/{identity_uuid}")
 async def update_employee_identity(
     identity_uuid: str,
@@ -161,18 +173,20 @@ async def update_employee_identity(
 
 
 @router.post("/relations")
-async def create_relation(request_data: CreateRelationRequest, db: AsyncSession = Depends(get_db)):
+async def create_relation(
+    request_data: CreateRelationRequest, db: AsyncSession = Depends(get_db)
+):
     try:
         relation_service = EmployeeUploadService(db)
         result = await relation_service.create_relation(request_data)
         return CreateRelationResponse(
-            relation_uuid = result.relation_uuid,
-            message = "Relation Created Successfully"
+            relation_uuid=result.relation_uuid, message="Relation Created Successfully"
         )
     except HTTPException as he:
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/relations")
 async def get_relations(db: AsyncSession = Depends(get_db)):
@@ -184,7 +198,3 @@ async def get_relations(db: AsyncSession = Depends(get_db)):
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-    
-
-

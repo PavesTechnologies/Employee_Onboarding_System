@@ -1,8 +1,16 @@
 # Backend/api/interfaces/offerletter_interfaces.py
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    field_validator,
+)
 from typing import List, Optional
 from datetime import date
+
 
 class CompensationComponent(BaseModel):
     name: str
@@ -10,11 +18,14 @@ class CompensationComponent(BaseModel):
     frequency: str
     amount: float
 
+
 class CompensationComponentResponse(BaseModel):
     name: str
     type: str
     frequency: str
     amount: float
+
+
 class OfferCreateRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
@@ -28,7 +39,7 @@ class OfferCreateRequest(BaseModel):
     employee_type: str
     currency: str
     compensation_components: List[CompensationComponent]
-    total_ctc: float                                    
+    total_ctc: float
     cc_emails: Optional[List[EmailStr]] = Field(
         default=None,
         validation_alias=AliasChoices("cc_emails", "cc_email", "ccEmails", "ccEmail"),
@@ -43,13 +54,16 @@ class OfferCreateRequest(BaseModel):
             return [email.strip() for email in value.split(",") if email.strip()]
         return value
 
+
 class OfferCreateResponse(BaseModel):
     message: str
     offer_id: str
 
+
 class OfferUpdateResponse(BaseModel):
     message: str
     offer_id: str
+
 
 class BulkOfferCreateResponse(BaseModel):
     message: Optional[str] = None
@@ -62,12 +76,13 @@ class BulkOfferCreateResponse(BaseModel):
     skipped_rows: int
     success_offer_ids: List[str] = Field(default_factory=list)
 
+
 class OfferLetterDetailsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     user_uuid: str
     first_name: Optional[str] = None
-    middle_name :Optional[str] = None
+    middle_name: Optional[str] = None
     last_name: Optional[str] = None
     mail: Optional[str] = None
     country_code: Optional[str] = None
@@ -77,13 +92,15 @@ class OfferLetterDetailsResponse(BaseModel):
     currency: Optional[str] = None
     total_ctc: float | None = None
     created_by: Optional[str] = None
-    status : Optional[str] = None
+    status: Optional[str] = None
     employee_type: Optional[str] = None
     reporting_manager: Optional[str] = None
     joining_date: Optional[date] = None
 
     cc_emails: Optional[List[EmailStr]] = None
-    compensation_components: List[CompensationComponentResponse] = Field(default_factory=list)
+    compensation_components: List[CompensationComponentResponse] = Field(
+        default_factory=list
+    )
 
     @field_validator("cc_emails", mode="before")
     @classmethod
@@ -93,6 +110,7 @@ class OfferLetterDetailsResponse(BaseModel):
         if isinstance(value, str):
             return [email.strip() for email in value.split(",") if email.strip()]
         return value
+
 
 class OfferPendingCandidate(BaseModel):
     user_uuid: str
@@ -106,16 +124,18 @@ class OfferPendingCandidate(BaseModel):
     status: str
     created_by: str
 
+
 class BulkSendOfferLettersRequest(BaseModel):
     user_uuid_list: List[str]
 
+
 class BulkSendOfferLettersResult(BaseModel):
     user_uuid: str
-    status: str                     # "success" or "failed"
-    mail_sent_to: Optional[str]     # candidate email from DB
+    status: str  # "success" or "failed"
+    mail_sent_to: Optional[str]  # candidate email from DB
     pandadoc_status: Optional[str]  # e.g., "document_created_and_sent"
-    message: Optional[str]          # success message
-    error: Optional[str]            # error details if failed
+    message: Optional[str]  # success message
+    error: Optional[str]  # error details if failed
 
 
 class BulkSendOfferLettersResponse(BaseModel):
@@ -123,6 +143,7 @@ class BulkSendOfferLettersResponse(BaseModel):
     successful: int
     failed: int
     results: List[BulkSendOfferLettersResult]
+
 
 class DeleteOfferResponse(BaseModel):
     message: str

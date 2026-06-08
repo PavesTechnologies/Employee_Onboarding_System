@@ -7,7 +7,7 @@ from ...DAL.utils.dependencies import get_db
 from ..interfaces.employee_bank_interfaces import (
     CreateBankDetailsRequest,
     CreateBankDetailsResponse,
-    BankDetails
+    BankDetails,
 )
 
 from ...Business_Layer.services.employee_bank_service import EmployeeBankService
@@ -26,8 +26,11 @@ async def get_all_bank_details(db: AsyncSession = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/user/{user_uuid}", response_model=BankDetails)
-async def get_bank_details_by_user_uuid(user_uuid: str, db: AsyncSession = Depends(get_db)):
+async def get_bank_details_by_user_uuid(
+    user_uuid: str, db: AsyncSession = Depends(get_db)
+):
     try:
         bank_service = EmployeeBankService(db)
         result = await bank_service.get_bank_details_by_user_uuid(user_uuid)
@@ -36,6 +39,7 @@ async def get_bank_details_by_user_uuid(user_uuid: str, db: AsyncSession = Depen
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/{bank_uuid}", response_model=BankDetails)
 async def get_bank_details_by_uuid(bank_uuid: str, db: AsyncSession = Depends(get_db)):
@@ -48,8 +52,11 @@ async def get_bank_details_by_uuid(bank_uuid: str, db: AsyncSession = Depends(ge
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/", response_model=CreateBankDetailsResponse)
-async def create_bank_details(request_data: CreateBankDetailsRequest, db: AsyncSession = Depends(get_db)):
+async def create_bank_details(
+    request_data: CreateBankDetailsRequest, db: AsyncSession = Depends(get_db)
+):
     try:
         start = perf_counter()
 
@@ -60,8 +67,7 @@ async def create_bank_details(request_data: CreateBankDetailsRequest, db: AsyncS
         print("Bank API Time:", end - start)
 
         return CreateBankDetailsResponse(
-            bank_uuid=result["bank_uuid"],
-            message="Bank Details Created Successfully"
+            bank_uuid=result["bank_uuid"], message="Bank Details Created Successfully"
         )
 
     except HTTPException as he:
@@ -70,15 +76,19 @@ async def create_bank_details(request_data: CreateBankDetailsRequest, db: AsyncS
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.put("/{bank_uuid}", response_model=CreateBankDetailsResponse)
-async def update_bank_details(bank_uuid: str, request_data: CreateBankDetailsRequest, db: AsyncSession = Depends(get_db)):
+async def update_bank_details(
+    bank_uuid: str,
+    request_data: CreateBankDetailsRequest,
+    db: AsyncSession = Depends(get_db),
+):
     try:
         bank_service = EmployeeBankService(db)
         result = await bank_service.update_bank_details(bank_uuid, request_data)
 
         return CreateBankDetailsResponse(
-            bank_uuid=bank_uuid,
-            message="Bank Details Updated Successfully"
+            bank_uuid=bank_uuid, message="Bank Details Updated Successfully"
         )
 
     except HTTPException as he:
@@ -94,8 +104,7 @@ async def delete_bank_details(bank_uuid: str, db: AsyncSession = Depends(get_db)
         await bank_service.delete_bank_details(bank_uuid)
 
         return CreateBankDetailsResponse(
-            bank_uuid=bank_uuid,
-            message="Bank Details Deleted Successfully"
+            bank_uuid=bank_uuid, message="Bank Details Deleted Successfully"
         )
 
     except HTTPException as he:

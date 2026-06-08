@@ -13,7 +13,6 @@ class EmployeePfService:
         self.dao = EmployeePfDAO(self.db)
         self.offerdao = OfferLetterDAO(self.db)
 
-
     async def get_all_pf_details(self):
 
         try:
@@ -29,7 +28,6 @@ class EmployeePfService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-
 
     async def get_pf_details_by_uuid(self, uuid):
 
@@ -57,7 +55,7 @@ class EmployeePfService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-            
+
     async def create_pf_details(self, request_data):
 
         try:
@@ -69,23 +67,16 @@ class EmployeePfService:
             if not employee:
                 raise HTTPException(status_code=404, detail="Employee Not Found")
 
-
             pf_uuid = generate_uuid7()
 
-            result = await self.dao.create_pf_details(
-                pf_uuid,
-                request_data
-            )
+            result = await self.dao.create_pf_details(pf_uuid, request_data)
 
-            return {
-                "pf_uuid": pf_uuid
-            }
+            return {"pf_uuid": pf_uuid}
 
         except HTTPException as he:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-
 
     async def update_pf_details(self, uuid, request_data):
 
@@ -104,7 +95,6 @@ class EmployeePfService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-
 
     async def delete_pf_details(self, uuid):
 

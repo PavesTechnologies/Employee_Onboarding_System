@@ -6,6 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from ...DAL.utils.database import set_db_session, remove_db_session
 import time
 
+
 class DBSessionMiddleware(BaseHTTPMiddleware):
     """
     Middleware to manage database session lifecycle per request.
@@ -35,7 +36,9 @@ class DBSessionMiddleware(BaseHTTPMiddleware):
                     await db.rollback()
                 except Exception:
                     pass
-            return JSONResponse({"detail": "A database error occurred."}, status_code=500)
+            return JSONResponse(
+                {"detail": "A database error occurred."}, status_code=500
+            )
 
         except Exception as e:
             print(f"🔴 DB Middleware - Unexpected Error: {e}")

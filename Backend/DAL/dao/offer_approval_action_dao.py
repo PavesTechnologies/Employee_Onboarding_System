@@ -2,7 +2,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import and_, select, update
 from sqlalchemy.orm import selectinload
 
-from Backend.DAL.models.models import OfferApprovalRequest, OfferApprovalAction, OfferLetterDetails
+from Backend.DAL.models.models import (
+    OfferApprovalRequest,
+    OfferApprovalAction,
+    OfferLetterDetails,
+)
 
 
 class OfferApprovalActionDAO:
@@ -10,7 +14,7 @@ class OfferApprovalActionDAO:
         self.db = db
 
     async def get_request_with_latest_action(self, user_uuid: str):
-    # 1️⃣ Get request (light query)
+        # 1️⃣ Get request (light query)
         stmt_req = (
             select(
                 OfferApprovalRequest.id,
@@ -29,11 +33,8 @@ class OfferApprovalActionDAO:
 
         # 2️⃣ Get latest action (only 1 row)
         stmt_action = (
-            select(
-                OfferApprovalAction.action,
-                OfferApprovalAction.comment
-            )
-            .where(OfferApprovalAction.request_id == req.id)  
+            select(OfferApprovalAction.action, OfferApprovalAction.comment)
+            .where(OfferApprovalAction.request_id == req.id)
             .order_by(OfferApprovalAction.id.desc())
             .limit(1)
         )
@@ -48,15 +49,14 @@ class OfferApprovalActionDAO:
             "comment": action.comment if action else None,
         }
 
-
     async def get_all_requests_with_actions(self):
-        stmt = (
-            select(OfferApprovalRequest)
-            .options(selectinload(OfferApprovalRequest.offer_approval_action))
+        stmt = select(OfferApprovalRequest).options(
+            selectinload(OfferApprovalRequest.offer_approval_action)
         )
 
         result = await self.db.execute(stmt)
         return result.scalars().all()
+
     async def get_request_by_user_uuid(self, user_uuid: str):
         stmt = select(OfferApprovalRequest).where(
             OfferApprovalRequest.user_uuid == user_uuid
@@ -64,16 +64,9 @@ class OfferApprovalActionDAO:
         result = await self.db.execute(stmt)
         return result.scalars().first()
 
-    async def create_action(
-        self,
-        request_id: int,
-        action: str,
-        comment: str | None
-    ):
+    async def create_action(self, request_id: int, action: str, comment: str | None):
         new_action = OfferApprovalAction(
-            request_id=request_id,
-            action=action,
-            comment=comment
+            request_id=request_id, action=action, comment=comment
         )
 
         try:
@@ -84,39 +77,33 @@ class OfferApprovalActionDAO:
         except Exception:
             await self.db.rollback()
             return None
-        
+
     async def has_action_for_request(self, request_id: int) -> bool:
         stmt = select(OfferApprovalAction.id).where(
             OfferApprovalAction.request_id == request_id
         )
         result = await self.db.execute(stmt)
         return result.scalar() is not None
-    
+
     async def get_action_by_request_id(self, request_id: int):
         stmt = select(OfferApprovalAction).where(
             OfferApprovalAction.request_id == request_id
         )
         result = await self.db.execute(stmt)
         return result.scalars().first()
-    
+
     async def update_action(
-        self,
-        action_id: int,
-        action: str,
-        comment: str | None
+        self, action_id: int, action: str, comment: str | None
     ) -> bool:
         stmt = (
             update(OfferApprovalAction)
             .where(OfferApprovalAction.id == action_id)
-            .values(
-                action=action,
-                comment=comment
-            )
+            .values(action=action, comment=comment)
         )
         await self.db.execute(stmt)
         await self.db.commit()
         return True
-    
+
     async def get_requests_for_action_taker(self, action_taker_id: int):
         """
         Fetch all approval requests assigned to this user
@@ -126,12 +113,13 @@ class OfferApprovalActionDAO:
             .where(OfferApprovalRequest.action_taker_id == action_taker_id)
             .options(
                 selectinload(OfferApprovalRequest.offer_approval_action),
-                selectinload(OfferApprovalRequest.offer_letter_details)
+                selectinload(OfferApprovalRequest.offer_letter_details),
             )
         )
 
         result = await self.db.execute(stmt)
         return result.scalars().all()
+
     async def get_all_my_actions(self, current_user_id):
         stmt = (
             select(
@@ -143,15 +131,15 @@ class OfferApprovalActionDAO:
                 OfferLetterDetails.last_name,
                 OfferLetterDetails.mail,
                 OfferLetterDetails.designation,
-                OfferApprovalAction.action
+                OfferApprovalAction.action,
             )
             .join(
                 OfferApprovalAction,
-                OfferApprovalAction.request_id == OfferApprovalRequest.id
+                OfferApprovalAction.request_id == OfferApprovalRequest.id,
             )
             .join(
                 OfferLetterDetails,
-                OfferLetterDetails.user_uuid == OfferApprovalRequest.user_uuid
+                OfferLetterDetails.user_uuid == OfferApprovalRequest.user_uuid,
             )
             .where(OfferApprovalRequest.action_taker_id == current_user_id)
         )
@@ -160,9 +148,7 @@ class OfferApprovalActionDAO:
         return result.mappings().all()
 
     async def reassign_approval_request(
-        self,
-        user_uuid: str,
-        new_action_taker_id: int
+        self, user_uuid: str, new_action_taker_id: int
     ) -> bool:
         """
         Reassign approver for a pending approval request
@@ -173,12 +159,10 @@ class OfferApprovalActionDAO:
             .where(
                 and_(
                     OfferApprovalRequest.user_uuid == user_uuid,
-                    OfferApprovalRequest.action_taker_id != new_action_taker_id
+                    OfferApprovalRequest.action_taker_id != new_action_taker_id,
                 )
             )
-            .values(
-                action_taker_id=new_action_taker_id
-            )
+            .values(action_taker_id=new_action_taker_id)
         )
 
         result = await self.db.execute(stmt)

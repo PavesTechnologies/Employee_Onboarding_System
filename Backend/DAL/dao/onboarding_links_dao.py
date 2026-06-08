@@ -2,9 +2,13 @@ from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
-from  sqlalchemy import select
-from Backend.Business_Layer.utils.email_token_utils import generate_mixed_month_time_token, hash_token
+from sqlalchemy import select
+from Backend.Business_Layer.utils.email_token_utils import (
+    generate_mixed_month_time_token,
+    hash_token,
+)
 from Backend.DAL.models.models import OnboardingLinks
+
 
 class OnboardingLinkDAO:
     def __init__(self, db: AsyncSession):

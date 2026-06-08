@@ -5,8 +5,8 @@ from Backend.DAL.models.models import ExitClearance, EmployeeExit, ExitClearance
 
 from datetime import datetime
 
-class ExitClearanceDAO:
 
+class ExitClearanceDAO:
 
     # Auto Create Clearances
     async def create_clearances(self, db, exit_uuid, employee_uuid):
@@ -23,7 +23,7 @@ class ExitClearanceDAO:
                     clearance_uuid=str(generate_uuid7()),
                     exit_uuid=exit_uuid,
                     employee_uuid=employee_uuid,
-                    department=dept
+                    department=dept,
                 )
 
                 db.add(clearance)
@@ -37,13 +37,11 @@ class ExitClearanceDAO:
             await db.rollback()
             raise Exception(str(e))
 
-
     # My Pending
     async def get_my_pending(self, db, departments):
 
         query = select(ExitClearance).where(
-            ExitClearance.department.in_(departments),
-            ExitClearance.status == "Pending"
+            ExitClearance.department.in_(departments), ExitClearance.status == "Pending"
         )
 
         result = await db.execute(query)
@@ -87,7 +85,7 @@ class ExitClearanceDAO:
             # Check all clearances approved
             query = select(ExitClearance).where(
                 ExitClearance.exit_uuid == clearance.exit_uuid,
-                ExitClearance.status != "Approved"
+                ExitClearance.status != "Approved",
             )
 
             result = await db.execute(query)
@@ -111,6 +109,7 @@ class ExitClearanceDAO:
         except Exception as e:
             await db.rollback()
             raise Exception(str(e))
+
     async def get_employee_clearances(self, db, employee_uuid):
         try:
             query = select(ExitClearance).where(
@@ -121,16 +120,16 @@ class ExitClearanceDAO:
         except Exception as e:
             await db.rollback()
             raise Exception(str(e))
+
     async def get_clearance_history(self, db, exit_uuid):
         try:
-            query = select(ExitClearance).where(
-                ExitClearance.exit_uuid == exit_uuid
-            )
+            query = select(ExitClearance).where(ExitClearance.exit_uuid == exit_uuid)
             result = await db.execute(query)
             return result.scalars().all()
         except Exception as e:
             await db.rollback()
             raise Exception(str(e))
+
     async def get_all_clearances(self, db):
         try:
             query = select(ExitClearance)

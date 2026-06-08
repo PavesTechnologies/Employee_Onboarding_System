@@ -14,7 +14,6 @@ class EmployeeBankService:
         self.dao = EmployeeBankDAO(self.db)
         self.offerdao = OfferLetterDAO(self.db)
 
-
     async def get_all_bank_details(self):
         try:
             result = await self.dao.get_all_bank_details()
@@ -25,7 +24,6 @@ class EmployeeBankService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-
 
     async def get_bank_details_by_uuid(self, uuid):
         try:
@@ -49,26 +47,21 @@ class EmployeeBankService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-
     async def create_bank_details(self, request_data):
         bank_uuid = None
         try:
             # Validate employee exists
             employee = await self.offerdao.get_offer_by_user_uuid(
-                request_data.user_uuid)
+                request_data.user_uuid
+            )
             if not employee:
                 raise HTTPException(status_code=404, detail="Employee Not Found")
             bank_uuid = str(generate_uuid7())
-            
+
             print("BANK UUID:", bank_uuid)
             print("BANK UUID TYPE:", type(bank_uuid))
-            result = await self.dao.create_bank_details(
-                bank_uuid,
-                request_data
-            )
-            return {
-                "bank_uuid": bank_uuid
-            }
+            result = await self.dao.create_bank_details(bank_uuid, request_data)
+            return {"bank_uuid": bank_uuid}
 
         except HTTPException as he:
             raise he
@@ -77,7 +70,6 @@ class EmployeeBankService:
             print("BANK UUID TYPE:", type(bank_uuid))
             traceback.print_exc()
             raise HTTPException(status_code=500, detail=str(e))
-
 
     async def update_bank_details(self, uuid, request_data):
         try:
@@ -90,7 +82,6 @@ class EmployeeBankService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-
 
     async def delete_bank_details(self, uuid):
         try:
