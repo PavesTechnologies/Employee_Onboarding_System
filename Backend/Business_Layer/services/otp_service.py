@@ -66,24 +66,22 @@ class OtpResponseService:
             message="OTP not found"
         )
 
-    try:
-        if datetime.utcnow() > otp_record.expirytime:
-            return OtpResponseStatus(
-                status="FAILED",
-                message="OTP expired"
-            )
-
-        if otp_record.otp != otp:
-            return OtpResponseStatus(
-                status="FAILED",
-                message="Incorrect OTP"
-            )
-
+    if datetime.utcnow() > otp_record.expirytime:
+        await self.dao.delete_otp(otp_record)
         return OtpResponseStatus(
-            status="SUCCESS",
-            message="OTP verified successfully"
+            status="FAILED",
+            message="OTP expired"
         )
 
-    finally:
-        await self.dao.delete_otp(otp_record)
+    if otp_record.otp != otp:
+        return OtpResponseStatus(
+            status="FAILED",
+            message="Incorrect OTP"
+        )
+
+    await self.dao.delete_otp(otp_record)
+    return OtpResponseStatus(
+        status="SUCCESS",
+        message="OTP verified successfully"
+    )
  
