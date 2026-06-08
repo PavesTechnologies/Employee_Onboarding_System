@@ -57,3 +57,10 @@ aiosignal==1.4.0
 frozenlist==1.8.0
 multidict==6.7.0
 yarl==1.22.0
+
+autoflake
+black 
+flake8
+bandit 
+pip-audit
+mypy
