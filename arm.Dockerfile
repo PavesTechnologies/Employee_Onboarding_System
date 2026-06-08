@@ -1,14 +1,9 @@
 # ── Build Stage ──────────────────────────────────────────
-FROM python:3.11-slim-bookworm AS builder
+FROM python:3.12-slim-bookworm AS builder
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    gcc \
-    g++ \
-    python3-dev \
-    libmariadb-dev \
-    pkg-config \
+    gcc g++ libmariadb-dev pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python -m venv /opt/venv
@@ -17,12 +12,12 @@ RUN python -m venv /opt/venv
 RUN date > /build_time.txt
 
 COPY requirements.txt .
-RUN /opt/venv/bin/pip install --upgrade pip setuptools wheel && \
-    /opt/venv/bin/pip install -v --no-cache-dir -r requirements.txt
+RUN /opt/venv/bin/pip install --upgrade pip && \
+    /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 
 # ── Runtime Stage ─────────────────────────────────────────
-FROM python:3.11-slim-bookworm
+FROM python:3.12-slim-bookworm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libmariadb3 libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0 \
