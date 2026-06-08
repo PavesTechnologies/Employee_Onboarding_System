@@ -29,4 +29,12 @@ async def send_otp(
 async def verify_otp(requestdata: OtpRequestBody, db: AsyncSession = Depends(get_db)):
     """Verifies the OTP sent to the user's email."""
     service = OtpResponseService(db)
-    return await service.verify_otp(requestdata.email, requestdata.otp)
+    result = await service.verify_otp(requestdata.email, requestdata.otp)
+
+    if result.status.upper() != "SUCCESS":
+        raise HTTPException(
+            status_code=400,
+            detail=result.message
+        )
+
+    return result
