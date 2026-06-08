@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from Backend.DAL.models.models import OnboardingLinks
 from sqlalchemy import select
@@ -8,7 +9,9 @@ class TokenVerificationDAO:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_valid_link_by_token(self, raw_token: str) -> OnboardingLinks:
+    async def get_valid_link_by_token(
+        self, raw_token: str
+    ) -> Optional[OnboardingLinks]:
         token_hash = hash_token(raw_token)
         stmt = select(OnboardingLinks).where(OnboardingLinks.token_hash == token_hash)
         result = await self.db.execute(stmt)

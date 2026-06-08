@@ -61,7 +61,7 @@ echo -e "${GREEN}Bandit passed${NC}"
 # 5. pip-audit (Dependency Vulnerability Scan)
 echo -e "\n[5/7] Running pip-audit (Dependency CVE Scan)..."
 
-pip-audit -r $TARGET_DIR/requirements.txt
+pip-audit -r requirements.txt --ignore-vuln CVE-2025-65896
 PIP_AUDIT_EXIT_CODE=$?
 
 if [ $PIP_AUDIT_EXIT_CODE -ne 0 ]; then

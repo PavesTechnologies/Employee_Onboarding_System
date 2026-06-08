@@ -43,7 +43,7 @@ class HrBulkJoinDAO:
 
         result = await self.db.execute(stmt)
         await self.db.commit()
-        return result.rowcount
+        return result.rowcount  # type: ignore[attr-defined]
 
     async def update_joining_date_for_user(
         self, user_uuid: str, payload, status: str, reporting_manager
@@ -61,7 +61,7 @@ class HrBulkJoinDAO:
 
         result = await self.db.execute(stmt)
         await self.db.commit()
-        return result.rowcount
+        return result.rowcount  # type: ignore[attr-defined]
 
     async def get_user_by_uuid(self, user_uuid: str):
         query = select(OfferLetterDetails).where(

@@ -26,8 +26,12 @@ async def get_dashboard_data(db, start_date: date, end_date: date):
     # ================= SUMMARY =================
     summary = {"selected": 0, "offersMade": 0, "joined": 0, "dropOffs": 0, "pending": 0}
 
-    weekly = defaultdict(lambda: {"completed": 0, "joining": 0})
-    monthly = defaultdict(lambda: {"completed": 0, "joining": 0})
+    weekly: dict[str, dict[str, int]] = defaultdict(
+        lambda: {"completed": 0, "joining": 0}
+    )
+    monthly: dict[str, dict[str, int]] = defaultdict(
+        lambda: {"completed": 0, "joining": 0}
+    )
     candidates = []
 
     # ================= HELPER =================
@@ -128,7 +132,7 @@ async def get_dashboard_data(db, start_date: date, end_date: date):
             {"week": k, "completed": v["completed"], "joining": v["joining"]}
             for k, v in monthly.items()
         ],
-        key=lambda x: datetime.strptime(x["week"].split(" - ")[0], "%b %d"),
+        key=lambda x: datetime.strptime(str(x["week"]).split(" - ")[0], "%b %d"),
     )
 
     # ================= ACTIVITIES =================

@@ -93,7 +93,6 @@ class OfferLetterDetailsResponse(BaseModel):
     total_ctc: float | None = None
     created_by: Optional[str] = None
     status: Optional[str] = None
-    employee_type: Optional[str] = None
     reporting_manager: Optional[str] = None
     joining_date: Optional[date] = None
 

@@ -72,7 +72,8 @@ async def update_offer_approval_requests(
     current_user_id = int(request.state.user.get("user_id"))
 
     return await service.update_offer_approval_requests(
-        data_list=payload, current_user_id=current_user_id
+        data_list=payload,  # type: ignore[arg-type]
+        current_user_id=current_user_id,
     )
 
 

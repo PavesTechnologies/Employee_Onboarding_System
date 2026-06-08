@@ -60,7 +60,7 @@ class EmployeeBankService:
 
             print("BANK UUID:", bank_uuid)
             print("BANK UUID TYPE:", type(bank_uuid))
-            result = await self.dao.create_bank_details(bank_uuid, request_data)
+            await self.dao.create_bank_details(bank_uuid, request_data)
             return {"bank_uuid": bank_uuid}
 
         except HTTPException as he:

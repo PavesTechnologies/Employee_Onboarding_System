@@ -1,8 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.dao.hr_onboarding_dao import HrOnboardingDAO
-
-# from ...Business_Layer.utils import send_hr_onboarding_submitted_email,send_candidate_onboarding_submitted_email
-from ...DAL.dao.hr_onboarding_dao import HrOnboardingDAO
 from fastapi import HTTPException
 from Backend.DAL.utils.storage_utils import S3StorageService
 from Backend.DAL.dao.offerletter_dao import OfferLetterDAO
@@ -107,8 +104,8 @@ class HrOnboardingService:
 
             if not match:
                 raise ValueError("Invalid S3 file path format")
-            match = re.search(pattern, file_path).group(1)
-            names = match.split("/")
+            folder_path = match.group(1)
+            names = folder_path.split("/")
             print("Names:", names)
             if len(names) == 2:
                 print("Entering identity and education document check")
@@ -154,7 +151,7 @@ class HrOnboardingService:
             raise HTTPException(status_code=400, detail="Invalid verification status")
 
         updated = await self.offer_dao.update_offerletter_status(
-            user_uuid=user_uuid, new_status=status, current_user_id=current_user_id
+            user_uuid=user_uuid, new_status=status, current_user_id=str(current_user_id)
         )
         if not updated:
             raise HTTPException(

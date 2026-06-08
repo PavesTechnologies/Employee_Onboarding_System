@@ -69,7 +69,7 @@ class EmployeePfService:
 
             pf_uuid = generate_uuid7()
 
-            result = await self.dao.create_pf_details(pf_uuid, request_data)
+            await self.dao.create_pf_details(pf_uuid, request_data)
 
             return {"pf_uuid": pf_uuid}
 

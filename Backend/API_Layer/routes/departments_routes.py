@@ -32,7 +32,6 @@ async def create_department(
     return dept
 
 
-@staticmethod
 @router.get(
     "/",
     response_model=List[DepartmentResponse],

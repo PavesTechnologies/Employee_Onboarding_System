@@ -1,5 +1,4 @@
 import uuid
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from Backend.DAL.dao.departments_dao import DepartmentsDAO
 from Backend.DAL.models.models import Departments
@@ -32,15 +31,6 @@ class DepartmentsService:
         departments = await DepartmentsDAO.get_all_departments(db)
 
         return departments
-
-    @staticmethod
-    async def get_department_by_uuid(db: AsyncSession, department_uuid: str):
-
-        result = await db.execute(
-            select(Departments).where(Departments.department_uuid == department_uuid)
-        )
-
-        return result.scalar_one_or_none()
 
     @staticmethod
     async def update_department(db: AsyncSession, department_uuid: str, data):

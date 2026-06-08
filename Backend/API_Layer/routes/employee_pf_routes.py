@@ -83,7 +83,7 @@ async def update_pf_details(
 ):
     try:
         pf_service = EmployeePfService(db)
-        result = await pf_service.update_pf_details(pf_uuid, request_data)
+        await pf_service.update_pf_details(pf_uuid, request_data)
 
         return CreatePfDetailsResponse(
             pf_uuid=pf_uuid, message="PF Details Updated Successfully"

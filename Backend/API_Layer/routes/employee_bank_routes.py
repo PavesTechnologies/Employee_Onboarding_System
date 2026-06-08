@@ -85,7 +85,7 @@ async def update_bank_details(
 ):
     try:
         bank_service = EmployeeBankService(db)
-        result = await bank_service.update_bank_details(bank_uuid, request_data)
+        await bank_service.update_bank_details(bank_uuid, request_data)
 
         return CreateBankDetailsResponse(
             bank_uuid=bank_uuid, message="Bank Details Updated Successfully"

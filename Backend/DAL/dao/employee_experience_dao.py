@@ -37,7 +37,7 @@ class EmployeeExperienceDAO:
     ):
         query = select(EmployeeExperience).where(
             EmployeeExperience.employee_uuid == employee_uuid,
-            EmployeeExperience.is_current == True,
+            EmployeeExperience.is_current.is_(True),
         )
 
         if exclude_uuid:

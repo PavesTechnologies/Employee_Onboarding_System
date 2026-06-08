@@ -1,11 +1,10 @@
 # from apscheduler.schedulers.background import BackgroundScheduler
-from Backend.API_Layer.routes import hr_bulk_join_router
 from fastapi import APIRouter
 from fastapi import FastAPI, Response
 
 from fastapi.openapi.utils import get_openapi
 import os
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from Backend.API_Layer.routes import (
     addtask_routes,
@@ -52,7 +51,6 @@ from Backend.API_Layer.routes import (
 )
 from datetime import date
 from weasyprint import HTML
-from Backend.API_Layer.routes import addtask_routes
 from Backend.API_Layer.routes import exit_final_settlement_routes
 from Backend.API_Layer.routes import exit_documents_routes
 
@@ -158,7 +156,7 @@ def custom_openapi():
     return app.openapi_schema
 
 
-app.openapi = custom_openapi
+app.openapi = custom_openapi  # type: ignore[method-assign]
 
 api_router.include_router(
     offerletter_routes.router, prefix="/offerletters", tags=["Offer Letters"]
@@ -288,7 +286,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 template_dir = os.path.join(BASE_DIR, "templates")
 
 # Initialize Jinja environment
-env = Environment(loader=FileSystemLoader(template_dir))
+env = Environment(
+    loader=FileSystemLoader(template_dir),
+    autoescape=select_autoescape(["html", "xml"]),
+)
 
 
 @app.get("/generate-offer")

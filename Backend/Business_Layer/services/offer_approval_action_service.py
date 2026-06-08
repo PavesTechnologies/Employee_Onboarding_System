@@ -13,9 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from Backend.DAL.dao.offer_approval_action_dao import OfferApprovalActionDAO
 from Backend.API_Layer.interfaces.offer_request_interfaces import OfferRequestResponse
 
-from Backend.DAL.dao.offer_approval_action_dao import OfferApprovalActionDAO
-from Backend.API_Layer.interfaces.offer_request_interfaces import OfferRequestResponse
-
 from Backend.DAL.dao.offerresponse_dao import OfferResponseDAO
 from Backend.API_Layer.interfaces.OfferActionAdmin_interfaces import (
     OfferActionAdminResponse,
@@ -136,13 +133,13 @@ class OfferApprovalActionService:
             request = await self.dao.get_request_by_user_uuid(item.user_uuid)
             if not request:
                 raise HTTPException(
-                    status_code=404, detail=f"No approval request found users"
+                    status_code=404, detail="No approval request found users"
                 )
 
             # 🔐 VALIDATION: only assigned approver can act
             if request.action_taker_id != current_user_id:
                 raise HTTPException(
-                    status_code=401, detail=(f"You are not authorized to take action.")
+                    status_code=401, detail="You are not authorized to take action."
                 )
 
             # ❌ NEW VALIDATION — already reviewed
@@ -158,7 +155,7 @@ class OfferApprovalActionService:
             if action not in {"APPROVED", "REJECTED", "ON_HOLD"}:
                 raise HTTPException(
                     status_code=422,
-                    detail=f"Invalid action should be APPROVED / REJECTED / ON_HOLD",
+                    detail="Invalid action should be APPROVED / REJECTED / ON_HOLD",
                 )
 
             result = await self.dao.create_action(
@@ -166,7 +163,7 @@ class OfferApprovalActionService:
             )
 
             if not result:
-                raise HTTPException(status_code=500, detail=f"Failed to insert action ")
+                raise HTTPException(status_code=500, detail="Failed to insert action")
 
             created.append(
                 {

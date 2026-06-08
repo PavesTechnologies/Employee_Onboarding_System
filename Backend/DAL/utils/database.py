@@ -1,5 +1,5 @@
 # Backend/DAL/utils/database.py
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 from contextvars import ContextVar
@@ -42,7 +42,7 @@ AsyncSessionLocal = async_sessionmaker(
 Base = declarative_base()
 
 # ✅ Context variable for async session
-_db_context: ContextVar[AsyncSession] = ContextVar("db_session", default=None)
+_db_context: ContextVar[Optional[AsyncSession]] = ContextVar("db_session", default=None)
 
 
 async def set_db_session() -> AsyncSession:

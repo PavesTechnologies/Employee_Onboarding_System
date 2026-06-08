@@ -6,7 +6,6 @@ from Backend.API_Layer.interfaces.addtask_interfaces import (
     EmployeeTaskCreateRequest,
     EmployeeTaskCreateResponse,
     EmployeeTaskListResponse,
-    EmployeeTaskListResponse,
     EmployeeTaskUpdateRequest,
     EmployeeTaskUpdateResponse,
 )

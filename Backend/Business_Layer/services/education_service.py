@@ -109,7 +109,7 @@ class EducationDocService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-    ## Employee Education Documents ##
+    # Employee Education Documents #
     async def create_employee_education_document(self, request_data, file):
         start_total = time.perf_counter()
 
@@ -247,7 +247,7 @@ class EducationDocService:
                 raise HTTPException(status_code=404, detail="Document Not Found")
             blob_upload_service = S3StorageService()
             await blob_upload_service.delete_file(existing.file_path)
-            result = await self.dao.delete_employee_education_document_by_uuid(uuid)
+            await self.dao.delete_employee_education_document_by_uuid(uuid)
             return existing.file_path
         except HTTPException as he:
             raise he

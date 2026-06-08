@@ -30,7 +30,7 @@ class CountryService:
             if existing:
                 raise ValueError("Country Already Exists")
             uuid = generate_uuid7()
-            country = await self.dao.create_country(uuid, calling_code, country_name)
+            await self.dao.create_country(uuid, calling_code, country_name)
             return uuid
         except ValueError as ve:
             raise HTTPException(status_code=422, detail=str(ve))

@@ -19,7 +19,7 @@ class CountryAllDetails(BaseModel):
     is_active: bool
 
 
-## EDUCATION LEVEL ##
+# EDUCATION LEVEL #
 class CreateEducLevelResponse(BaseModel):
     education_uuid: str
     message: str

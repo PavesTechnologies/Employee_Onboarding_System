@@ -26,7 +26,6 @@ class ExitInterviewResponse(BaseModel):
     reason_for_leaving: Optional[str] = None
     company_feedback: Optional[str] = None
     manager_feedback: Optional[str] = None
-    manager_feedback: Optional[str] = None
     rating: Optional[int] = None
     submitted_at: Optional[datetime] = None
 

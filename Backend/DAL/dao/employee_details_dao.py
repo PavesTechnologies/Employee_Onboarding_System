@@ -50,7 +50,7 @@ class EmployeeDetailsDAO:
 
             result = await self.db.execute(update_stmt)
 
-            if result.rowcount == 0:
+            if result.rowcount == 0:  # type: ignore[attr-defined]
                 return None
 
             await self.db.commit()

@@ -1,9 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from Backend.DAL.models.models import Otptable
-from Backend.DAL.models.models import Otptable
-
 from sqlalchemy import select, delete
+from Backend.DAL.models.models import Otptable
 
 
 class OtpResponseDAO:
@@ -20,7 +17,7 @@ class OtpResponseDAO:
             await self.db.commit()
             await self.db.refresh(new_otp)
             return True
-        except Exception as e:
+        except Exception:
             await self.db.rollback()
             return False
 
@@ -34,6 +31,6 @@ class OtpResponseDAO:
             await self.db.delete(otp_record)
             await self.db.commit()
             return True
-        except Exception as e:
+        except Exception:
             await self.db.rollback()
             return False

@@ -49,9 +49,9 @@ class AuditTrails:
 
     async def get_audit_logs(
         self,
-        entity_name: str = None,
-        entity_id: str = None,
-        user_id: str = None,
+        entity_name: str | None = None,
+        entity_id: str | None = None,
+        user_id: str | None = None,
         limit: int = 100,
     ):
         """Query audit logs with filters"""

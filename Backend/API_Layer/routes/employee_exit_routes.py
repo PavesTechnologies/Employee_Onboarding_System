@@ -88,7 +88,7 @@ async def update_employee_exit(
 
 # update by exit uuid
 @router.put("/exit/{exit_uuid}", response_model=EmployeeExitResponse)
-async def update_employee_exit(
+async def update_employee_exit_by_uuid(
     exit_uuid: str, data: EmployeeExitCreate, db: AsyncSession = Depends(get_db)
 ):
     try:

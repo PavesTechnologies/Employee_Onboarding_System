@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
-from Backend.DAL.dao.designation_dao import DesignationsDAO
 from Backend.DAL.utils.dependencies import get_db
 from Backend.Business_Layer.services.designation_service import DesignationsService
 from Backend.API_Layer.interfaces.designation_interface import (
@@ -40,11 +39,6 @@ async def create_designation(
 )
 async def get_all_designations(db: AsyncSession = Depends(get_db)):
     return await DesignationsService.get_all_designations(db)
-
-
-@staticmethod
-async def get_designations_by_department(db, department_uuid):
-    return await DesignationsDAO.get_designations_by_department(db, department_uuid)
 
 
 @router.get(

@@ -94,7 +94,7 @@ class OfferApprovalRequestDAO:
 
             result = await self.db.execute(stmt)
 
-            if result.rowcount == 0:
+            if result.rowcount == 0:  # type: ignore[attr-defined]
                 return False  # No record updated
 
             await self.db.commit()
@@ -103,13 +103,6 @@ class OfferApprovalRequestDAO:
         except Exception:
             await self.db.rollback()
             raise
-
-    async def get_by_user_uuid(self, user_uuid: str):
-        stmt = select(OfferApprovalRequest).where(
-            OfferApprovalRequest.user_uuid == user_uuid
-        )
-        result = await self.db.execute(stmt)
-        return result.scalars().first()
 
     async def delete_by_user_uuid(self, user_uuid: str) -> bool:
         try:

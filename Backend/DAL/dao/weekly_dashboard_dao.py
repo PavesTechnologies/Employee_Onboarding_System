@@ -51,7 +51,7 @@ async def get_dashboard_data_from_db(db, start_date, end_date):
             offer_designation.department_uuid
             == offer_designation_department.department_uuid,
         )
-        .where(OfferLetterDetails.joining_date != None)
+        .where(OfferLetterDetails.joining_date.is_not(None))
     )
 
     result = await db.execute(stmt)

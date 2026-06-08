@@ -40,7 +40,7 @@ class CountryDAO:
         result = await self.db.execute(
             select(exists().where(Countries.country_uuid == country_uuid))
         )
-        return result.scalar()
+        return bool(result.scalar())
 
     async def get_country_by_uuid(self, country_uuid: str):
         result = await self.db.execute(
@@ -79,7 +79,7 @@ class CountryDAO:
                 Countries.country_name,
                 Countries.is_active,
             )
-            .where(Countries.is_active == True)  #  added filter
+            .where(Countries.is_active.is_(True))  # added filter
             .order_by(Countries.country_name)
         )
 
@@ -304,10 +304,10 @@ class ContactDAO:
             return None
 
         # 🔄 Update correct fields
-        contact.country_uuid = request_data.country_uuid
-        contact.contact_number = request_data.contact_number
+        contact.country_uuid = request_data.country_uuid  # type: ignore[attr-defined]
+        contact.contact_number = request_data.contact_number  # type: ignore[attr-defined]
         contact.emergency_contact = request_data.emergency_contact
-        contact.is_active = request_data.is_active
+        contact.is_active = request_data.is_active  # type: ignore[attr-defined]
 
         await self.db.commit()
         await self.db.refresh(contact)

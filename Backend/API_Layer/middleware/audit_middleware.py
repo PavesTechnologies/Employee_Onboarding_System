@@ -86,7 +86,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
             req_body = json.loads(body) if body else {}
             # Reset body for downstream consumers
             request._body = body
-        except:
+        except Exception:
             req_body = {}
 
         # Extract entity information
@@ -131,7 +131,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
 
         try:
             new_data = json.loads(response_body.decode())
-        except:
+        except Exception:
             new_data = None
 
         print("new data from response", new_data)
@@ -167,14 +167,18 @@ class AuditMiddleware(BaseHTTPMiddleware):
                     )
                     break
                 # Identify which columns changed
-                changed_fields = {
-                    key
-                    for key in old_data.keys()
-                    if key in new_entity_data and old_data[key] != new_entity_data[key]
-                }
+                if old_data and new_entity_data:
+                    changed_fields = {
+                        key
+                        for key in old_data.keys()
+                        if key in new_entity_data
+                        and old_data[key] != new_entity_data[key]
+                    }
 
-                old_data = {key: old_data[key] for key in changed_fields}
-                new_entity_data = {key: new_entity_data[key] for key in changed_fields}
+                    old_data = {key: old_data[key] for key in changed_fields}
+                    new_entity_data = {
+                        key: new_entity_data[key] for key in changed_fields
+                    }
             print("new entity data after query db", new_entity_data)
             # Create new response with captured body
             response = Response(

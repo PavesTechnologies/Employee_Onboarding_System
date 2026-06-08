@@ -1,6 +1,7 @@
 # Backend/API_Layer/routes/offerletter_routes.py
 
 import os
+import time
 
 from Backend.DAL.utils.database import get_read_db
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Request, Query
@@ -145,9 +146,6 @@ async def get_all_offers(db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-import time
-
-
 @router.get(
     "/user_id/details",
     response_model=list[OfferLetterDetailsResponse],
@@ -251,7 +249,7 @@ async def bulk_send_offer_letters(
     return result
 
 
-## delete offer letter by user_uuid only when it satisfies the following conditions:
+# delete offer letter by user_uuid only when it satisfies the following conditions:
 # 1. The offer letter status is 'rejected'
 # 2. The offer letter status was in 'created' and approval status is 'Rejected'
 # 3. the offer letter status is in  'created'(no action taken from approver

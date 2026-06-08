@@ -7,7 +7,6 @@ from ..interfaces.employee_details_interfaces import (
     PersonalDetails,
     DeleteEmployeeIdentityResponse,
     PersonalDetailsResponse,
-    PersonalDetails,
     UpdatePersonalRequest,
     CreateAddressRequest,
     CreateAddressResponse,
@@ -26,7 +25,6 @@ from ...Business_Layer.services.employee_details_service import (
     EmployeeSocialLinkService,
     EmployeeAboutService,
 )
-from time import perf_counter
 
 router = APIRouter()
 
@@ -211,7 +209,7 @@ async def update_address(
 ):
     try:
         address_service = AddressService(db)
-        result = await address_service.update_address(address_uuid, request_data)
+        await address_service.update_address(address_uuid, request_data)
         return CreateAddressResponse(
             address_uuid=address_uuid, message="Address Updated Successfully"
         )

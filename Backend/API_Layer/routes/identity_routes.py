@@ -1,5 +1,5 @@
 import time
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.utils.dependencies import get_db
 from ..interfaces.identity_interfaces import (
@@ -81,7 +81,6 @@ async def update_identity_type(
         await identity_service.update_identity_type(uuid, request_data)
         return IdentityResponse(
             identity_type_uuid=uuid,
-            identity_type_name=request_data.identity_type_name,
             message="Identity Type Updated Successfully",
         )
     except HTTPException as he:
@@ -90,7 +89,7 @@ async def update_identity_type(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-### Country Identity Mapping Routes ###
+# Country Identity Mapping Routes #
 
 
 @router.post("/country-mapping", response_model=CountryIdentityMappingResponse)
@@ -184,9 +183,6 @@ async def get_identities_by_country(
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 
 
 @router.put(
