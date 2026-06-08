@@ -1,27 +1,24 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from Backend.DAL.utils.dependencies import get_db
-from Backend.Business_Layer.services.exit_final_settlement_service import ExitFinalSettlementService
+from Backend.Business_Layer.services.exit_final_settlement_service import (
+    ExitFinalSettlementService,
+)
 from Backend.API_Layer.interfaces.exit_final_settlement_interface import (
     ExitFinalSettlementCreate,
     ExitFinalSettlementApprove,
     ExitFinalSettlementPaid,
-    ExitFinalSettlementResponse
+    ExitFinalSettlementResponse,
 )
 
-
-router = APIRouter(
-    prefix="/exit-settlement",
-    tags=["Exit Final Settlement"]
-)
+router = APIRouter(prefix="/exit-settlement", tags=["Exit Final Settlement"])
 
 
 # Create Settlement
 @router.post("/create", response_model=ExitFinalSettlementResponse)
 async def create_settlement(
-    data: ExitFinalSettlementCreate,
-    db: AsyncSession = Depends(get_db)
+    data: ExitFinalSettlementCreate, db: AsyncSession = Depends(get_db)
 ):
 
     service = ExitFinalSettlementService()
@@ -31,10 +28,7 @@ async def create_settlement(
 
 # Get Settlement
 @router.get("/{exit_uuid}", response_model=ExitFinalSettlementResponse)
-async def get_settlement(
-    exit_uuid: str,
-    db: AsyncSession = Depends(get_db)
-):
+async def get_settlement(exit_uuid: str, db: AsyncSession = Depends(get_db)):
 
     service = ExitFinalSettlementService()
 
@@ -46,7 +40,7 @@ async def get_settlement(
 async def approve_settlement(
     data: ExitFinalSettlementApprove,
     request: Request,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
 
     user = request.state.user
@@ -55,23 +49,14 @@ async def approve_settlement(
     service = ExitFinalSettlementService()
 
     return await service.approve_settlement(
-        db,
-        data.settlement_uuid,
-        user_id,
-        data.remarks
+        db, data.settlement_uuid, user_id, data.remarks
     )
 
 
 # Mark Paid
 @router.put("/paid", response_model=ExitFinalSettlementResponse)
-async def mark_paid(
-    data: ExitFinalSettlementPaid,
-    db: AsyncSession = Depends(get_db)
-):
+async def mark_paid(data: ExitFinalSettlementPaid, db: AsyncSession = Depends(get_db)):
 
     service = ExitFinalSettlementService()
 
-    return await service.mark_paid(
-        db,
-        data.settlement_uuid
-    )
+    return await service.mark_paid(db, data.settlement_uuid)

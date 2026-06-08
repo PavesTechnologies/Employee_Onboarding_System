@@ -6,19 +6,15 @@ from Backend.Business_Layer.services.exit_interview_service import ExitInterview
 from Backend.API_Layer.interfaces.exit_interview_interface import (
     ExitInterviewCreate,
     ExitInterviewUpdate,
-    ExitInterviewResponse
+    ExitInterviewResponse,
 )
 
-router = APIRouter(
-    prefix="/exit-interview",
-    tags=["Exit Interview"]
-)
+router = APIRouter(prefix="/exit-interview", tags=["Exit Interview"])
 
 
 @router.post("/create", response_model=ExitInterviewResponse)
 async def create_exit_interview(
-    data: ExitInterviewCreate,
-    db: AsyncSession = Depends(get_db)
+    data: ExitInterviewCreate, db: AsyncSession = Depends(get_db)
 ):
     try:
         service = ExitInterviewService()
@@ -33,10 +29,7 @@ async def create_exit_interview(
 
 
 @router.get("/{interview_uuid}", response_model=ExitInterviewResponse)
-async def get_exit_interview(
-    interview_uuid: str,
-    db: AsyncSession = Depends(get_db)
-):
+async def get_exit_interview(interview_uuid: str, db: AsyncSession = Depends(get_db)):
     try:
         service = ExitInterviewService()
         return await service.get_exit_interview(db, interview_uuid)
@@ -50,15 +43,11 @@ async def get_exit_interview(
 
 @router.put("/{interview_uuid}", response_model=ExitInterviewResponse)
 async def update_exit_interview(
-    interview_uuid: str,
-    data: ExitInterviewUpdate,
-    db: AsyncSession = Depends(get_db)
+    interview_uuid: str, data: ExitInterviewUpdate, db: AsyncSession = Depends(get_db)
 ):
     try:
         service = ExitInterviewService()
-        return await service.update_exit_interview(
-            db, interview_uuid, data
-        )
+        return await service.update_exit_interview(db, interview_uuid, data)
 
     except HTTPException as he:
         raise he
@@ -69,14 +58,11 @@ async def update_exit_interview(
 
 @router.delete("/{interview_uuid}")
 async def delete_exit_interview(
-    interview_uuid: str,
-    db: AsyncSession = Depends(get_db)
+    interview_uuid: str, db: AsyncSession = Depends(get_db)
 ):
     try:
         service = ExitInterviewService()
-        return await service.delete_exit_interview(
-            db, interview_uuid
-        )
+        return await service.delete_exit_interview(db, interview_uuid)
 
     except HTTPException as he:
         raise he

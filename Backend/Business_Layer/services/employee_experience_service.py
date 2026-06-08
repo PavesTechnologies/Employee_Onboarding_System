@@ -1,10 +1,15 @@
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import date, datetime
+from datetime import date
 
 
-from Backend.API_Layer.interfaces.employee_experience_interfaces import  EmploymentType, ExperienceCreateRequest, ExperienceCreateResponse, ExperienceUpdate 
-from Backend.Business_Layer.utils.experience_document_rules import EMPLOYMENT_DOCUMENT_RULES
+from Backend.API_Layer.interfaces.employee_experience_interfaces import (
+    EmploymentType,
+    ExperienceCreateRequest,
+)
+from Backend.Business_Layer.utils.experience_document_rules import (
+    EMPLOYMENT_DOCUMENT_RULES,
+)
 
 from ...DAL.dao.employee_experience_dao import EmployeeExperienceDAO
 from ...DAL.dao.offerletter_dao import OfferLetterDAO
@@ -13,17 +18,15 @@ from ..utils.uuid_generator import generate_uuid7
 import asyncio
 import time
 
+
 class EmployeeExperienceService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.dao = EmployeeExperienceDAO(self.db)
         self.offerdao = OfferLetterDAO(self.db)
         self.storage = get_storage_service()
-        
 
     # ------------------ CREATE EXPERIENCE ------------------
-
-   
 
     async def create_experience(
         self,
@@ -43,7 +46,9 @@ class EmployeeExperienceService:
 
         # Prevent multiple current jobs
         if request_data.is_current:
-            existing_current = await self.dao.get_current_job(request_data.employee_uuid)
+            existing_current = await self.dao.get_current_job(
+                request_data.employee_uuid
+            )
 
             if existing_current:
                 raise HTTPException(400, "Employee already has a current job")
@@ -68,11 +73,11 @@ class EmployeeExperienceService:
         if employment_type not in EMPLOYMENT_DOCUMENT_RULES:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported employment type: {employment_type}"
+                detail=f"Unsupported employment type: {employment_type}",
             )
 
         rules = EMPLOYMENT_DOCUMENT_RULES[employment_type]
-        
+
         if len(doc_types) == 1 and "," in doc_types[0]:
             doc_types = [d.strip() for d in doc_types[0].split(",")]
 
@@ -89,7 +94,7 @@ class EmployeeExperienceService:
             if not file.filename.lower().endswith(allowed_types):
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Invalid file type for {file.filename}. Allowed: PDF, PNG, JPG"
+                    detail=f"Invalid file type for {file.filename}. Allowed: PDF, PNG, JPG",
                 )
 
         max_size = 5 * 1024 * 1024  # 5MB
@@ -99,8 +104,7 @@ class EmployeeExperienceService:
 
             if len(contents) > max_size:
                 raise HTTPException(
-                    status_code=400,
-                    detail=f"{file.filename} exceeds 5MB size limit"
+                    status_code=400, detail=f"{file.filename} exceeds 5MB size limit"
                 )
 
             file.file.seek(0)
@@ -157,8 +161,6 @@ class EmployeeExperienceService:
 
         return result
 
-                        
-
     # ------------------ GET EXPERIENCE ------------------
     async def get_all_experience(self):
         try:
@@ -166,13 +168,14 @@ class EmployeeExperienceService:
             result = await self.dao.get_all_experience()
             print("after dao call", result)
             if not result:
-                raise HTTPException(status_code=404, detail="No Experience Records Found")
+                raise HTTPException(
+                    status_code=404, detail="No Experience Records Found"
+                )
             return result
         except HTTPException as he:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-
 
     async def get_experience_by_uuid(self, experience_uuid: str):
         result = await self.dao.get_experience_by_uuid(experience_uuid)
@@ -186,23 +189,20 @@ class EmployeeExperienceService:
     #         raise HTTPException(status_code=404, detail="No Experience Found for this Employee")
     #     return result
     async def get_experience_by_employee_uuid(
-    self,
-    employee_uuid: str,
-    has_experience: bool = False
+        self, employee_uuid: str, has_experience: bool = False
     ):
         result = await self.dao.get_experience_by_employee_uuid(employee_uuid)
 
         # Experienced candidate must have records
         if has_experience and not result:
             raise HTTPException(
-                status_code=404,
-                detail="Experience Details Not Found for this user"
+                status_code=404, detail="Experience Details Not Found for this user"
             )
 
         # Freshers can have empty experience
         return result or []
 
-   # ------------------ UPDATE EXPERIENCE ------------------
+    # ------------------ UPDATE EXPERIENCE ------------------
     async def update_experience_with_files(
         self,
         experience_uuid: str,
@@ -225,28 +225,23 @@ class EmployeeExperienceService:
 
         if start_date > date.today():
             raise HTTPException(
-                status_code=400,
-                detail="Start date cannot be in the future"
+                status_code=400, detail="Start date cannot be in the future"
             )
 
         if end_date and end_date < start_date:
             raise HTTPException(
-                status_code=400,
-                detail="End date cannot be before start date"
+                status_code=400, detail="End date cannot be before start date"
             )
 
         if is_current and end_date:
             raise HTTPException(
-                status_code=400,
-                detail="Current job cannot have end date"
+                status_code=400, detail="Current job cannot have end date"
             )
 
         if is_current and notice_period_days is None:
             raise HTTPException(
-                status_code=400,
-                detail="Notice period required for current job"
+                status_code=400, detail="Notice period required for current job"
             )
-        
 
         # 🔹 Validate docs based on employment type
         rules = EMPLOYMENT_DOCUMENT_RULES[employment_type.value]
@@ -271,8 +266,7 @@ class EmployeeExperienceService:
             for file in files:
                 if not file.filename.lower().endswith(allowed_types):
                     raise HTTPException(
-                        status_code=400,
-                        detail=f"Invalid file type for {file.filename}"
+                        status_code=400, detail=f"Invalid file type for {file.filename}"
                     )
 
         # 🔹 Upload new files if provided
@@ -340,31 +334,36 @@ class EmployeeExperienceService:
                     pass
 
             # Upload new certificate
-            file_path = await storage_service.upload_file(file, folder="experience_documents")
+            file_path = await storage_service.upload_file(
+                file, folder="experience_documents"
+            )
 
             # Update DB record safely
-            updated_record = await self.dao.update_experience_certificate(experience_uuid, file_path)
+            updated_record = await self.dao.update_experience_certificate(
+                experience_uuid, file_path
+            )
 
             return updated_record
 
         except Exception as e:
             # Rollback is handled inside DAO or session context
-            raise HTTPException(status_code=500, detail=f"Failed to update certificate: {str(e)}")
-
+            raise HTTPException(
+                status_code=500, detail=f"Failed to update certificate: {str(e)}"
+            )
 
     # ------------------ DELETE CERTIFICATE ONLY ------------------
     async def delete_certificate(self, experience_uuid: str):
-      experience = await self.dao.get_experience_by_uuid(experience_uuid)
-      if not experience:
-        raise HTTPException(status_code=404, detail="Experience Not Found")
+        experience = await self.dao.get_experience_by_uuid(experience_uuid)
+        if not experience:
+            raise HTTPException(status_code=404, detail="Experience Not Found")
 
-      print("Deleting:", experience.exp_certificate_path)
+        print("Deleting:", experience.exp_certificate_path)
 
-      storage = get_storage_service()  # ✅ singleton instance
+        storage = get_storage_service()  # ✅ singleton instance
 
-      if experience.exp_certificate_path:
-        await storage.delete_file(experience.exp_certificate_path)
+        if experience.exp_certificate_path:
+            await storage.delete_file(experience.exp_certificate_path)
 
-      await self.dao.delete_experience_certificate(experience_uuid)
+        await self.dao.delete_experience_certificate(experience_uuid)
 
-      return {"message": "Certificate deleted successfully"}
+        return {"message": "Certificate deleted successfully"}

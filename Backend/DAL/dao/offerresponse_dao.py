@@ -29,8 +29,8 @@ class OfferResponseDAO:
             return None
 
         # 2. Update fields
-        offer.status = new_status            # "Accepted"
-        offer.offer_response_at = signed_at    # datetime from webhook
+        offer.status = new_status  # "Accepted"
+        offer.offer_response_at = signed_at  # datetime from webhook
 
         # 3. Commit + refresh
         await self.db.commit()
@@ -39,15 +39,15 @@ class OfferResponseDAO:
         print(f"✅ DAO: Updated offer {offer.user_uuid} successfully.")
 
         return offer
-    
+
     async def update_offer_expiration_from_webhook(self, update_data: dict):
         """
         Update offer letter fields when PandaDoc webhook notifies expiration.
         """
 
         doc_id = update_data["doc_id"]
-        new_status = update_data["new_status"]          # "Expired"
-        expired_at = update_data["offer_response_at"]   # datetime from webhook
+        new_status = update_data["new_status"]  # "Expired"
+        expired_at = update_data["offer_response_at"]  # datetime from webhook
 
         # 1. Fetch record by doc_id (stored in pandadoc_draft_id)
         result = await self.db.execute(
@@ -62,8 +62,8 @@ class OfferResponseDAO:
             return None
 
         # 2. Update fields
-        offer.status = new_status              # "Expired"
-        offer.offer_response_at = expired_at   # datetime when expiration occurred
+        offer.status = new_status  # "Expired"
+        offer.offer_response_at = expired_at  # datetime when expiration occurred
 
         # 3. Commit + refresh
         await self.db.commit()
@@ -94,13 +94,12 @@ class OfferResponseDAO:
         return {
             "fullname": f"{first_name} {last_name}".strip(),
             "email": offer.mail,
-            "uuid": uuid
+            "uuid": uuid,
         }
+
     async def is_email_accepted(self, email: str) -> bool:
         result = await self.db.execute(
-            select(OfferLetterDetails).where(
-                OfferLetterDetails.mail == email
-            )
+            select(OfferLetterDetails).where(OfferLetterDetails.mail == email)
         )
         offer = result.scalar_one_or_none()
 
@@ -108,15 +107,13 @@ class OfferResponseDAO:
             return False
 
         return offer.status == "Accepted"
-    
+
     async def get_offer_by_uuid(self, user_uuid: str):
         """
         Fetch offer letter details by user UUID.
         """
         result = await self.db.execute(
-            select(OfferLetterDetails).where(
-                OfferLetterDetails.user_uuid == user_uuid
-            )
+            select(OfferLetterDetails).where(OfferLetterDetails.user_uuid == user_uuid)
         )
         offer = result.scalar_one_or_none()
 

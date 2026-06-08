@@ -1,18 +1,27 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
 from ...DAL.dao.offerletter_dao import OfferLetterDAO
-from ...DAL.dao.master_dao import  CountryDAO, EducationDAO, ContactDAO
+from ...DAL.dao.master_dao import CountryDAO, EducationDAO, ContactDAO
 from ...DAL.dao.education_dao import EducationDocDAO
-from ..utils.validation_utils import validate_alphabets_only, validate_country, validate_phone_number, get_country_name
+from ..utils.validation_utils import (
+    validate_alphabets_only,
+    validate_phone_number,
+    get_country_name,
+)
 from ..utils.uuid_generator import generate_uuid7
-from ...API_Layer.interfaces.master_interfaces import CreateEducLevelRequest, EducLevelDetails, UpdateContactRequest
+from ...API_Layer.interfaces.master_interfaces import (
+    CreateEducLevelRequest,
+    EducLevelDetails,
+    UpdateContactRequest,
+)
 import time
+
 
 class CountryService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.dao = CountryDAO(self.db)
+
     async def create_country(self, calling_code: str):
         try:
             country_name = get_country_name(calling_code)
@@ -29,7 +38,7 @@ class CountryService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
+
     async def get_country_uuid(self, country_uuid: str):
         try:
             if not country_uuid:
@@ -44,7 +53,7 @@ class CountryService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
+
     async def update_country(self, country_uuid: str, is_active: bool):
         updated = await self.dao.update_country(country_uuid, is_active)
 
@@ -52,6 +61,7 @@ class CountryService:
             raise HTTPException(status_code=404, detail="Country does not exist")
 
         return "Successfully Activated" if is_active else "Successfully Deactivated"
+
     async def get_all_countries(self):
         try:
             result = await self.dao.get_all_countries()
@@ -61,19 +71,25 @@ class CountryService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
+
 class EducationService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.dao = EducationDAO(self.db)
         self.educationdao = EducationDocDAO(self.db)
         self.countrydao = CountryDAO(self.db)
+
     async def create_education_level(self, request_data: CreateEducLevelRequest):
         try:
             education_name = validate_alphabets_only(request_data.education_name)
-            education_name = await self.dao.get_education_level_by_eduname(education_name)
+            education_name = await self.dao.get_education_level_by_eduname(
+                education_name
+            )
             uuid = generate_uuid7()
             if education_name:
-                raise HTTPException(status_code=404, detail = "Education Level Already Exist")
+                raise HTTPException(
+                    status_code=404, detail="Education Level Already Exist"
+                )
             return await self.dao.create_education_level(request_data, uuid)
         except ValueError as ve:
             raise HTTPException(status_code=422, detail=str(ve))
@@ -81,7 +97,7 @@ class EducationService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-    
+
     async def get_all_education_levels(self):
         try:
             result = await self.dao.get_all_education_levels()
@@ -90,7 +106,7 @@ class EducationService:
             raise
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
+
     async def get_education_level_by_uuid(self, uuid: str):
         try:
             result = await self.dao.get_education_level_by_uuid(uuid)
@@ -99,13 +115,17 @@ class EducationService:
             raise
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
+
     async def update_education_level(self, request_data: EducLevelDetails, uuid: str):
         try:
             education_name = validate_alphabets_only(request_data.education_name)
-            education_name = await self.dao.get_education_level_by_eduname_and_uuid(education_name, uuid)
+            education_name = await self.dao.get_education_level_by_eduname_and_uuid(
+                education_name, uuid
+            )
             if education_name:
-                raise HTTPException(status_code=404, detail = "Education Level Already Exist")
+                raise HTTPException(
+                    status_code=404, detail="Education Level Already Exist"
+                )
             return await self.dao.update_education_level(request_data, uuid)
         except ValueError as ve:
             raise HTTPException(status_code=422, detail=str(ve))
@@ -113,40 +133,51 @@ class EducationService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
+
     async def delete_education_level(self, uuid: str):
         try:
             result = await self.dao.get_education_level_by_uuid(uuid)
             if not result:
-                raise HTTPException(status_code=404, detail = "Education Level Not Found")
+                raise HTTPException(status_code=404, detail="Education Level Not Found")
             return await self.dao.delete_education_level(uuid)
         except HTTPException as he:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
-    async def create_education_country_mapping(self, educ_level_uuid, educ_doc_uuid, country_uuid):
+
+    async def create_education_country_mapping(
+        self, educ_level_uuid, educ_doc_uuid, country_uuid
+    ):
         try:
             existing = await self.dao.get_education_level_by_uuid(educ_level_uuid)
             if not existing:
                 raise HTTPException(status_code=404, detail="Education Level Not Found")
-            existing = await self.educationdao.get_education_document_by_uuid(educ_doc_uuid)
+            existing = await self.educationdao.get_education_document_by_uuid(
+                educ_doc_uuid
+            )
             print("country uuid", country_uuid)
             if not existing:
-                raise HTTPException(status_code=404, detail="Education Document Not Found")
+                raise HTTPException(
+                    status_code=404, detail="Education Document Not Found"
+                )
             existing = await self.countrydao.get_country_by_uuid(country_uuid)
             if not existing:
                 raise HTTPException(status_code=404, detail="Country Not Found")
-            existing = await self.dao.check_education_country_mapping(educ_level_uuid, educ_doc_uuid, country_uuid)
+            existing = await self.dao.check_education_country_mapping(
+                educ_level_uuid, educ_doc_uuid, country_uuid
+            )
             if existing:
                 raise HTTPException(status_code=404, detail="Mapping Already Exists")
             uuid = generate_uuid7()
-            result = await self.dao.create_education_country_mapping(educ_level_uuid, educ_doc_uuid, country_uuid, uuid)
+            result = await self.dao.create_education_country_mapping(
+                educ_level_uuid, educ_doc_uuid, country_uuid, uuid
+            )
             return result
         except HTTPException as he:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
     async def delete_education_country_mapping(self, mapping_uuid):
         try:
             result = await self.dao.get_education_country_mapping_by_uuid(mapping_uuid)
@@ -157,7 +188,7 @@ class EducationService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
+
     async def get_all_education_country_mapping(self):
         try:
             result = await self.dao.get_all_education_country_mapping()
@@ -166,6 +197,7 @@ class EducationService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
 
 class ContactService:
     def __init__(self, db: AsyncSession):
@@ -180,7 +212,9 @@ class ContactService:
         try:
             # ================= USER CHECK =================
             t0 = time.perf_counter()
-            existing_user = await self.offerdao.get_offer_by_uuid(request_data.user_uuid)
+            existing_user = await self.offerdao.get_offer_by_uuid(
+                request_data.user_uuid
+            )
             print(f"[TIMING] User lookup: {time.perf_counter() - t0:.4f}s")
 
             if not existing_user:
@@ -240,9 +274,10 @@ class ContactService:
             raise HTTPException(status_code=500, detail=str(e))
 
         finally:
-            print(f"[TIMING] Total create_contact time: {time.perf_counter() - start_total:.4f}s")
+            print(
+                f"[TIMING] Total create_contact time: {time.perf_counter() - start_total:.4f}s"
+            )
 
-        
     async def get_all_contacts(self):
         try:
             result = await self.dao.get_all_contacts()
@@ -251,6 +286,7 @@ class ContactService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
     async def get_contact_by_uuid(self, uuid):
         try:
             result = await self.dao.get_contact_by_uuid(uuid)
@@ -261,6 +297,7 @@ class ContactService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
     async def delete_contact(self, uuid):
         try:
             result = await self.dao.get_contact_by_uuid(uuid)
@@ -272,24 +309,15 @@ class ContactService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-            
     async def update_contact(
-        self,
-        contact_uuid: str,
-        request_data: UpdateContactRequest
+        self, contact_uuid: str, request_data: UpdateContactRequest
     ):
         # 🔍 Check if contact exists
         contact = await self.dao.get_contact_by_uuid(contact_uuid)
 
         if not contact:
-            raise HTTPException(
-                status_code=404,
-                detail="Contact not found"
-            )
+            raise HTTPException(status_code=404, detail="Contact not found")
         # 🔄 Call DAO update
-        updated_contact = await self.dao.update_contact(
-            contact_uuid,
-            request_data
-        )
+        updated_contact = await self.dao.update_contact(contact_uuid, request_data)
 
         return updated_contact

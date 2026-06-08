@@ -1,6 +1,6 @@
 import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
-from  DAL.models.models import Base   
+from DAL.models.models import Base
 
 
 async def create_all_tables():
@@ -12,8 +12,7 @@ async def create_all_tables():
     DB_DRIVER = "mysql+asyncmy"
 
     DATABASE_URL = (
-        f"{DB_DRIVER}://{DB_USER}:{DB_PASSWORD}"
-        f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+        f"{DB_DRIVER}://{DB_USER}:{DB_PASSWORD}" f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
 
     engine = create_async_engine(
@@ -31,6 +30,7 @@ async def create_all_tables():
     finally:
         # Ensure all connections are closed before the event loop shuts down.
         await engine.dispose()
-    
+
+
 if __name__ == "__main__":
     asyncio.run(create_all_tables())

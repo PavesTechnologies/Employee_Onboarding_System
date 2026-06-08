@@ -9,13 +9,10 @@ class DesignationsDAO:
     async def get_designation_by_name(db: AsyncSession, name: str):
 
         result = await db.execute(
-            select(Designations).where(
-                Designations.designation_name == name
-            )
+            select(Designations).where(Designations.designation_name == name)
         )
 
         return result.scalar_one_or_none()
-
 
     @staticmethod
     async def create_designation(db: AsyncSession, designation):
@@ -26,14 +23,12 @@ class DesignationsDAO:
 
         return designation
 
-
     @staticmethod
     async def get_all_designations(db: AsyncSession):
 
         result = await db.execute(select(Designations))
 
         return result.scalars().all()
-
 
     @staticmethod
     async def get_designation_by_uuid(db: AsyncSession, designation_uuid: str):
@@ -45,18 +40,15 @@ class DesignationsDAO:
         )
 
         return result.scalar_one_or_none()
-    
+
     @staticmethod
     async def get_designations_by_department(db: AsyncSession, department_uuid: str):
 
         result = await db.execute(
-            select(Designations).where(
-                Designations.department_uuid == department_uuid
-            )
+            select(Designations).where(Designations.department_uuid == department_uuid)
         )
 
         return result.scalars().all()
-
 
     @staticmethod
     async def update_designation(db: AsyncSession, designation, data):
@@ -74,7 +66,6 @@ class DesignationsDAO:
         await db.refresh(designation)
 
         return designation
-
 
     @staticmethod
     async def delete_designation(db: AsyncSession, designation):

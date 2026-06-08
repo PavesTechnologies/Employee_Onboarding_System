@@ -3,6 +3,7 @@ from weasyprint import HTML
 import os
 from datetime import datetime
 
+
 class DocumentService:
 
     def generate_offer_pdf(self, offer_data):
@@ -13,10 +14,9 @@ class DocumentService:
 
         # Render HTML
         # html_content = template.render(offer_data)
-        html_content = template.render({
-                **offer_data,
-                "current_date": datetime.today().strftime("%d %B %Y")
-            })
+        html_content = template.render(
+            {**offer_data, "current_date": datetime.today().strftime("%d %B %Y")}
+        )
 
         # Ensure folder exists
         os.makedirs("generated_pdfs", exist_ok=True)
@@ -33,18 +33,17 @@ class DocumentService:
         env = Environment(loader=FileSystemLoader("Backend/templates"))
         template = env.get_template("joining_letter.html")
 
-        logo_path = os.path.abspath(os.path.join(
-            "Backend",
-            "static",
-            "images",
-            "paves_logo.jpg"
-        ))
+        logo_path = os.path.abspath(
+            os.path.join("Backend", "static", "images", "paves_logo.jpg")
+        )
 
-        html_content = template.render({
-            **joining_data,
-            "current_date": datetime.today().strftime("%d %B %Y"),
-            "logo_path": logo_path
-        })
+        html_content = template.render(
+            {
+                **joining_data,
+                "current_date": datetime.today().strftime("%d %B %Y"),
+                "logo_path": logo_path,
+            }
+        )
 
         os.makedirs("generated_pdfs", exist_ok=True)
 

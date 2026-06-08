@@ -1,22 +1,29 @@
-from ..models.models import PersonalDetails, Addresses, EmployeeIdentityDocument, EmployeeSocialLink, EmployeeAbout
+from ..models.models import (
+    PersonalDetails,
+    Addresses,
+    EmployeeIdentityDocument,
+    EmployeeSocialLink,
+    EmployeeAbout,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, exists
-from typing import Optional
-from datetime import date
-import time
+from sqlalchemy import select, update
 from time import perf_counter
+
+
 class EmployeeDetailsDAO:
     def __init__(self, db: AsyncSession):
         self.db = db
 
     async def get_personal_details_by_user_uuid(self, user_uuid):
-        result = await self.db.execute(select(PersonalDetails).where(PersonalDetails.user_uuid == user_uuid))
+        result = await self.db.execute(
+            select(PersonalDetails).where(PersonalDetails.user_uuid == user_uuid)
+        )
         return result.scalar_one_or_none()
 
     # async def get_personal_details_by_uuid(self, uuid: str):
     #     stmt = select(
     #         exists().where(PersonalDetails.personal_uuid == uuid)
-            
+
     #     )
     #     result = await self.db.execute(stmt)
     #     return result.scalar()
@@ -25,7 +32,6 @@ class EmployeeDetailsDAO:
             select(PersonalDetails).where(PersonalDetails.personal_uuid == uuid)
         )
         return result.scalar_one_or_none()
-
 
     async def get_all_personal_details(self):
         result = await self.db.execute(select(PersonalDetails))
@@ -60,33 +66,45 @@ class EmployeeDetailsDAO:
                 "residence_country_uuid": request_data.residence_country_uuid,
                 "emergency_contact_name": request_data.emergency_contact_name,
                 "emergency_contact_phone": request_data.emergency_contact_phone,
-                "emergency_contact_relation_uuid": request_data.emergency_contact_relation_uuid
+                "emergency_contact_relation_uuid": request_data.emergency_contact_relation_uuid,
             }
             end = perf_counter()
             print("Time taken to update personal details:", end - start)
 
         except Exception as e:
             raise e
+
     async def delete_personal_details(self, personal_uuid):
-        result = await self.db.execute(select(PersonalDetails).where(PersonalDetails.personal_uuid == personal_uuid))
+        result = await self.db.execute(
+            select(PersonalDetails).where(
+                PersonalDetails.personal_uuid == personal_uuid
+            )
+        )
         personal_details = result.scalar_one_or_none()
         await self.db.delete(personal_details)
         await self.db.commit()
         return personal_details
 
+
 # Adresses DAO
 class AddressDAO:
     def __init__(self, db: AsyncSession):
         self.db = db
+
     async def get_address_by_address_uuid(self, address_uuid):
-        result = await self.db.execute(select(Addresses).where(Addresses.address_uuid == address_uuid))
+        result = await self.db.execute(
+            select(Addresses).where(Addresses.address_uuid == address_uuid)
+        )
         return result.scalar_one_or_none()
+
     async def get_all_addresses(self):
         result = await self.db.execute(select(Addresses))
         return result.scalars().all()
-    
+
     async def update_address(self, uuid, request_data):
-        result = await self.db.execute(select(Addresses).where(Addresses.address_uuid == uuid))
+        result = await self.db.execute(
+            select(Addresses).where(Addresses.address_uuid == uuid)
+        )
         permanent_address = result.scalar_one_or_none()
         if not permanent_address:
             return None
@@ -102,33 +120,50 @@ class AddressDAO:
         await self.db.commit()
         await self.db.refresh(permanent_address)
         return permanent_address
+
     async def delete_address(self, uuid):
-        result = await self.db.execute(select(Addresses).where(Addresses.address_uuid == uuid))
+        result = await self.db.execute(
+            select(Addresses).where(Addresses.address_uuid == uuid)
+        )
         address = result.scalar_one_or_none()
         await self.db.delete(address)
         await self.db.commit()
         return address
-    
+
+
 class EmployeeIdentityDAO:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_employee_identity_by_user_uuid_and_mapping_uuid(self, user_uuid, mapping_uuid):
-        result = await self.db.execute(select(EmployeeIdentityDocument).where(EmployeeIdentityDocument.user_uuid == user_uuid).
-                                       where(EmployeeIdentityDocument.mapping_uuid == mapping_uuid))
-        return result.scalar_one_or_none()
-    
-    async def get_employee_identity_by_document_uuid(self, document_uuid):
-        result = await self.db.execute(select(EmployeeIdentityDocument).where(EmployeeIdentityDocument.document_uuid == document_uuid))
+    async def get_employee_identity_by_user_uuid_and_mapping_uuid(
+        self, user_uuid, mapping_uuid
+    ):
+        result = await self.db.execute(
+            select(EmployeeIdentityDocument)
+            .where(EmployeeIdentityDocument.user_uuid == user_uuid)
+            .where(EmployeeIdentityDocument.mapping_uuid == mapping_uuid)
+        )
         return result.scalar_one_or_none()
 
-        
+    async def get_employee_identity_by_document_uuid(self, document_uuid):
+        result = await self.db.execute(
+            select(EmployeeIdentityDocument).where(
+                EmployeeIdentityDocument.document_uuid == document_uuid
+            )
+        )
+        return result.scalar_one_or_none()
+
     async def delete_employee_identity(self, document_uuid):
-        result = await self.db.execute(select(EmployeeIdentityDocument).where(EmployeeIdentityDocument.document_uuid == document_uuid))
+        result = await self.db.execute(
+            select(EmployeeIdentityDocument).where(
+                EmployeeIdentityDocument.document_uuid == document_uuid
+            )
+        )
         employee_identity = result.scalar_one_or_none()
         await self.db.delete(employee_identity)
         await self.db.commit()
         return employee_identity
+
 
 class EmployeeSocialLinkDAO:
     def __init__(self, db: AsyncSession):
@@ -136,9 +171,7 @@ class EmployeeSocialLinkDAO:
 
     async def get_social_links(self, user_uuid):
         result = await self.db.execute(
-            select(EmployeeSocialLink).where(
-                EmployeeSocialLink.user_uuid == user_uuid
-            )
+            select(EmployeeSocialLink).where(EmployeeSocialLink.user_uuid == user_uuid)
         )
         return result.scalars().all()
 
@@ -155,7 +188,7 @@ class EmployeeSocialLinkDAO:
             social_link_uuid=social_link_uuid,
             user_uuid=user_uuid,
             platform_name=request_data.platform_name,
-            url=request_data.url
+            url=request_data.url,
         )
 
         self.db.add(social_link)
@@ -180,31 +213,27 @@ class EmployeeSocialLinkDAO:
 
         await self.db.delete(social_link)
         await self.db.commit()
-    
+
+
 class EmployeeAboutDAO:
     def __init__(self, db: AsyncSession):
         self.db = db
 
     async def get_employee_about(self, employee_uuid):
         result = await self.db.execute(
-            select(EmployeeAbout).where(
-                EmployeeAbout.employee_uuid == employee_uuid
-            )
+            select(EmployeeAbout).where(EmployeeAbout.employee_uuid == employee_uuid)
         )
         return result.scalar_one_or_none()
 
     async def create_employee_about(
-        self,
-        employee_about_uuid,
-        employee_uuid,
-        request_data
+        self, employee_about_uuid, employee_uuid, request_data
     ):
         employee_about = EmployeeAbout(
             employee_about_uuid=employee_about_uuid,
             employee_uuid=employee_uuid,
             about_me=request_data.about_me,
             work_enjoyment=request_data.work_enjoyment,
-            interests_hobbies=request_data.interests_hobbies
+            interests_hobbies=request_data.interests_hobbies,
         )
 
         self.db.add(employee_about)
@@ -223,11 +252,11 @@ class EmployeeAboutDAO:
         await self.db.refresh(employee_about)
 
         return employee_about
-    
+
     async def delete_employee_about(self, employee_uuid):
         employee_about = await self.get_employee_about(employee_uuid)
 
         await self.db.delete(employee_about)
         await self.db.commit()
-        
+
         return employee_about

@@ -13,7 +13,7 @@ class HrBulkJoinDAO:
     async def get_verified_users_by_emails(self, email_list: List[str]):
         query = select(OfferLetterDetails).where(
             OfferLetterDetails.mail.in_(email_list),
-            OfferLetterDetails.status == "Verified"
+            OfferLetterDetails.status == "Verified",
         )
         result = await self.db.execute(query)
         return result.scalars().all()
@@ -21,18 +21,13 @@ class HrBulkJoinDAO:
     async def count_verified_by_emails(self, email_list: List[str]):
         query = select(OfferLetterDetails).where(
             OfferLetterDetails.mail.in_(email_list),
-            OfferLetterDetails.status == "Verified"
+            OfferLetterDetails.status == "Verified",
         )
         result = await self.db.execute(query)
         return len(result.scalars().all())
 
     async def update_joining_date_for_verified(
-        self,
-        email_list: List[str],
-        joining_date,
-        payload,
-        status,
-        reporting_manager
+        self, email_list: List[str], joining_date, payload, status, reporting_manager
     ):
         stmt = (
             update(OfferLetterDetails)
@@ -42,7 +37,7 @@ class HrBulkJoinDAO:
                 joining_date=joining_date,
                 reporting_manager=reporting_manager,
                 joining_comments=getattr(payload, "joining_comments", None),
-                status=status
+                status=status,
             )
         )
 
@@ -51,11 +46,7 @@ class HrBulkJoinDAO:
         return result.rowcount
 
     async def update_joining_date_for_user(
-        self,
-        user_uuid: str,
-        payload,
-        status: str,
-        reporting_manager
+        self, user_uuid: str, payload, status: str, reporting_manager
     ):
         stmt = (
             update(OfferLetterDetails)
@@ -64,7 +55,7 @@ class HrBulkJoinDAO:
                 joining_date=payload.new_joining_date,
                 reporting_manager=reporting_manager,
                 joining_comments=payload.joining_comments,
-                status=status
+                status=status,
             )
         )
 
@@ -90,7 +81,7 @@ class HrBulkJoinDAO:
         filters = [
             EmployeeDetails.employee_id == manager_value,
             EmployeeDetails.employee_uuid == manager_value,
-            EmployeeDetails.user_uuid == manager_value
+            EmployeeDetails.user_uuid == manager_value,
         ]
 
         if manager_value.isdigit():
@@ -115,9 +106,7 @@ class HrBulkJoinDAO:
         """
         query = (
             select(EmployeeDetails)
-            .where(
-                EmployeeDetails.reporting_manager_uuid == manager_employee_id
-            )
+            .where(EmployeeDetails.reporting_manager_uuid == manager_employee_id)
             .order_by(EmployeeDetails.first_name)
         )
 

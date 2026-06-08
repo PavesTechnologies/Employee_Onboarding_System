@@ -6,7 +6,7 @@ from ...DAL.utils.dependencies import get_db
 from ..interfaces.employee_pf_interfaces import (
     CreatePfDetailsRequest,
     CreatePfDetailsResponse,
-    PfDetails
+    PfDetails,
 )
 
 from ...Business_Layer.services.employee_pf_service import EmployeePfService
@@ -25,8 +25,11 @@ async def get_all_pf_details(db: AsyncSession = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/user/{user_uuid}", response_model=PfDetails)
-async def get_pf_details_by_user_uuid(user_uuid: str, db: AsyncSession = Depends(get_db)):
+async def get_pf_details_by_user_uuid(
+    user_uuid: str, db: AsyncSession = Depends(get_db)
+):
     try:
         pf_service = EmployeePfService(db)
         result = await pf_service.get_pf_details_by_user_uuid(user_uuid)
@@ -35,7 +38,8 @@ async def get_pf_details_by_user_uuid(user_uuid: str, db: AsyncSession = Depends
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-        
+
+
 @router.get("/{pf_uuid}", response_model=PfDetails)
 async def get_pf_details_by_uuid(pf_uuid: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -47,8 +51,11 @@ async def get_pf_details_by_uuid(pf_uuid: str, db: AsyncSession = Depends(get_db
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/", response_model=CreatePfDetailsResponse)
-async def create_pf_details(request_data: CreatePfDetailsRequest, db: AsyncSession = Depends(get_db)):
+async def create_pf_details(
+    request_data: CreatePfDetailsRequest, db: AsyncSession = Depends(get_db)
+):
     try:
         start = perf_counter()
 
@@ -59,8 +66,7 @@ async def create_pf_details(request_data: CreatePfDetailsRequest, db: AsyncSessi
         print("PF API Time:", end - start)
 
         return CreatePfDetailsResponse(
-            pf_uuid=result["pf_uuid"],
-            message="PF Details Created Successfully"
+            pf_uuid=result["pf_uuid"], message="PF Details Created Successfully"
         )
 
     except HTTPException as he:
@@ -70,14 +76,17 @@ async def create_pf_details(request_data: CreatePfDetailsRequest, db: AsyncSessi
 
 
 @router.put("/{pf_uuid}", response_model=CreatePfDetailsResponse)
-async def update_pf_details(pf_uuid: str, request_data: CreatePfDetailsRequest, db: AsyncSession = Depends(get_db)):
+async def update_pf_details(
+    pf_uuid: str,
+    request_data: CreatePfDetailsRequest,
+    db: AsyncSession = Depends(get_db),
+):
     try:
         pf_service = EmployeePfService(db)
         result = await pf_service.update_pf_details(pf_uuid, request_data)
 
         return CreatePfDetailsResponse(
-            pf_uuid=pf_uuid,
-            message="PF Details Updated Successfully"
+            pf_uuid=pf_uuid, message="PF Details Updated Successfully"
         )
 
     except HTTPException as he:
@@ -93,8 +102,7 @@ async def delete_pf_details(pf_uuid: str, db: AsyncSession = Depends(get_db)):
         await pf_service.delete_pf_details(pf_uuid)
 
         return CreatePfDetailsResponse(
-            pf_uuid=pf_uuid,
-            message="PF Details Deleted Successfully"
+            pf_uuid=pf_uuid, message="PF Details Deleted Successfully"
         )
 
     except HTTPException as he:

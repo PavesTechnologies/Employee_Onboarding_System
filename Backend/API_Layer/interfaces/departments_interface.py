@@ -15,6 +15,7 @@ class DepartmentResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class DepartmentUpdate(BaseModel):
     department_name: Optional[str]
-    description: Optional[str]        
+    description: Optional[str]

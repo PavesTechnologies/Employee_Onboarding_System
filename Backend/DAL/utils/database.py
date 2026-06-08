@@ -44,11 +44,13 @@ Base = declarative_base()
 # ✅ Context variable for async session
 _db_context: ContextVar[AsyncSession] = ContextVar("db_session", default=None)
 
+
 async def set_db_session() -> AsyncSession:
     """Create and set async session in context"""
     db = AsyncSessionLocal()
     _db_context.set(db)
     return db
+
 
 def get_db_session() -> AsyncSession:
     """Get current async session from context"""
@@ -57,13 +59,15 @@ def get_db_session() -> AsyncSession:
         raise RuntimeError("DB session not found in context")
     return db
 
+
 async def remove_db_session():
     """Close and remove async session from context"""
     db = _db_context.get()
     if db:
         await db.close()
         _db_context.set(None)
-        
+
+
 async def get_read_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
-        yield session   # ❌ no commit, no rollback
+        yield session  # ❌ no commit, no rollback

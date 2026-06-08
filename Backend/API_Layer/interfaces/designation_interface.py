@@ -19,7 +19,6 @@ class DesignationResponse(BaseModel):
     designation_name: str
     department_uuid: str
     description: Optional[str]
-    
 
     class Config:
         from_attributes = True
