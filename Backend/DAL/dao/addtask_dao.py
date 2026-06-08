@@ -1,6 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import uuid4
 import datetime
 

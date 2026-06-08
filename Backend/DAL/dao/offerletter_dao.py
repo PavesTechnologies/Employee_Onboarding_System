@@ -192,7 +192,7 @@ class OfferLetterDAO:
         result = await self.db.execute(
             select(OfferLetterDetails.mail).where(OfferLetterDetails.mail.in_(emails))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_all_offers(self):
         """
@@ -291,7 +291,7 @@ class OfferLetterDAO:
                 "name": c.name,
                 "type": c.type,
                 "frequency": c.frequency,
-                "amount": float(c.amount),
+                "amount": float(c.amount) if c.amount is not None else 0.0,
             }
             for c in compensations
         ]
@@ -345,7 +345,7 @@ class OfferLetterDAO:
         )
 
         result = await self.db.execute(stmt)
-        if result.rowcount == 0:
+        if result.rowcount == 0:  # type: ignore[attr-defined]
             return False
 
         # 2. Sync Compensation Components (The "Delete and Re-insert" pattern)
@@ -484,4 +484,4 @@ class OfferLetterDAO:
         result = await self.db.execute(
             delete(OfferLetterDetails).where(OfferLetterDetails.user_uuid == user_uuid)
         )
-        return result.rowcount > 0
+        return result.rowcount > 0  # type: ignore[attr-defined]

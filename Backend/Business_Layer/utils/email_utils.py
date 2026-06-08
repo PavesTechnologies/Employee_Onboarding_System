@@ -77,8 +77,8 @@ def send_offer_accepted_email(
 
     Once again, welcome aboard — we look forward to working with you!
 
-    Warm regards,  
-    Employee Onboarding System  
+    Warm regards,
+    Employee Onboarding System
     Paves Technologies
     """
 
@@ -125,8 +125,8 @@ anyone for security reasons.
 
 If you did not request this verification, please ignore this email.
 
-Warm regards,  
-Employee Onboarding System  
+Warm regards,
+Employee Onboarding System
 Paves Technologies
 """
 
@@ -167,8 +167,8 @@ You will be notified if any additional action is required from your side.
 
 Thank you for completing the onboarding process.
 
-Warm regards,  
-Employee Onboarding System  
+Warm regards,
+Employee Onboarding System
 Paves Technologies
 """
 
@@ -212,8 +212,8 @@ Candidate Name : {candidate_name}
 Candidate Email : {candidate_email}
 Submitted At   : {submitted_time}
 
-Regards,  
-Employee Onboarding System  
+Regards,
+Employee Onboarding System
 Paves Technologies
 """
 

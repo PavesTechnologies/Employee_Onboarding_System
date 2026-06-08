@@ -96,7 +96,3 @@ class EmployeeTaskListResponse(BaseModel):
     message: str
     total_tasks: int
     tasks: List[EmployeeTaskItemResponse]
-
-
-class EmployeeTaskListResponse(BaseModel):
-    tasks: List[EmployeeTaskItemResponse]

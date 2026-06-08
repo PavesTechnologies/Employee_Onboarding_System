@@ -55,7 +55,7 @@ class OfferResponseService:
                 signing_timestamp = datetime.fromisoformat(
                     signing_timestamp_raw.replace("Z", "+00:00")
                 )
-            except:
+            except Exception:
                 signing_timestamp = datetime.utcnow()
 
         print(f"➡ Signing Timestamp: {signing_timestamp}")
@@ -77,7 +77,7 @@ class OfferResponseService:
         result = await self.dao.update_offer_acceptance_from_webhook(update_data)
         if result:
             userdetails = await self.dao.get_fullname_email_by_docid(
-                update_data["doc_id"]
+                str(update_data["doc_id"])
             )
             print("User details fetched:", userdetails)
 
@@ -138,7 +138,7 @@ class OfferResponseService:
                 expiration_timestamp = datetime.fromisoformat(
                     expiration_timestamp_raw.replace("Z", "+00:00")
                 )
-            except:
+            except Exception:
                 expiration_timestamp = datetime.utcnow()
 
         print(f"➡ Expiration Timestamp: {expiration_timestamp}")

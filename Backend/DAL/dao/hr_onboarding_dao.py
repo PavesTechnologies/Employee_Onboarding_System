@@ -275,7 +275,7 @@ class HrOnboardingDAO:
                         .where(RelationMaster.relation_uuid.in_(relation_uuids))
                     )
                     relation = {
-                        rel.relation_uuid: rel.relation_name
+                        rel.relation_uuid: rel.relation_name  # type: ignore[attr-defined]
                         for rel in r.scalars().all()
                     }
                 except Exception as e:
@@ -284,9 +284,9 @@ class HrOnboardingDAO:
 
             # degree mapping
             degree_uuids = set()
-            for e in education_rows:
-                if e.degree_uuid:
-                    degree_uuids.add(e.degree_uuid)
+            for edu_row in education_rows:
+                if edu_row.degree_uuid:
+                    degree_uuids.add(edu_row.degree_uuid)
             degree = {}
             if degree_uuids:
                 r = await s.execute(
@@ -294,7 +294,7 @@ class HrOnboardingDAO:
                     .options(noload("*"))
                     .where(DegreeMaster.degree_uuid.in_(degree_uuids))
                 )
-                degree = {d.degree_uuid: d.degree_name for d in r.scalars().all()}
+                degree = {d.degree_uuid: d.degree_name for d in r.scalars().all()}  # type: ignore[attr-defined]
 
             # -------- Identity Mapping --------
             identity_map = {}
@@ -573,7 +573,7 @@ class HrOnboardingDAO:
 
         result = await self.db.execute(stmt)
 
-        return result.rowcount > 0
+        return result.rowcount > 0  # type: ignore[attr-defined]
 
     async def final_submit_onboarding(self, user_uuid):
         stmt = (
@@ -585,7 +585,7 @@ class HrOnboardingDAO:
         result = await self.db.execute(stmt)
         await self.db.commit()
 
-        return result.rowcount > 0
+        return result.rowcount > 0  # type: ignore[attr-defined]
 
     async def get_personal_details_by_uuid(self, user_uuid):
         stmt = select(PersonalDetails.user_uuid).where(
@@ -654,7 +654,7 @@ class HrOnboardingDAO:
                 raise Exception("user_uuid is required")
 
             result = await self.db.execute(
-                select(model).where(model.user_uuid == user_uuid)
+                select(model).where(model.user_uuid == user_uuid)  # type: ignore[attr-defined]
             )
 
             doc = result.scalar()
@@ -678,7 +678,7 @@ class HrOnboardingDAO:
             if not doc:
                 raise Exception("Experience not found")
 
-            doc.status = status
+            doc.status = status  # type: ignore[attr-defined]
 
             if hasattr(doc, "verified_by"):
                 doc.verified_by = verified_by
@@ -698,7 +698,7 @@ class HrOnboardingDAO:
                 raise Exception("document_uuid is required")
 
             result = await self.db.execute(
-                select(model).where(model.document_uuid == document_uuid)
+                select(model).where(model.document_uuid == document_uuid)  # type: ignore[attr-defined]
             )
 
             doc = result.scalar()
@@ -709,7 +709,7 @@ class HrOnboardingDAO:
         if not doc:
             raise Exception("Record not found")
 
-        doc.status = status
+        doc.status = status  # type: ignore[attr-defined]
 
         if hasattr(doc, "remarks") and remarks:
             doc.remarks = remarks

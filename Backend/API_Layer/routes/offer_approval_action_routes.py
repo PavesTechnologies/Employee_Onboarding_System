@@ -94,7 +94,7 @@ async def update_offer_action(
     response = await service.update_offer_action(
         user_uuid=payload.user_uuid,
         action=payload.action,
-        comments=payload.comments,
+        comments=payload.comments or "",
         current_user_id=current_user_id,
     )
 

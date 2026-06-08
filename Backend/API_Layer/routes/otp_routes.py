@@ -32,9 +32,6 @@ async def verify_otp(requestdata: OtpRequestBody, db: AsyncSession = Depends(get
     result = await service.verify_otp(requestdata.email, requestdata.otp)
 
     if result.status.upper() != "SUCCESS":
-        raise HTTPException(
-            status_code=400,
-            detail=result.message
-        )
+        raise HTTPException(status_code=400, detail=result.message)
 
     return result

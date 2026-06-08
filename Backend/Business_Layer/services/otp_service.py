@@ -1,4 +1,3 @@
-import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta
 import random
@@ -6,7 +5,6 @@ from Backend.Business_Layer.utils import email_utils
 from Backend.DAL.dao.otp_dao import OtpResponseDAO
 from Backend.API_Layer.interfaces.otp_interfaces import OtpResponseStatus
 from Backend.DAL.dao.offerresponse_dao import OfferResponseDAO
-from Backend.API_Layer.interfaces.otp_interfaces import OtpResponseStatus
 
 
 class OtpResponseService:
@@ -56,22 +54,12 @@ class OtpResponseService:
         if not otp_record:
             return OtpResponseStatus(status="FAILED", message="OTP not found")
 
-    if datetime.utcnow() > otp_record.expirytime:
+        if datetime.utcnow() > otp_record.expirytime:
+            await self.dao.delete_otp(otp_record)
+            return OtpResponseStatus(status="FAILED", message="OTP expired")
+
+        if otp_record.otp != otp:
+            return OtpResponseStatus(status="FAILED", message="Incorrect OTP")
+
         await self.dao.delete_otp(otp_record)
-        return OtpResponseStatus(
-            status="FAILED",
-            message="OTP expired"
-        )
-
-    if otp_record.otp != otp:
-        return OtpResponseStatus(
-            status="FAILED",
-            message="Incorrect OTP"
-        )
-
-    await self.dao.delete_otp(otp_record)
-    return OtpResponseStatus(
-        status="SUCCESS",
-        message="OTP verified successfully"
-    )
- 
+        return OtpResponseStatus(status="SUCCESS", message="OTP verified successfully")

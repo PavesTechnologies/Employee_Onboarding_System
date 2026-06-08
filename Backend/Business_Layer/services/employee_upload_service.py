@@ -263,7 +263,7 @@ class EmployeeUploadService:
             file_path = await blob_service.upload_file(
                 file,
                 "identity_documents",
-                original_filename=file.filename,
+                original_filename=file.filename or "",
                 employee_uuid=user_uuid,
             )
 

@@ -1,4 +1,3 @@
-import datetime
 from Backend.DAL.dao.offerletter_dao import OfferLetterDAO
 from Backend.DAL.utils.database import AsyncSessionLocal
 from .corn_email import send_joinning_email as send_email
@@ -8,8 +7,7 @@ from .corn_email import send_joinning_email as send_email
 
 async def send_joining_date_reminders():
 
-    today = datetime.date.today()
-    # three_days_later = today + datetime.timedelta(days=3)
+    # three_days_later = datetime.date.today() + datetime.timedelta(days=3)
 
     async with AsyncSessionLocal() as session:
 
@@ -45,7 +43,7 @@ async def send_joining_date_reminders():
         """
         try:
             send_email("sumiyapatan2@gmail.com", subject, body)
-            print(f"📧 Sent to sumiyapatan2@gmail.com")
+            print("📧 Sent to sumiyapatan2@gmail.com")
 
         except Exception as e:
             print(f"❌ Email failed: {e}")

@@ -79,8 +79,6 @@ class IdentityDAO:
         await self.db.commit()
         return identity_type
 
-    from sqlalchemy import update, select, exists
-
     async def update_identity_type(self, uuid, request_data):
         # 1️⃣ duplicate name check (FAST)
         dup_stmt = select(

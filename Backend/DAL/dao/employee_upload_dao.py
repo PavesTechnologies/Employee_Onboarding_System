@@ -126,7 +126,7 @@ class EmployeeUploadDAO:
         exists_flag = result.scalar()
 
         print("DAO MAPPING EXISTS TIME:", time.perf_counter() - start)
-        return exists_flag
+        return bool(exists_flag)
 
     async def identity_exists(self, user_uuid: str, mapping_uuid: str) -> bool:
         result = await self.db.execute(
@@ -137,7 +137,7 @@ class EmployeeUploadDAO:
                 )
             )
         )
-        return result.scalar()
+        return bool(result.scalar())
 
     async def get_employee_identity_by_uuid(self, identity_uuid: str):
         result = await self.db.execute(

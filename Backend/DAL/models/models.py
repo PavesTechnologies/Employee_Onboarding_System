@@ -22,7 +22,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.mysql import ENUM, TINYINT, YEAR
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import Integer, String, DateTime
 
 
 class Base(DeclarativeBase):
@@ -280,8 +279,6 @@ class OfferLetterDetails(Base):
         Enum("Full-Time", "Part-Time", "Intern", "Contractor", "Freelance"),
         nullable=True,
     )
-    package: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-    currency: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     job_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     created_by: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     hire_type: Mapped[Optional[str]] = mapped_column(
@@ -1949,7 +1946,7 @@ class OfferApprovalAction(Base):
 #     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 #     offer_uuid: Mapped[str] = mapped_column(String(36), nullable=False)
 #     name: Mapped[Optional[str]] = mapped_column(String(255))
-# type: Mapped[Optional[str]] = mapped_column(String(50))
+#     comp_type: Mapped[Optional[str]] = mapped_column(String(50))
 #     frequency: Mapped[Optional[str]] = mapped_column(String(50))
 #     amount: Mapped[Optional[decimal.Decimal]] = mapped_column(DECIMAL(12, 2))
 
@@ -2315,19 +2312,6 @@ class EmployeeExit(Base):
         back_populates="employee_exit",
         cascade="all, delete-orphan",
         lazy="selectin",
-    )
-
-    employee_details: Mapped[Optional["EmployeeDetails"]] = relationship(
-        "EmployeeDetails",
-        back_populates="employee_exit",
-    )
-    department: Mapped[Optional["Departments"]] = relationship(
-        "Departments",
-        back_populates="employee_exit",
-    )
-    designation: Mapped[Optional["Designations"]] = relationship(
-        "Designations",
-        back_populates="employee_exit",
     )
 
 

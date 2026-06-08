@@ -91,7 +91,7 @@ class EmployeeExperienceService:
         allowed_types = (".pdf", ".png", ".jpg", ".jpeg")
 
         for file in files:
-            if not file.filename.lower().endswith(allowed_types):
+            if not (file.filename or "").lower().endswith(allowed_types):
                 raise HTTPException(
                     status_code=400,
                     detail=f"Invalid file type for {file.filename}. Allowed: PDF, PNG, JPG",
@@ -243,9 +243,6 @@ class EmployeeExperienceService:
                 status_code=400, detail="Notice period required for current job"
             )
 
-        # 🔹 Validate docs based on employment type
-        rules = EMPLOYMENT_DOCUMENT_RULES[employment_type.value]
-
         if doc_types and len(doc_types) == 1 and "," in doc_types[0]:
             doc_types = [d.strip() for d in doc_types[0].split(",")]
 
@@ -264,7 +261,7 @@ class EmployeeExperienceService:
 
         if files:
             for file in files:
-                if not file.filename.lower().endswith(allowed_types):
+                if not (file.filename or "").lower().endswith(allowed_types):
                     raise HTTPException(
                         status_code=400, detail=f"Invalid file type for {file.filename}"
                     )
@@ -281,7 +278,7 @@ class EmployeeExperienceService:
                 file_path = await self.storage.upload_file(
                     file,
                     folder,
-                    original_filename=file.filename,
+                    original_filename=file.filename or "",
                     employee_uuid=experience.employee_uuid,
                 )
 

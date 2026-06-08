@@ -22,7 +22,7 @@ class EducationDocDAO:
         result = await self.db.execute(
             select(EducationDocumentType).where(
                 EducationDocumentType.document_name == document_name,
-                EducationDocumentType.document_uuid != uuid,
+                EducationDocumentType.document_uuid != uuid,  # type: ignore[attr-defined]
             )
         )
         return result.scalar_one_or_none()
@@ -106,7 +106,7 @@ class EducationDocDAO:
                 )
             )
         )
-        return result.scalar()
+        return bool(result.scalar())
 
     async def create_employee_education_document(self, request_data, uuid, file_path):
         new_edu_doc = EmployeeEducationDocument(

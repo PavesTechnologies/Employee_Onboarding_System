@@ -1,4 +1,3 @@
-from email.mime import text
 from sqlalchemy import text
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +19,7 @@ async def verify_token(
     """Verifies the onboarding token sent to the user's email."""
 
     service = OnboardingVerifyLinkService(db)
-    print(f"API: Verifying token...")
+    print("API: Verifying token...")
 
     result = await service.verify_token(requestdata)
 

@@ -31,9 +31,9 @@ async def create_personal_details(
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))  # 👈 show real error
+        raise HTTPException(status_code=500, detail=str(e))  # show real error
 
-    ## Addresses Routes ##
+    # Addresses Routes #
 
 
 @router.post("/address", response_model=CreateAddressResponse)

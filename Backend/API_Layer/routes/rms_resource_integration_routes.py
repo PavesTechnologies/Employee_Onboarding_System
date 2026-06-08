@@ -1,9 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from sqlalchemy.orm import aliased
 
-from Backend.API_Layer.utils.role_based import require_roles
 from Backend.API_Layer.utils.role_based import require_roles
 from Backend.DAL.utils.dependencies import get_db
 
@@ -21,9 +19,6 @@ router = APIRouter()
     "/resources", dependencies=[Depends(require_roles("Resource_Manager", "HR"))]
 )
 async def get_rms_resources(db: AsyncSession = Depends(get_db)):
-
-    # Alias for Reporting Manager
-    ManagerEmployee = aliased(EmployeeDetails)
 
     stmt = (
         select(

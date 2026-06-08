@@ -167,7 +167,7 @@ class OfferApprovalActionDAO:
 
         result = await self.db.execute(stmt)
 
-        if result.rowcount == 0:
+        if result.rowcount == 0:  # type: ignore[attr-defined]
             await self.db.rollback()
             return False
 

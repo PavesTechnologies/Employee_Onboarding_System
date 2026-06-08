@@ -17,10 +17,10 @@ class S3StorageService:
 
     def __init__(
         self,
-        access_key_id: str = None,
-        secret_access_key: str = None,
-        region_name: str = None,
-        bucket_name: str = None,
+        access_key_id: Optional[str] = None,
+        secret_access_key: Optional[str] = None,
+        region_name: Optional[str] = None,
+        bucket_name: Optional[str] = None,
     ):
         self.access_key_id = get_env_var("AWS_ACCESS_KEY_ID")
         self.secret_access_key = get_env_var("AWS_SECRET_ACCESS_KEY")
@@ -49,9 +49,9 @@ class S3StorageService:
         self,
         file,  # UploadFile OR bytes
         folder: str,
-        original_filename: str = None,
-        employee_uuid: str = None,
-        custom_filename: str = None,
+        original_filename: Optional[str] = None,
+        employee_uuid: Optional[str] = None,
+        custom_filename: Optional[str] = None,
     ) -> str:
         try:
 
@@ -259,7 +259,7 @@ class S3StorageService:
             if e.response["Error"]["Code"] == "404":
                 return False
             raise Exception(f"Error checking file existence: {str(e)}")
-        except Exception as e:
+        except Exception:
             return False
 
     async def get_file_metadata(self, s3_path: str) -> dict:

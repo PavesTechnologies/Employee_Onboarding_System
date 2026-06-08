@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, Depends, Request, HTTPException
+from fastapi import APIRouter, Depends, Request, HTTPException
 
 from ...API_Layer.interfaces.offerresponse_interface import (
     PandaDocWebhookRequest,
@@ -30,7 +30,7 @@ async def offerletter_accepted_webhook(
     print("📬 API Layer: Received PandaDoc webhook for offer letter acceptance")
 
     # 1. Extract client IP
-    client_ip = request.client.host
+    client_ip = request.client.host if request.client else "unknown"
     print(f"[Offer Signed] Incoming IP: {client_ip}")
 
     # 2. Validate IP using utils
@@ -65,7 +65,7 @@ async def offerletter_accepted_webhook(
                 )
                 responses.append(response)
             except HTTPException:
-                raise e
+                raise
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
@@ -86,7 +86,6 @@ async def offerletter_accepted_webhook(
 async def offerletter_expired_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    payload: dict = Body(...),  # 👈 THIS LINE is just to test the webhook handling
 ):
     """
     Receives PandaDoc webhook when the offer letter is automatically expired
@@ -96,7 +95,7 @@ async def offerletter_expired_webhook(
     print("📬 API Layer: Received PandaDoc webhook for offer letter expiration")
 
     # 1. Extract client IP
-    client_ip = request.client.host
+    client_ip = request.client.host if request.client else "unknown"
     print(f"[Offer Signed] Incoming IP: {client_ip}")
 
     # 2. Validate IP using utils
@@ -140,7 +139,7 @@ async def offerletter_expired_webhook(
                 responses.append(response)
 
             except HTTPException:
-                raise e
+                raise
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 

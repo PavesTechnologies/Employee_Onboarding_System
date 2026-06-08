@@ -157,10 +157,10 @@ async def get_demographics(db: AsyncSession):
     result = await db.execute(stmt)
     data = result.all()
 
-    gender_counter = Counter()
-    nationality_counter = Counter()
-    employment_counter = Counter()
-    worker_counter = Counter()
+    gender_counter: Counter[str] = Counter()
+    nationality_counter: Counter[str] = Counter()
+    employment_counter: Counter[str] = Counter()
+    worker_counter: Counter[str] = Counter()
 
     age_groups = empty_age_groups()
 
@@ -233,7 +233,9 @@ async def get_worker_department(db: AsyncSession):
     result = await db.execute(stmt)
     data = result.all()
 
-    dept_map = defaultdict(lambda: {"permanent": 0, "contingent": 0})
+    dept_map: dict[str, dict[str, int]] = defaultdict(
+        lambda: {"permanent": 0, "contingent": 0}
+    )
 
     for emp, offer, dept, _designation in data:
         dept_name = department_name(dept)
@@ -270,7 +272,7 @@ async def get_gender_department(db: AsyncSession):
     result = await db.execute(stmt)
     data = result.all()
 
-    dept_map = defaultdict(lambda: {"female": 0, "male": 0})
+    dept_map: dict[str, dict[str, int]] = defaultdict(lambda: {"female": 0, "male": 0})
 
     for emp, personal, dept, _designation in data:
         gender = normalize_gender(
@@ -305,7 +307,7 @@ async def get_employment_department(db: AsyncSession):
     result = await db.execute(stmt)
     data = result.all()
 
-    dept_map = defaultdict(
+    dept_map: dict[str, dict[str, int]] = defaultdict(
         lambda: {
             "full": 0,
             "partTime": 0,

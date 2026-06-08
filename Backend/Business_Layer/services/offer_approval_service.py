@@ -32,7 +32,7 @@ class OfferApprovalRequestService:
 
             if existing_request:
                 raise HTTPException(
-                    status_code=400, detail=f"Approval request already exists for users"
+                    status_code=400, detail="Approval request already exists for users"
                 )
 
             created_requests = []

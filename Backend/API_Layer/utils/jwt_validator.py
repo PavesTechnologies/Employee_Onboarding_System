@@ -113,6 +113,6 @@ def validate_jwt(token: str):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Invalid token: {str(e)}"
         )
-    except Exception as e:
-        # print(f"[JWTValidator] 💥 Unexpected error during validation: {e}")
+    except Exception:
+        # print(f"[JWTValidator] Unexpected error during validation")
         raise

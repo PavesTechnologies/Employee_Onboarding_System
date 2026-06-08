@@ -1,4 +1,4 @@
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from weasyprint import HTML
 import os
 from datetime import datetime
@@ -9,7 +9,10 @@ class DocumentService:
     def generate_offer_pdf(self, offer_data):
 
         # Load template
-        env = Environment(loader=FileSystemLoader("Backend/templates"))
+        env = Environment(
+            loader=FileSystemLoader("Backend/templates"),
+            autoescape=select_autoescape(["html", "xml"]),
+        )
         template = env.get_template("offer_letter.html")
 
         # Render HTML
@@ -30,7 +33,10 @@ class DocumentService:
 
     def generate_joining_pdf(self, joining_data):
 
-        env = Environment(loader=FileSystemLoader("Backend/templates"))
+        env = Environment(
+            loader=FileSystemLoader("Backend/templates"),
+            autoescape=select_autoescape(["html", "xml"]),
+        )
         template = env.get_template("joining_letter.html")
 
         logo_path = os.path.abspath(

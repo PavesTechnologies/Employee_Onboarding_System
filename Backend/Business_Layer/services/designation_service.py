@@ -44,18 +44,6 @@ class DesignationsService:
         return designation
 
     @staticmethod
-    async def get_designation_by_uuid(db, designation_uuid):
-
-        designation = await DesignationsDAO.get_designation_by_uuid(
-            db, designation_uuid
-        )
-
-        if not designation:
-            raise HTTPException(status_code=404, detail="Designation not found")
-
-        return designation
-
-    @staticmethod
     async def get_designations_by_department(db: AsyncSession, department_uuid: str):
 
         designations = await DesignationsDAO.get_designations_by_department(

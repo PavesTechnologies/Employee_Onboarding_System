@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends
+import time
+from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..interfaces.master_interfaces import (
     CreateCountryResponse,
@@ -26,7 +27,7 @@ from ..utils.role_based import require_roles
 router = APIRouter()
 
 
-## COUNTRY ROUTES START ##
+# COUNTRY ROUTES START #
 @router.post("/country", response_model=CreateCountryResponse)
 async def create_country(calling_code: str, db: AsyncSession = Depends(get_db)):
     try:
@@ -43,7 +44,6 @@ async def create_country(calling_code: str, db: AsyncSession = Depends(get_db)):
 
 
 # deactivate country by country uuid
-from fastapi import Query
 
 
 @router.put(
@@ -94,9 +94,9 @@ async def get_all_countries(db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-## COUNTRY ROUTES END ##
+# COUNTRY ROUTES END #
 
-## EDUCATION LEVEL ROUTES ##
+# EDUCATION LEVEL ROUTES #
 
 
 @router.post("/education-level/", response_model=CreateEducLevelResponse)
@@ -131,7 +131,6 @@ async def get_all_education_levels(db: AsyncSession = Depends(get_db)):
 
 
 # get education details with uuid
-import time
 
 
 @router.get("/education-level/{education_uuid}", response_model=EducLevelDetails)
@@ -184,7 +183,7 @@ async def delete_education_level(
 ):
     try:
         education_service = EducationService(db)
-        result = await education_service.delete_education_level(education_uuid)
+        await education_service.delete_education_level(education_uuid)
 
         return CreateCountryResponse(
             country_uuid=education_uuid, message="Education Level Deleted Successfully"
@@ -250,10 +249,10 @@ async def get_all_education_country_mapping(db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-## EDUCATION LEVEL AND MAPPING ROUTES ENDS ##
+# EDUCATION LEVEL AND MAPPING ROUTES ENDS #
 
 
-## CONTACTS ROUTES BEGINS ##
+# CONTACTS ROUTES BEGINS #
 # Create contect details
 @router.post("/contacts", response_model=CreateContactResponse)
 async def create_contact(

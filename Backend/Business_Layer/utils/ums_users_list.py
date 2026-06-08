@@ -1,10 +1,11 @@
-from time import time
+import time
+from typing import Any
 import httpx
 from ...config.env_loader import get_env_var
 
 ADMIN_USERS_API = get_env_var("ADMIN_USERS_API")
 
-_admin_cache = {"data": None, "expires": 0}
+_admin_cache: dict[str, Any] = {"data": None, "expires": 0}
 _admin_client: httpx.AsyncClient | None = None
 
 
@@ -13,10 +14,6 @@ async def get_admin_http_client():
     if _admin_client is None:
         _admin_client = httpx.AsyncClient(timeout=30.0)
     return _admin_client
-
-
-import time
-import httpx
 
 
 def _full_name(

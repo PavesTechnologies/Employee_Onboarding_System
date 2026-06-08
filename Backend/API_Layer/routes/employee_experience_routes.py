@@ -13,9 +13,6 @@ from ...DAL.utils.dependencies import get_db
 from ...Business_Layer.services.employee_experience_service import (
     EmployeeExperienceService,
 )
-from ...DAL.utils.storage_utils import (
-    get_storage_service,
-)  # If needed for presigned URL
 
 router = APIRouter()
 
@@ -36,10 +33,10 @@ async def create_experience(
     notice_period_days: int | None = Form(None, ge=0, le=120),
     doc_types: Annotated[
         List[str], Form(description="Document type identifiers (one per file)")
-    ] = ...,
+    ] = ...,  # type: ignore[assignment]
     files: Annotated[
         List[UploadFile], File(description="Upload documents (one per doc_type)")
-    ] = ...,
+    ] = ...,  # type: ignore[assignment]
     db: AsyncSession = Depends(get_db),
 ):
 
@@ -71,7 +68,7 @@ async def create_experience(
     allowed_types = (".pdf", ".png", ".jpg", ".jpeg")
 
     for file in files:
-        if not file.filename.lower().endswith(allowed_types):
+        if not (file.filename or "").lower().endswith(allowed_types):
             raise HTTPException(
                 status_code=400, detail="Invalid file type. Only PDF, PNG, JPG allowed"
             )
@@ -170,7 +167,7 @@ async def update_experience(
             status_code=400, detail="Notice period required for current job"
         )
 
-    if files and len(doc_types) != len(files):
+    if files and doc_types and len(doc_types) != len(files):
         raise HTTPException(
             status_code=400, detail="doc_types and files count must match"
         )
@@ -196,7 +193,7 @@ async def update_experience(
         end_date,
         is_current,
         notice_period_days,
-        doc_types,
+        doc_types or [],
         files,
     )
 
