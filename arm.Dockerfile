@@ -3,10 +3,7 @@ FROM python:3.11-slim-bookworm AS builder
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
     gcc \
-    g++ \
-    python3-dev \
     libmariadb-dev \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
@@ -14,9 +11,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN python -m venv /opt/venv
 
 COPY requirements.txt .
-RUN /opt/venv/bin/pip install --upgrade pip setuptools wheel && \
-    /opt/venv/bin/pip install -v --no-cache-dir -r requirements.txt
 
+RUN --mount=type=cache,target=/root/.cache/pip \
+    /opt/venv/bin/pip install --upgrade pip setuptools wheel && \
+    /opt/venv/bin/pip install --prefer-binary -r requirements.txt
 
 # ── Runtime Stage ─────────────────────────────────────────
 FROM python:3.11-slim-bookworm
