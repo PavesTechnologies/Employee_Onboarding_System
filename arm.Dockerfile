@@ -1,16 +1,16 @@
 # syntax=docker/dockerfile:1.7
 
+# ── Build Stage ──────────────────────────────────────────
 FROM python:3.11-slim-bookworm AS builder
 
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    gcc \
-    g++ \
-    python3-dev \
     libmariadb-dev \
     pkg-config \
+    ca-certificates \
+    openssl \
+    && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python -m venv /opt/venv
@@ -18,9 +18,9 @@ RUN python -m venv /opt/venv
 COPY requirements.txt .
 
 RUN --mount=type=cache,target=/root/.cache/pip \
-    /opt/venv/bin/pip install --upgrade pip setuptools wheel && \
-    /opt/venv/bin/pip install --prefer-binary --no-compile -r requirements.txt
+    /opt/venv/bin/pip install -r requirements.txt
 
+# ── Runtime Stage ─────────────────────────────────────────
 FROM python:3.11-slim-bookworm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -32,6 +32,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgdk-pixbuf2.0-0 \
     libglib2.0-0 \
     shared-mime-info \
+    ca-certificates \
+    && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m appuser
@@ -39,6 +41,7 @@ RUN useradd -m appuser
 WORKDIR /app
 
 COPY --from=builder /opt/venv /opt/venv
+
 COPY --chown=appuser:appuser Backend/ Backend/
 COPY --chown=appuser:appuser generated_pdfs/ generated_pdfs/
 
