@@ -40,9 +40,9 @@ pycountry==26.2.16
 Jinja2==3.1.6
 weasyprint==68.1
 
-# autoflake
-# black 
-# flake8
-# bandit 
-# pip-audit
-# mypy
+autoflake
+black 
+flake8
+bandit 
+pip-audit
+mypy
