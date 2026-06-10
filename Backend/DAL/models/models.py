@@ -431,8 +431,8 @@ class Addresses(Base):
     address_type: Mapped[str] = mapped_column(
         Enum("permanent", "current"), nullable=False
     )
-    address_line1: Mapped[str] = mapped_column(String(255), nullable=False)
-    country_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
+    address_line1: Mapped[Optional[str]] = mapped_column(String(255))
+    country_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))
     address_line2: Mapped[Optional[str]] = mapped_column(String(255))
     city: Mapped[Optional[str]] = mapped_column(String(150))
     district_or_ward: Mapped[Optional[str]] = mapped_column(String(150))
@@ -804,12 +804,12 @@ class EmployeeBankDetails(Base):
         CHAR(36), ForeignKey("offer_letter_details.user_uuid"), nullable=False
     )
 
-    account_holder_name: Mapped[str] = mapped_column(String(150), nullable=False)
-    bank_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    account_holder_name: Mapped[Optional[str]] = mapped_column(String(150))
+    bank_name: Mapped[Optional[str]] = mapped_column(String(100))
     branch_name: Mapped[Optional[str]] = mapped_column(String(100))
-    account_number: Mapped[str] = mapped_column(String(30), nullable=False)
-    ifsc_code: Mapped[str] = mapped_column(String(15), nullable=False)
-    account_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    account_number: Mapped[Optional[str]] = mapped_column(String(30))
+    ifsc_code: Mapped[Optional[str]] = mapped_column(String(15))
+    account_type: Mapped[Optional[str]] = mapped_column(String(20))
     status: Mapped[Optional[str]] = mapped_column(
         ENUM("uploaded", "verified", "rejected"), server_default=text("'uploaded'")
     )
@@ -826,7 +826,7 @@ class EmployeePfDetails(Base):
         CHAR(36), ForeignKey("offer_letter_details.user_uuid"), nullable=False
     )
 
-    pf_member: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    pf_member: Mapped[Optional[bool]] = mapped_column(Boolean)
     uan_number: Mapped[Optional[str]] = mapped_column(String(20))
     status: Mapped[Optional[str]] = mapped_column(
         Enum("uploaded", "verified", "rejected"), server_default=text("'uploaded'")
