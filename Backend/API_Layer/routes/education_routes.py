@@ -44,9 +44,7 @@ async def create_education_document(
 
 @router.get(
     "/education-document",
-    response_model=list[EducDocDetails],
-    dependencies=[Depends(require_roles("HR", "ADMIN"))],
-)
+    response_model=list[EducDocDetails],)
 async def get_all_education_documents(db: AsyncSession = Depends(get_db)):
     try:
         education_service = EducationDocService(db)
@@ -61,7 +59,7 @@ async def get_all_education_documents(db: AsyncSession = Depends(get_db)):
 @router.get(
     "/education-document/{uuid}",
     response_model=EducDocDetails,
-    dependencies=[Depends(require_roles("HR", "ADMIN"))],
+    # dependencies=[Depends(require_roles("HR", "ADMIN"))],
 )
 async def get_education_document_by_uuid(uuid: str, db: AsyncSession = Depends(get_db)):
     try:

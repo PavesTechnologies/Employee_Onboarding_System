@@ -38,6 +38,9 @@ class JWTMiddleware(BaseHTTPMiddleware):
             "/ems/pf/",
             "/ems/offerletters/offer/",
             "/ems/employee-upload/relations",
+            "/ems/identity",
+            "/ems/education/education-document",
+            
         ]
 
     async def dispatch(self, request: Request, call_next):
