@@ -4,6 +4,7 @@ from datetime import datetime
 import pycountry
 import phonenumbers
 
+
 def validate_non_empty(value: str, field_name: str = "Field") -> str:
     """
     Ensures the given string is not empty or whitespace.
@@ -43,7 +44,9 @@ def validate_alphabets_only(value: str, field_name: str = "Field") -> str:
     cleaned = validate_non_empty(value, field_name)
 
     if not re.match(r"^[A-Za-z\s0-9]+$", cleaned):
-        raise ValueError(f"{field_name} must contain only alphabets and spaces and numbers")
+        raise ValueError(
+            f"{field_name} must contain only alphabets and spaces and numbers"
+        )
 
     return cleaned
 
@@ -58,8 +61,7 @@ def validate_name(first_name: str) -> str:
     """
     if not first_name or not first_name.strip():
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="First name cannot be empty"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="First name cannot be empty"
         )
 
     # Trim spaces first
@@ -69,10 +71,11 @@ def validate_name(first_name: str) -> str:
     if not re.match(r"^[A-Za-z0-9 ]+$", first_name):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="First name can only contain alphabets, spaces, and numbers"
+            detail="First name can only contain alphabets, spaces, and numbers",
         )
 
     return first_name
+
 
 def validate_document_name(value: str, field_name: str = "Document Name") -> str:
     cleaned = validate_non_empty(value, field_name)
@@ -81,6 +84,7 @@ def validate_document_name(value: str, field_name: str = "Document Name") -> str
         raise ValueError(f"{field_name} must contain only alphabets and spaces")
 
     return cleaned
+
 
 def validate_email(email: str) -> str:
     """
@@ -92,8 +96,7 @@ def validate_email(email: str) -> str:
     """
     if not email or not email.strip():
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email cannot be empty"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Email cannot be empty"
         )
 
     email = email.strip()
@@ -103,12 +106,10 @@ def validate_email(email: str) -> str:
 
     if not re.match(email_pattern, email):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid email format"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email format"
         )
 
     return email
-
 
 
 def validate_designation(designation: str) -> str:
@@ -130,7 +131,9 @@ def validate_designation(designation: str) -> str:
 
     # Allow letters, spaces, dots, and hyphens
     if not re.match(r"^[A-Za-z\s\.-]+$", cleaned):
-        raise ValueError("Designation can only contain letters, spaces, periods, and hyphens")
+        raise ValueError(
+            "Designation can only contain letters, spaces, periods, and hyphens"
+        )
 
     return cleaned
 
@@ -177,10 +180,11 @@ def validate_currency(currency: str) -> str:
         raise ValueError("Currency cannot be empty or just spaces")
 
     if not re.match(r"^[A-Z]{3}$", cleaned):
-        raise ValueError("Currency must be a valid 3-letter uppercase code (e.g., USD, INR, EUR)")
+        raise ValueError(
+            "Currency must be a valid 3-letter uppercase code (e.g., USD, INR, EUR)"
+        )
 
     return cleaned
-
 
 
 def validate_country(calling_code: str):
@@ -203,6 +207,7 @@ def validate_country(calling_code: str):
 
     return calling_code
 
+
 def get_country_name(calling_code: str):
     try:
         code = int(calling_code)
@@ -222,6 +227,7 @@ def get_country_name(calling_code: str):
         raise ValueError("Country not found in pycountry")
 
     return country.name
+
 
 def validate_phone_number(calling_code: str, phone_number: str, type: str) -> str:
     # 1. Validate calling code
@@ -257,6 +263,7 @@ def validate_phone_number(calling_code: str, phone_number: str, type: str) -> st
 
     return phone_number
 
+
 def validate_numeric_value(value: str):
     try:
         num = float(value)
@@ -265,9 +272,9 @@ def validate_numeric_value(value: str):
         return num
     except Exception:
         raise HTTPException(
-            status_code=400,
-            detail="Percentage / CGPA must be a valid positive number"
+            status_code=400, detail="Percentage / CGPA must be a valid positive number"
         )
+
 
 def validate_date_of_birth(date_of_birth: str):
     try:
@@ -275,10 +282,15 @@ def validate_date_of_birth(date_of_birth: str):
     except ValueError:
         raise ValueError("Date of birth must be in YYYY-MM_DD format")
     return date_of_birth
+
+
 def validate_blood_group(blood_group: str):
     if blood_group not in ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"]:
-        raise ValueError("Invalid blood group. It must be one of A+, A-, B+, B-, O+, O-, AB+, AB-")
+        raise ValueError(
+            "Invalid blood group. It must be one of A+, A-, B+, B-, O+, O-, AB+, AB-"
+        )
     return blood_group
+
 
 # def validate_date_format(date_str: str, field_name: str = "Date") -> str:
 #     """

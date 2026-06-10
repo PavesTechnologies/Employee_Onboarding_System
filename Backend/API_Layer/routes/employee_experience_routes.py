@@ -7,15 +7,15 @@ from Backend.API_Layer.interfaces.employee_experience_interfaces import (
     ExperienceResponse,
     ExperienceCreateResponse,
     EmploymentType,
-    ExperienceUpdate,
 )
 
 from ...DAL.utils.dependencies import get_db
-from ...Business_Layer.services.employee_experience_service import EmployeeExperienceService
-from ...DAL.utils.storage_utils import get_storage_service  # If needed for presigned URL
-from ..utils.role_based import require_roles
+from ...Business_Layer.services.employee_experience_service import (
+    EmployeeExperienceService,
+)
 
 router = APIRouter()
+
 
 # -------------------------------------------------------
 # CREATE EXPERIENCE
@@ -31,53 +31,46 @@ async def create_experience(
     end_date: date | None = Form(None),
     is_current: bool = Form(False),
     notice_period_days: int | None = Form(None, ge=0, le=120),
-
-    doc_types: Annotated[List[str], Form(description="Document type identifiers (one per file)")] = ...,
-    files: Annotated[List[UploadFile], File(description="Upload documents (one per doc_type)")] = ...,
-
+    doc_types: Annotated[
+        List[str], Form(description="Document type identifiers (one per file)")
+    ] = ...,  # type: ignore[assignment]
+    files: Annotated[
+        List[UploadFile], File(description="Upload documents (one per doc_type)")
+    ] = ...,  # type: ignore[assignment]
     db: AsyncSession = Depends(get_db),
 ):
 
     # ADD HERE
     if start_date > date.today():
         raise HTTPException(
-            status_code=400,
-            detail="Start date cannot be in the future"
+            status_code=400, detail="Start date cannot be in the future"
         )
 
     if end_date and end_date < start_date:
         raise HTTPException(
-            status_code=400,
-            detail="End date cannot be before start date"
+            status_code=400, detail="End date cannot be before start date"
         )
-
 
     if is_current and end_date:
-        raise HTTPException(
-            status_code=400,
-            detail="Current job cannot have end date"
-        )
+        raise HTTPException(status_code=400, detail="Current job cannot have end date")
 
     if is_current and notice_period_days is None:
         raise HTTPException(
-            status_code=400,
-            detail="Notice period required for current job"
+            status_code=400, detail="Notice period required for current job"
         )
 
     if len(doc_types) != len(files):
         raise HTTPException(
-            status_code=400,
-            detail="doc_types and files count must match"
+            status_code=400, detail="doc_types and files count must match"
         )
-    
+
     # ADD HERE
     allowed_types = (".pdf", ".png", ".jpg", ".jpeg")
 
     for file in files:
-        if not file.filename.lower().endswith(allowed_types):
+        if not (file.filename or "").lower().endswith(allowed_types):
             raise HTTPException(
-                status_code=400,
-                detail="Invalid file type. Only PDF, PNG, JPG allowed"
+                status_code=400, detail="Invalid file type. Only PDF, PNG, JPG allowed"
             )
 
     request_data = ExperienceCreateRequest(
@@ -114,7 +107,9 @@ async def get_all_experience(db: AsyncSession = Depends(get_db)):
 # GET EXPERIENCE BY EMPLOYEE UUID
 # -------------------------------------------------------
 @router.get("/employee/{employee_uuid}", response_model=list[ExperienceResponse])
-async def get_experience_by_employee_uuid(employee_uuid: str, db: AsyncSession = Depends(get_db)):
+async def get_experience_by_employee_uuid(
+    employee_uuid: str, db: AsyncSession = Depends(get_db)
+):
     try:
         service = EmployeeExperienceService(db)
         result = await service.get_experience_by_employee_uuid(employee_uuid)
@@ -129,7 +124,9 @@ async def get_experience_by_employee_uuid(employee_uuid: str, db: AsyncSession =
 # GET EXPERIENCE BY UUID
 # -------------------------------------------------------
 @router.get("/{experience_uuid}", response_model=ExperienceResponse)
-async def get_experience_by_uuid(experience_uuid: str, db: AsyncSession = Depends(get_db)):
+async def get_experience_by_uuid(
+    experience_uuid: str, db: AsyncSession = Depends(get_db)
+):
     try:
         service = EmployeeExperienceService(db)
         result = await service.get_experience_by_uuid(experience_uuid)
@@ -146,7 +143,6 @@ async def get_experience_by_uuid(experience_uuid: str, db: AsyncSession = Depend
 @router.put("/{experience_uuid}", response_model=ExperienceCreateResponse)
 async def update_experience(
     experience_uuid: str,
-
     company_name: str = Form(...),
     role_title: str = Form(...),
     employment_type: EmploymentType = Form(...),
@@ -154,41 +150,36 @@ async def update_experience(
     end_date: date | None = Form(None),
     is_current: bool = Form(False),
     notice_period_days: int | None = Form(None, ge=0, le=120),
-
-    doc_types: Annotated[Optional[List[str]], Form(description="Document type identifiers")] = None,
-    files: Annotated[Optional[List[UploadFile]], File(description="Upload documents")] = None,
-
+    doc_types: Annotated[
+        Optional[List[str]], Form(description="Document type identifiers")
+    ] = None,
+    files: Annotated[
+        Optional[List[UploadFile]], File(description="Upload documents")
+    ] = None,
     db: AsyncSession = Depends(get_db),
 ):
 
     if is_current and end_date:
-        raise HTTPException(
-            status_code=400,
-            detail="Current job cannot have end date"
-        )
+        raise HTTPException(status_code=400, detail="Current job cannot have end date")
 
     if is_current and notice_period_days is None:
         raise HTTPException(
-            status_code=400,
-            detail="Notice period required for current job"
+            status_code=400, detail="Notice period required for current job"
         )
 
-    if files and len(doc_types) != len(files):
+    if files and doc_types and len(doc_types) != len(files):
         raise HTTPException(
-            status_code=400,
-            detail="doc_types and files count must match"
+            status_code=400, detail="doc_types and files count must match"
         )
     # ADD HERE
     if start_date > date.today():
         raise HTTPException(
-            status_code=400,
-            detail="Start date cannot be in the future"
+            status_code=400, detail="Start date cannot be in the future"
         )
 
     if end_date and end_date < start_date:
         raise HTTPException(
-            status_code=400,
-            detail="End date cannot be before start date"
+            status_code=400, detail="End date cannot be before start date"
         )
 
     service = EmployeeExperienceService(db)
@@ -202,7 +193,7 @@ async def update_experience(
         end_date,
         is_current,
         notice_period_days,
-        doc_types,
+        doc_types or [],
         files,
     )
 
@@ -220,8 +211,7 @@ async def update_experience_certificate(
         service = EmployeeExperienceService(db)
 
         result = await service.update_experience_certificate(
-            experience_uuid=experience_uuid,
-            file=file
+            experience_uuid=experience_uuid, file=file
         )
 
         return ExperienceCreateResponse(
@@ -246,7 +236,7 @@ async def delete_experience(experience_uuid: str, db: AsyncSession = Depends(get
 
         return ExperienceCreateResponse(
             experience_uuid=result.experience_uuid,
-            message="Experience record deleted successfully"
+            message="Experience record deleted successfully",
         )
 
     except HTTPException as he:

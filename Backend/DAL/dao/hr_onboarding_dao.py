@@ -1,7 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.mysql import insert
-from sqlalchemy.orm import aliased
 from sqlalchemy import update
 from datetime import datetime
 import time
@@ -22,54 +21,47 @@ from ...DAL.models.models import (
     EducationDocumentType,
     EmployeeExperience,
     OfferApprovalRequest,
-    OfferApprovalAction,
     RelationMaster,
     DegreeMaster,
     EmployeeBankDetails,
     EmployeePfDetails,
-    
 )
 from sqlalchemy.orm import noload
+
 
 class HrOnboardingDAO:
     def __init__(self, db: AsyncSession):
         self.db = db
+
     def build_experience_documents(e):
         documents = []
 
         if e.exp_certificate_path:
-            documents.append({
-                "doc_type": "exp_certificate",
-                "file_path": e.exp_certificate_path
-            })
+            documents.append(
+                {"doc_type": "exp_certificate", "file_path": e.exp_certificate_path}
+            )
 
         if e.payslip_path:
-            documents.append({
-                "doc_type": "payslip",
-                "file_path": e.payslip_path
-            })
+            documents.append({"doc_type": "payslip", "file_path": e.payslip_path})
 
         if e.internship_certificate_path:
-            documents.append({
-                "doc_type": "internship_certificate",
-                "file_path": e.internship_certificate_path
-            })
+            documents.append(
+                {
+                    "doc_type": "internship_certificate",
+                    "file_path": e.internship_certificate_path,
+                }
+            )
 
         if e.contract_aggrement_path:
-            documents.append({
-                "doc_type": "contract_aggrement",
-                "file_path": e.contract_aggrement_path
-            })
+            documents.append(
+                {
+                    "doc_type": "contract_aggrement",
+                    "file_path": e.contract_aggrement_path,
+                }
+            )
 
         return documents
 
-
-
-        
-
-
-
-        
     # =================================================
     # =============== CREATE METHODS ==================
     # =================================================
@@ -122,18 +114,18 @@ class HrOnboardingDAO:
         )
         await self.db.execute(stmt)
 
-# -------------------------------------------
+    # -------------------------------------------
     # helper: run query in its own DB connection
     # -------------------------------------------
     async def _fetch(self, stmt):
         async with AsyncSessionLocal() as s:
             res = await s.execute(stmt)
             return res
+
     # -------------------------------------------------
     # OFFER / BASIC USER DETAILS
     # -------------------------------------------------
-    
-    
+
     async def get_full_onboarding_details(self, user_uuid: str, current_user_id: int):
 
         TOTAL_START = time.time()
@@ -149,11 +141,9 @@ class HrOnboardingDAO:
                 .join(
                     PersonalDetails,
                     PersonalDetails.user_uuid == OfferLetterDetails.user_uuid,
-                    isouter=True
+                    isouter=True,
                 )
-                .where(
-                    OfferLetterDetails.user_uuid == user_uuid
-                )
+                .where(OfferLetterDetails.user_uuid == user_uuid)
             )
             row = res.first()
 
@@ -204,6 +194,7 @@ class HrOnboardingDAO:
                     .where(EmployeeExperience.employee_uuid == user_uuid)
                 )
                 return r.scalars().all()
+
         async def fetch_bank_details():
             async with AsyncSessionLocal() as s:
                 r = await s.execute(
@@ -213,7 +204,6 @@ class HrOnboardingDAO:
                 )
                 return r.scalar_one_or_none()
 
-
         async def fetch_pf_details():
             async with AsyncSessionLocal() as s:
                 r = await s.execute(
@@ -222,21 +212,29 @@ class HrOnboardingDAO:
                     .where(EmployeePfDetails.user_uuid == user_uuid)
                 )
                 return r.scalar_one_or_none()
-        address_rows, identity_rows, education_rows, experience_rows, bank_row, pf_row = await asyncio.gather(
+
+        (
+            address_rows,
+            identity_rows,
+            education_rows,
+            experience_rows,
+            bank_row,
+            pf_row,
+        ) = await asyncio.gather(
             fetch_addresses(),
             fetch_identity(),
             fetch_education(),
             fetch_experience(),
             fetch_bank_details(),
-            fetch_pf_details()
-)
+            fetch_pf_details(),
+        )
 
         print("Q1–Q4 parallel:", round(time.time() - t, 3), "s")
 
         # ==================================================
         # Q5: LOOKUPS
         # ==================================================
-        
+
         t = time.time()
         async with AsyncSessionLocal() as s:
 
@@ -277,7 +275,7 @@ class HrOnboardingDAO:
                         .where(RelationMaster.relation_uuid.in_(relation_uuids))
                     )
                     relation = {
-                        rel.relation_uuid: rel.relation_name
+                        rel.relation_uuid: rel.relation_name  # type: ignore[attr-defined]
                         for rel in r.scalars().all()
                     }
                 except Exception as e:
@@ -286,9 +284,9 @@ class HrOnboardingDAO:
 
             # degree mapping
             degree_uuids = set()
-            for e in education_rows:
-                if e.degree_uuid:
-                    degree_uuids.add(e.degree_uuid)
+            for edu_row in education_rows:
+                if edu_row.degree_uuid:
+                    degree_uuids.add(edu_row.degree_uuid)
             degree = {}
             if degree_uuids:
                 r = await s.execute(
@@ -296,7 +294,7 @@ class HrOnboardingDAO:
                     .options(noload("*"))
                     .where(DegreeMaster.degree_uuid.in_(degree_uuids))
                 )
-                degree = {d.degree_uuid: d.degree_name for d in r.scalars().all()}
+                degree = {d.degree_uuid: d.degree_name for d in r.scalars().all()}  # type: ignore[attr-defined]
 
             # -------- Identity Mapping --------
             identity_map = {}
@@ -309,11 +307,12 @@ class HrOnboardingDAO:
                     .options(noload("*"))
                     .join(
                         IdentityType,
-                        IdentityType.identity_type_uuid == CountryIdentityMapping.identity_type_uuid
+                        IdentityType.identity_type_uuid
+                        == CountryIdentityMapping.identity_type_uuid,
                     )
                     .join(
                         Countries,
-                        Countries.country_uuid == CountryIdentityMapping.country_uuid
+                        Countries.country_uuid == CountryIdentityMapping.country_uuid,
                     )
                     .where(CountryIdentityMapping.mapping_uuid.in_(identity_ids))
                 )
@@ -321,7 +320,7 @@ class HrOnboardingDAO:
                 for m, it, c in r.all():
                     identity_map[m.mapping_uuid] = {
                         "identity_type": it.identity_type_name,
-                        "country": c.country_name
+                        "country": c.country_name,
                     }
 
             # -------- Education Mapping --------
@@ -334,17 +333,18 @@ class HrOnboardingDAO:
                     select(
                         CountryEducationDocumentMapping,
                         EducationLevel,
-                        EducationDocumentType
+                        EducationDocumentType,
                     )
                     .options(noload("*"))
                     .join(
                         EducationLevel,
-                        EducationLevel.education_uuid == CountryEducationDocumentMapping.education_uuid
+                        EducationLevel.education_uuid
+                        == CountryEducationDocumentMapping.education_uuid,
                     )
                     .join(
                         EducationDocumentType,
                         EducationDocumentType.education_document_uuid
-                        == CountryEducationDocumentMapping.education_document_uuid
+                        == CountryEducationDocumentMapping.education_document_uuid,
                     )
                     .where(CountryEducationDocumentMapping.mapping_uuid.in_(edu_ids))
                 )
@@ -353,7 +353,7 @@ class HrOnboardingDAO:
                     edu_map[m.mapping_uuid] = {
                         "education_level": lvl.education_name,
                         "document_name": doc.document_name,
-                        "mandatory": bool(m.is_mandatory)
+                        "mandatory": bool(m.is_mandatory),
                     }
 
         print("Q5 lookups:", round(time.time() - t, 3), "s")
@@ -392,7 +392,9 @@ class HrOnboardingDAO:
                 "emergency_contact_name": personal_row.emergency_contact_name,
                 "emergency_contact_phone": personal_row.emergency_contact_phone,
                 "emergency_contact_relation_uuid": personal_row.emergency_contact_relation_uuid,
-                "emergency_contact_relation": relation.get(personal_row.emergency_contact_relation_uuid),
+                "emergency_contact_relation": relation.get(
+                    personal_row.emergency_contact_relation_uuid
+                ),
             }
 
         # -------- Addresses --------
@@ -408,7 +410,7 @@ class HrOnboardingDAO:
                 "state_or_region": a.state_or_region,
                 "postal_code": a.postal_code,
                 "country_uuid": a.country_uuid,
-                "country": countries.get(a.country_uuid)
+                "country": countries.get(a.country_uuid),
             }
             for a in address_rows
         ]
@@ -419,7 +421,9 @@ class HrOnboardingDAO:
                 "document_uuid": d.document_uuid,
                 "mapping_uuid": d.mapping_uuid,
                 "user_uuid": d.user_uuid,
-                "identity_type": identity_map.get(d.mapping_uuid, {}).get("identity_type"),
+                "identity_type": identity_map.get(d.mapping_uuid, {}).get(
+                    "identity_type"
+                ),
                 "identity_file_number": d.identity_file_number,
                 "country": identity_map.get(d.mapping_uuid, {}).get("country"),
                 "expiry_date": d.expiry_date,
@@ -437,7 +441,9 @@ class HrOnboardingDAO:
                 "document_uuid": d.document_uuid,
                 "mapping_uuid": d.mapping_uuid,
                 "user_uuid": d.user_uuid,
-                "education_level": edu_map.get(d.mapping_uuid, {}).get("education_level"),
+                "education_level": edu_map.get(d.mapping_uuid, {}).get(
+                    "education_level"
+                ),
                 "document_name": edu_map.get(d.mapping_uuid, {}).get("document_name"),
                 "mandatory": edu_map.get(d.mapping_uuid, {}).get("mandatory"),
                 "degree_uuid": d.degree_uuid,
@@ -487,16 +493,16 @@ class HrOnboardingDAO:
                 "branch_name": bank_row.branch_name,
                 "account_number": bank_row.account_number,
                 "ifsc_code": bank_row.ifsc_code,
-                "account_type": bank_row.account_type
+                "account_type": bank_row.account_type,
             }
 
-# -------- PF Details --------
+        # -------- PF Details --------
         pf_details = None
         if pf_row:
             pf_details = {
                 "user_uuid": pf_row.user_uuid,
                 "pf_member": pf_row.pf_member,
-                "uan_number": pf_row.uan_number
+                "uan_number": pf_row.uan_number,
             }
 
         print("BUILD:", round(time.time() - t, 3), "s")
@@ -510,7 +516,7 @@ class HrOnboardingDAO:
             "education_documents": education_docs,
             "experience": experience,
             "bank_details": bank_details,
-            "pf_details": pf_details
+            "pf_details": pf_details,
         }
 
     async def identity_and_education_document_exists(self, table_name, file_path):
@@ -532,26 +538,24 @@ class HrOnboardingDAO:
             return document is not None
         else:
             return False
-    
+
     async def experience_document_exists(self, table_name, col_name, filepath):
         if table_name == "experience_documents":
-            stmt = select(EmployeeExperience).where(getattr(EmployeeExperience, col_name) == filepath)
-            
+            stmt = select(EmployeeExperience).where(
+                getattr(EmployeeExperience, col_name) == filepath
+            )
+
             res = await self.db.execute(stmt)
             document = res.scalar_one_or_none()
             return document is not None
         else:
             return False
-        
 
     # =================================================
     # HR VERIFY / REJECT PROFILE
     # =================================================
     async def update_hr_verification_status(
-        self,
-        user_uuid: str,
-        status: str,
-        verified_by: int
+        self, user_uuid: str, status: str, verified_by: int
     ) -> bool:
         """
         Update HR verification status for an employee
@@ -563,50 +567,56 @@ class HrOnboardingDAO:
             .values(
                 hr_verification_status=status,
                 verified_by=verified_by,
-                verified_at=datetime.utcnow()
+                verified_at=datetime.utcnow(),
             )
         )
 
         result = await self.db.execute(stmt)
 
-        return result.rowcount > 0
-    
+        return result.rowcount > 0  # type: ignore[attr-defined]
+
     async def final_submit_onboarding(self, user_uuid):
         stmt = (
             update(OfferLetterDetails)
             .where(OfferLetterDetails.user_uuid == user_uuid)
-            .values(
-                status="Submitted"
-            )
+            .values(status="Submitted")
         )
 
         result = await self.db.execute(stmt)
         await self.db.commit()
 
-        return result.rowcount > 0
-    
+        return result.rowcount > 0  # type: ignore[attr-defined]
+
     async def get_personal_details_by_uuid(self, user_uuid):
-        stmt = select(PersonalDetails.user_uuid).where(PersonalDetails.user_uuid == user_uuid)
+        stmt = select(PersonalDetails.user_uuid).where(
+            PersonalDetails.user_uuid == user_uuid
+        )
         result = await self.db.execute(stmt)
         return result.scalars().first()
-    
+
     async def get_address_details_by_uuid(self, user_uuid):
         stmt = select(Addresses.user_uuid).where(Addresses.user_uuid == user_uuid)
         result = await self.db.execute(stmt)
         return result.scalars().first()
-    
+
     async def get_identity_details_by_uuid(self, user_uuid):
-        stmt = select(EmployeeIdentityDocument.user_uuid).where(EmployeeIdentityDocument.user_uuid == user_uuid)
+        stmt = select(EmployeeIdentityDocument.user_uuid).where(
+            EmployeeIdentityDocument.user_uuid == user_uuid
+        )
         result = await self.db.execute(stmt)
         return result.scalars().first()
-    
+
     async def get_education_details_by_uuid(self, user_uuid):
-        stmt = select(EmployeeEducationDocument.user_uuid).where(EmployeeEducationDocument.user_uuid == user_uuid)
+        stmt = select(EmployeeEducationDocument.user_uuid).where(
+            EmployeeEducationDocument.user_uuid == user_uuid
+        )
         result = await self.db.execute(stmt)
         return result.scalars().first()
-    
+
     async def get_experience_details_by_uuid(self, user_uuid):
-        stmt = select(EmployeeExperience.employee_uuid).where(EmployeeExperience.employee_uuid == user_uuid)
+        stmt = select(EmployeeExperience.employee_uuid).where(
+            EmployeeExperience.employee_uuid == user_uuid
+        )
         result = await self.db.execute(stmt)
         return result.scalars().first()
 
@@ -617,7 +627,7 @@ class HrOnboardingDAO:
         doc_type: str,
         status: str,
         remarks: str,
-        verified_by: int
+        verified_by: int,
     ):
 
         model_map = {
@@ -627,7 +637,7 @@ class HrOnboardingDAO:
             "identity": EmployeeIdentityDocument,
             "experience": EmployeeExperience,
             "bank": EmployeeBankDetails,
-            "pf": EmployeePfDetails
+            "pf": EmployeePfDetails,
         }
 
         model = model_map.get(doc_type)
@@ -644,7 +654,7 @@ class HrOnboardingDAO:
                 raise Exception("user_uuid is required")
 
             result = await self.db.execute(
-                select(model).where(model.user_uuid == user_uuid)
+                select(model).where(model.user_uuid == user_uuid)  # type: ignore[attr-defined]
             )
 
             doc = result.scalar()
@@ -668,7 +678,7 @@ class HrOnboardingDAO:
             if not doc:
                 raise Exception("Experience not found")
 
-            doc.status = status
+            doc.status = status  # type: ignore[attr-defined]
 
             if hasattr(doc, "verified_by"):
                 doc.verified_by = verified_by
@@ -688,7 +698,7 @@ class HrOnboardingDAO:
                 raise Exception("document_uuid is required")
 
             result = await self.db.execute(
-                select(model).where(model.document_uuid == document_uuid)
+                select(model).where(model.document_uuid == document_uuid)  # type: ignore[attr-defined]
             )
 
             doc = result.scalar()
@@ -699,7 +709,7 @@ class HrOnboardingDAO:
         if not doc:
             raise Exception("Record not found")
 
-        doc.status = status
+        doc.status = status  # type: ignore[attr-defined]
 
         if hasattr(doc, "remarks") and remarks:
             doc.remarks = remarks

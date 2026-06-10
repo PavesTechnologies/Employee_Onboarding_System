@@ -1,14 +1,6 @@
 from pydantic import BaseModel
-from typing import List
 
 # Import existing interfaces (DO NOT DUPLICATE)
-from .employee_details_interfaces import (
-    PersonalDetailsRequest,
-    CreateAddressRequest,
-)
-
-from .education_interfaces import EmployeEduDocDetails
-from .employee_experience_interfaces import ExperienceCreateRequest
 
 
 class IdentityDocumentSubmit(BaseModel):

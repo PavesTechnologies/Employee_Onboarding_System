@@ -1,9 +1,12 @@
 from pydantic import BaseModel
 from typing import Optional
+
+
 class OfferApproveActionRequest(BaseModel):
     user_uuid: str
     action: str  # e.g., "approve" or "reject"
     comments: str | None = None
+
 
 class OfferApproveActionResponse(BaseModel):
     id: int
@@ -16,5 +19,3 @@ class OfferApproveActionResponse(BaseModel):
     mail: str
     designation: str
     action: str
-
-    

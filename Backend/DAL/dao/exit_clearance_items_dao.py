@@ -1,9 +1,10 @@
 from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
 from Backend.Business_Layer.utils.uuid_generator import generate_uuid7
 from Backend.DAL.models.models import ExitClearanceItems, EmployeeExit, ExitClearance
 
 from datetime import datetime
+
+
 class ExitClearanceItemsDAO:
 
     async def create_items(self, db, clearance_uuid, item_name):
@@ -11,7 +12,7 @@ class ExitClearanceItemsDAO:
             new_item = ExitClearanceItems(
                 clearance_item_uuid=str(generate_uuid7()),
                 clearance_uuid=clearance_uuid,
-                item_name=item_name
+                item_name=item_name,
             )
             db.add(new_item)
             await db.commit()
@@ -36,7 +37,6 @@ class ExitClearanceItemsDAO:
         except Exception as e:
             raise Exception(str(e))
 
-
     async def update_item(self, db, data):
 
         try:
@@ -60,7 +60,7 @@ class ExitClearanceItemsDAO:
             # Step 1: Check all items completed
             query = select(ExitClearanceItems).where(
                 ExitClearanceItems.clearance_uuid == item.clearance_uuid,
-                ExitClearanceItems.status != "Completed"
+                ExitClearanceItems.status != "Completed",
             )
 
             result = await db.execute(query)
@@ -86,7 +86,7 @@ class ExitClearanceItemsDAO:
                 # Step 3: Check all department clearances
                 query = select(ExitClearance).where(
                     ExitClearance.exit_uuid == clearance.exit_uuid,
-                    ExitClearance.status != "Approved"
+                    ExitClearance.status != "Approved",
                 )
 
                 result = await db.execute(query)
@@ -112,6 +112,7 @@ class ExitClearanceItemsDAO:
         except Exception as e:
             await db.rollback()
             raise Exception(str(e))
+
     async def get_all_items(self, db):
         try:
             query = select(ExitClearanceItems)

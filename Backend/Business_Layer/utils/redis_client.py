@@ -7,6 +7,7 @@ REDIS_URL = get_env_var("REDIS_URL")
 _redis_client = None
 _redis_available = True
 
+
 def get_redis_client():
     """
     Returns a connected synchronous Redis client.
@@ -14,11 +15,11 @@ def get_redis_client():
     Returns None if Redis is unavailable (no delays).
     """
     global _redis_client, _redis_available
-    
+
     # If we already know Redis is unavailable, return immediately
     if not _redis_available:
         return None
-    
+
     if _redis_client is None:
         try:
             # Parse Redis URL or use defaults
@@ -27,7 +28,7 @@ def get_redis_client():
                 decode_responses=True,
                 socket_connect_timeout=1,  # Quick timeout
                 socket_timeout=1,
-                retry_on_timeout=False
+                retry_on_timeout=False,
             )
             # Test connection
             _redis_client.ping()
@@ -37,8 +38,9 @@ def get_redis_client():
             _redis_available = False
             _redis_client = None
             return None
-    
+
     return _redis_client
+
 
 def close_redis_client():
     """Close Redis connection"""

@@ -17,45 +17,30 @@ class PermanentEmployeeDetailsDAO:
     async def get_last_employee(self, db: AsyncSession):
 
         result = await db.execute(
-            select(func.max(cast(EmployeeDetails.employee_id, Integer)))
-            .where(EmployeeDetails.employee_id.isnot(None))
+            select(func.max(cast(EmployeeDetails.employee_id, Integer))).where(
+                EmployeeDetails.employee_id.isnot(None)
+            )
         )
 
         return result.scalar()
 
-    async def get_employee_by_user_uuid(
-        self,
-        db: AsyncSession,
-        user_uuid: str
-    ):
+    async def get_employee_by_user_uuid(self, db: AsyncSession, user_uuid: str):
 
         result = await db.execute(
-            select(EmployeeDetails).where(
-                EmployeeDetails.user_uuid == user_uuid
-            )
+            select(EmployeeDetails).where(EmployeeDetails.user_uuid == user_uuid)
         )
 
         return result.scalars().first()
 
-    async def get_employee_by_email(
-        self,
-        db: AsyncSession,
-        email: str
-    ):
+    async def get_employee_by_email(self, db: AsyncSession, email: str):
 
         result = await db.execute(
-            select(EmployeeDetails).where(
-                EmployeeDetails.work_email == email
-            )
+            select(EmployeeDetails).where(EmployeeDetails.work_email == email)
         )
 
         return result.scalars().first()
 
-    async def get_employee_by_manager_value(
-        self,
-        db: AsyncSession,
-        reporting_manager
-    ):
+    async def get_employee_by_manager_value(self, db: AsyncSession, reporting_manager):
 
         if reporting_manager is None:
             return None
@@ -66,48 +51,31 @@ class PermanentEmployeeDetailsDAO:
             return None
 
         filters = [
-
             EmployeeDetails.employee_id == manager_value,
-
             EmployeeDetails.employee_uuid == manager_value,
-
             EmployeeDetails.user_uuid == manager_value,
-
+            func.trim(
+                func.concat(EmployeeDetails.first_name, " ", EmployeeDetails.last_name)
+            )
+            == manager_value,
             func.trim(
                 func.concat(
                     EmployeeDetails.first_name,
                     " ",
-                    EmployeeDetails.last_name
-                )
-            ) == manager_value,
-
-            func.trim(
-                func.concat(
-                    EmployeeDetails.first_name,
+                    func.coalesce(EmployeeDetails.middle_name, ""),
                     " ",
-                    func.coalesce(
-                        EmployeeDetails.middle_name,
-                        ""
-                    ),
-                    " ",
-                    EmployeeDetails.last_name
+                    EmployeeDetails.last_name,
                 )
-            ) == manager_value
+            )
+            == manager_value,
         ]
 
         if manager_value.isdigit():
-            filters.insert(
-                0,
-                EmployeeDetails.id == int(manager_value)
-            )
+            filters.insert(0, EmployeeDetails.id == int(manager_value))
 
         for filter_condition in filters:
 
-            result = await db.execute(
-                select(EmployeeDetails).where(
-                    filter_condition
-                )
-            )
+            result = await db.execute(select(EmployeeDetails).where(filter_condition))
 
             employee = result.scalars().first()
 
@@ -120,11 +88,7 @@ class PermanentEmployeeDetailsDAO:
     # CREATE EMPLOYEE
     # =====================================================
 
-    async def create_employee(
-        self,
-        db: AsyncSession,
-        employee: EmployeeDetails
-    ):
+    async def create_employee(self, db: AsyncSession, employee: EmployeeDetails):
 
         db.add(employee)
 
@@ -138,11 +102,7 @@ class PermanentEmployeeDetailsDAO:
     # GET EMPLOYEE
     # =====================================================
 
-    async def get_employee_by_uuid(
-        self,
-        db: AsyncSession,
-        employee_uuid: str
-    ):
+    async def get_employee_by_uuid(self, db: AsyncSession, employee_uuid: str):
 
         result = await db.execute(
             select(EmployeeDetails).where(
@@ -156,11 +116,7 @@ class PermanentEmployeeDetailsDAO:
     # UPDATE EMPLOYEE
     # =====================================================
 
-    async def update_employee(
-        self,
-        db: AsyncSession,
-        employee: EmployeeDetails
-    ):
+    async def update_employee(self, db: AsyncSession, employee: EmployeeDetails):
 
         await db.flush()
 
@@ -172,52 +128,29 @@ class PermanentEmployeeDetailsDAO:
     # GET ALL EMPLOYEES
     # =====================================================
 
-    async def get_all_employees(
-        self,
-        db: AsyncSession
-    ):
+    async def get_all_employees(self, db: AsyncSession):
 
         query = select(
-
             EmployeeDetails.user_uuid,
-
             EmployeeDetails.employee_uuid,
-
             EmployeeDetails.employee_id,
-
             EmployeeDetails.first_name,
-
             EmployeeDetails.middle_name,
-
             EmployeeDetails.last_name,
-
             EmployeeDetails.date_of_birth,
-
             EmployeeDetails.work_email,
-
             EmployeeDetails.contact_number,
-
             EmployeeDetails.department_uuid,
-
             EmployeeDetails.designation_uuid,
-
             EmployeeDetails.reporting_manager_uuid,
-
             EmployeeDetails.employment_type,
-
             EmployeeDetails.joining_date,
-
             EmployeeDetails.location,
-
             EmployeeDetails.work_mode,
-
             EmployeeDetails.employment_status,
-
             EmployeeDetails.blood_group,
-
             EmployeeDetails.gender,
-
-            EmployeeDetails.marital_status
+            EmployeeDetails.marital_status,
         )
 
         result = await db.execute(query)
@@ -228,16 +161,9 @@ class PermanentEmployeeDetailsDAO:
     # DELETE EMPLOYEE
     # =====================================================
 
-    async def delete_employee(
-        self,
-        db: AsyncSession,
-        employee_uuid: str
-    ):
+    async def delete_employee(self, db: AsyncSession, employee_uuid: str):
 
-        employee = await self.get_employee_by_uuid(
-            db,
-            employee_uuid
-        )
+        employee = await self.get_employee_by_uuid(db, employee_uuid)
 
         if not employee:
             raise ValueError("Employee not found")
@@ -250,33 +176,20 @@ class PermanentEmployeeDetailsDAO:
     # DUPLICATE VALIDATIONS
     # =====================================================
 
-    async def check_employee_id_exists(
-        self,
-        db,
-        employee_id
-    ):
+    async def check_employee_id_exists(self, db, employee_id):
 
         query = text("""
             SELECT employee_id
             FROM employee_details
-            WHERE employee_id = :employee_id
+            WHERE employee_id = employee_id
             LIMIT 1
         """)
 
-        result = await db.execute(
-            query,
-            {
-                "employee_id": employee_id
-            }
-        )
+        result = await db.execute(query, {"employee_id": employee_id})
 
         return result.scalar() is not None
 
-    async def check_work_email_exists(
-        self,
-        db,
-        work_email
-    ):
+    async def check_work_email_exists(self, db, work_email):
 
         query = text("""
             SELECT work_email
@@ -292,12 +205,7 @@ class PermanentEmployeeDetailsDAO:
             LIMIT 1
         """)
 
-        result = await db.execute(
-            query,
-            {
-                "work_email": work_email
-            }
-        )
+        result = await db.execute(query, {"work_email": work_email})
 
         return result.scalar() is not None
 
@@ -317,11 +225,7 @@ class PermanentEmployeeDetailsDAO:
 
         return result.fetchall()
 
-    async def get_department_uuid(
-        self,
-        db,
-        department_name
-    ):
+    async def get_department_uuid(self, db, department_name):
 
         query = text("""
             SELECT department_uuid
@@ -329,12 +233,7 @@ class PermanentEmployeeDetailsDAO:
             WHERE department_name = :name
         """)
 
-        result = await db.execute(
-            query,
-            {
-                "name": department_name
-            }
-        )
+        result = await db.execute(query, {"name": department_name})
 
         return result.scalar()
 
@@ -356,11 +255,7 @@ class PermanentEmployeeDetailsDAO:
 
         return result.fetchall()
 
-    async def get_designation_uuid(
-        self,
-        db,
-        designation_name
-    ):
+    async def get_designation_uuid(self, db, designation_name):
 
         query = text("""
             SELECT designation_uuid
@@ -368,12 +263,7 @@ class PermanentEmployeeDetailsDAO:
             WHERE designation_name = :name
         """)
 
-        result = await db.execute(
-            query,
-            {
-                "name": designation_name
-            }
-        )
+        result = await db.execute(query, {"name": designation_name})
 
         return result.scalar()
 
@@ -395,18 +285,12 @@ class PermanentEmployeeDetailsDAO:
 
         return [row[0] for row in result.fetchall()]
 
-    async def get_country_uuid_by_calling_code(
-        self,
-        db,
-        calling_code
-    ):
+    async def get_country_uuid_by_calling_code(self, db, calling_code):
 
         if not calling_code:
             return None
 
-        cleaned_code = str(calling_code)\
-            .replace("+", "")\
-            .strip()
+        cleaned_code = str(calling_code).replace("+", "").strip()
 
         query = text("""
             SELECT country_uuid
@@ -416,12 +300,7 @@ class PermanentEmployeeDetailsDAO:
             LIMIT 1
         """)
 
-        result = await db.execute(
-            query,
-            {
-                "calling_code": cleaned_code
-            }
-        )
+        result = await db.execute(query, {"calling_code": cleaned_code})
 
         return result.scalar()
 
@@ -450,12 +329,7 @@ class PermanentEmployeeDetailsDAO:
     # =====================================================
 
     async def insert_offer_letter(
-        self,
-        db,
-        row,
-        user_uuid,
-        uploaded_by,
-        reporting_manager_employee_id
+        self, db, row, user_uuid, uploaded_by, reporting_manager_employee_id
     ):
 
         query = text("""
@@ -504,38 +378,21 @@ class PermanentEmployeeDetailsDAO:
         """)
 
         values = {
-
             "user_uuid": user_uuid,
-
             "first_name": row.get("first_name"),
-
             "middle_name": row.get("middle_name"),
-
             "last_name": row.get("last_name"),
-
             "mail": row.get("mail"),
-
             "country_code": row.get("country_code"),
-
             "contact_number": row.get("contact_number"),
-
             "designation": row.get("designation"),
-
             "cc_emails": row.get("cc_emails"),
-
             "employee_type": row.get("employee_type"),
-
             "joining_date": row.get("joining_date"),
-
             "job_id": row.get("job_id"),
-
             "total_ctc": row.get("total_ctc"),
-
             "currency": row.get("currency"),
-
-            "reporting_manager":
-                reporting_manager_employee_id,
-
+            "reporting_manager": reporting_manager_employee_id,
             "created_by": uploaded_by,
         }
 
@@ -556,7 +413,7 @@ class PermanentEmployeeDetailsDAO:
         department_uuid,
         designation_uuid,
         reporting_manager_employee_id,
-        uploaded_by
+        uploaded_by,
     ):
 
         query = text("""
@@ -611,54 +468,27 @@ class PermanentEmployeeDetailsDAO:
         """)
 
         values = {
-
             "employee_uuid": employee_uuid,
-
             "user_uuid": user_uuid,
-
             "employee_id": employee_id,
-
             "first_name": row.get("first_name"),
-
             "middle_name": row.get("middle_name"),
-
             "last_name": row.get("last_name"),
-
             "date_of_birth": row.get("date_of_birth"),
-
             "work_email": work_email,
-
             "contact_number": row.get("contact_number"),
-
             "department_uuid": department_uuid,
-
             "designation_uuid": designation_uuid,
-
-            "reporting_manager_uuid":
-                reporting_manager_employee_id,
-
-            "employment_type":
-                row.get("employment_type"),
-
+            "reporting_manager_uuid": reporting_manager_employee_id,
+            "employment_type": row.get("employment_type"),
             "joining_date": row.get("joining_date"),
-
             "location": row.get("location"),
-
             "work_mode": row.get("work_mode"),
-
-            "employment_status":
-                row.get("employment_status"),
-
+            "employment_status": row.get("employment_status"),
             "blood_group": row.get("blood_group"),
-
             "gender": row.get("gender"),
-
-            "marital_status":
-                row.get("marital_status"),
-
-            "total_experience":
-                row.get("total_experience"),
-
+            "marital_status": row.get("marital_status"),
+            "total_experience": row.get("total_experience"),
             "created_by": uploaded_by,
         }
 
@@ -668,13 +498,7 @@ class PermanentEmployeeDetailsDAO:
     # PERSONAL DETAILS
     # =====================================================
 
-    async def insert_personal_details(
-        self,
-        db,
-        personal_uuid,
-        user_uuid,
-        row
-    ):
+    async def insert_personal_details(self, db, personal_uuid, user_uuid, row):
 
         query = text("""
             INSERT INTO personal_details (
@@ -712,21 +536,12 @@ class PermanentEmployeeDetailsDAO:
         """)
 
         values = {
-
             "personal_uuid": personal_uuid,
-
             "user_uuid": user_uuid,
-
-            "date_of_birth":
-                row.get("date_of_birth"),
-
+            "date_of_birth": row.get("date_of_birth"),
             "gender": row.get("gender"),
-
-            "marital_status":
-                row.get("marital_status"),
-
-            "blood_group":
-                row.get("blood_group"),
+            "marital_status": row.get("marital_status"),
+            "blood_group": row.get("blood_group"),
         }
 
         await db.execute(query, values)
@@ -735,12 +550,7 @@ class PermanentEmployeeDetailsDAO:
     # BANK DETAILS
     # =====================================================
 
-    async def insert_bank_details(
-        self,
-        db,
-        bank_uuid,
-        user_uuid
-    ):
+    async def insert_bank_details(self, db, bank_uuid, user_uuid):
 
         query = text("""
             INSERT INTO employee_bank_details (
@@ -780,12 +590,7 @@ class PermanentEmployeeDetailsDAO:
     # PF DETAILS
     # =====================================================
 
-    async def insert_pf_details(
-        self,
-        db,
-        pf_uuid,
-        user_uuid
-    ):
+    async def insert_pf_details(self, db, pf_uuid, user_uuid):
 
         query = text("""
             INSERT INTO employee_pf_details (
@@ -818,12 +623,7 @@ class PermanentEmployeeDetailsDAO:
     # =====================================================
 
     async def insert_address(
-        self,
-        db,
-        address_uuid,
-        user_uuid,
-        address_type,
-        country_uuid
+        self, db, address_uuid, user_uuid, address_type, country_uuid
     ):
 
         query = text("""
@@ -860,13 +660,9 @@ class PermanentEmployeeDetailsDAO:
         """)
 
         values = {
-
             "address_uuid": address_uuid,
-
             "user_uuid": user_uuid,
-
             "address_type": address_type,
-
             "country_uuid": country_uuid,
         }
 

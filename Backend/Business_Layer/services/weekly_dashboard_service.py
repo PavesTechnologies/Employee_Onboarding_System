@@ -17,23 +17,21 @@ async def get_dashboard_data(db, start_date: date, end_date: date):
         update(OfferLetterDetails)
         .where(
             OfferLetterDetails.joining_date < today,
-            OfferLetterDetails.status == "Joining"
+            OfferLetterDetails.status == "Joining",
         )
         .values(status="Joining Pending")
     )
     await db.commit()
 
     # ================= SUMMARY =================
-    summary = {
-        "selected": 0,
-        "offersMade": 0,
-        "joined": 0,
-        "dropOffs": 0,
-        "pending": 0
-    }
+    summary = {"selected": 0, "offersMade": 0, "joined": 0, "dropOffs": 0, "pending": 0}
 
-    weekly = defaultdict(lambda: {"completed": 0, "joining": 0})
-    monthly = defaultdict(lambda: {"completed": 0, "joining": 0})
+    weekly: dict[str, dict[str, int]] = defaultdict(
+        lambda: {"completed": 0, "joining": 0}
+    )
+    monthly: dict[str, dict[str, int]] = defaultdict(
+        lambda: {"completed": 0, "joining": 0}
+    )
     candidates = []
 
     # ================= HELPER =================
@@ -91,13 +89,15 @@ async def get_dashboard_data(db, start_date: date, end_date: date):
             monthly[label]["joining"] += 1
 
         # Table
-        candidates.append({
-            "name": f"{o.first_name} {o.last_name}",
-            "role": o.designation,
-            "department": resolve_department_name(emp, department_name),
-            "joiningDate": str(o.joining_date),
-            "status": status
-        })
+        candidates.append(
+            {
+                "name": f"{o.first_name} {o.last_name}",
+                "role": o.designation,
+                "department": resolve_department_name(emp, department_name),
+                "joiningDate": str(o.joining_date),
+                "status": status,
+            }
+        )
 
     # ================= WEEKLY OUTPUT =================
     day_order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -110,7 +110,7 @@ async def get_dashboard_data(db, start_date: date, end_date: date):
         {
             "day": day,
             "completed": weekly[day]["completed"],
-            "joining": weekly[day]["joining"]
+            "joining": weekly[day]["joining"],
         }
         for day in day_order
     ]
@@ -129,21 +129,15 @@ async def get_dashboard_data(db, start_date: date, end_date: date):
 
     monthly_output = sorted(
         [
-            {
-                "week": k,
-                "completed": v["completed"],
-                "joining": v["joining"]
-            }
+            {"week": k, "completed": v["completed"], "joining": v["joining"]}
             for k, v in monthly.items()
         ],
-        key=lambda x: datetime.strptime(x["week"].split(" - ")[0], "%b %d")
+        key=lambda x: datetime.strptime(str(x["week"]).split(" - ")[0], "%b %d"),
     )
 
     # ================= ACTIVITIES =================
     activities_sorted = sorted(
-        candidates,
-        key=lambda x: x["joiningDate"],
-        reverse=True
+        candidates, key=lambda x: x["joiningDate"], reverse=True
     )[:6]
 
     activities_output = [
@@ -158,7 +152,7 @@ async def get_dashboard_data(db, start_date: date, end_date: date):
                 )
             ),
             "type": c["status"],
-            "time": c["joiningDate"]
+            "time": c["joiningDate"],
         }
         for c in activities_sorted
     ]
@@ -169,5 +163,5 @@ async def get_dashboard_data(db, start_date: date, end_date: date):
         "monthlyJoinings": monthly_output,
         "weeklyJoinings": weekly_output,
         "joinedCandidates": candidates,
-        "activities": activities_output
+        "activities": activities_output,
     }
