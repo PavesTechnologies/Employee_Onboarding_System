@@ -1,12 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from Backend.API_Layer.utils.docusign_token_genearation_utils import generate_docusign_access_token
-from Backend.Business_Layer.services.docusign_webhook_service import DocuSignWebhookService
+from Backend.API_Layer.utils.docusign_token_genearation_utils import (
+    generate_docusign_access_token,
+)
+from Backend.Business_Layer.services.docusign_webhook_service import (
+    DocuSignWebhookService,
+)
 from Backend.DAL.utils.dependencies import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..utils.role_based import require_roles
 
 router = APIRouter()
+
+
 @router.get("/docusign/token")
 def get_docusign_token():
     """
@@ -19,15 +24,14 @@ def get_docusign_token():
         return {
             "access_token": token_data["access_token"],
             "expires_in": token_data["expires_in"],
-            "token_type": token_data.get("token_type", "Bearer")
+            "token_type": token_data.get("token_type", "Bearer"),
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.post("/webhooks/docusign")
-async def docusign_webhook(request: Request,
-            db: AsyncSession = Depends(get_db)
-            ):
+async def docusign_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     try:
         print("📩 Received DocuSign webhook")
 

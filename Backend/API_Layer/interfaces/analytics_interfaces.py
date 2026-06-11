@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 from typing import List
 
-
 # -------- COMMON --------
+
 
 class LabelValue(BaseModel):
     label: str
@@ -10,6 +10,7 @@ class LabelValue(BaseModel):
 
 
 # -------- DEMOGRAPHICS --------
+
 
 class AgeGroupStats(BaseModel):
     group: str
@@ -27,8 +28,8 @@ class DemographicsResponse(BaseModel):
 
     gender: List[LabelValue]
 
-    employmentType: List[LabelValue]   # ✅ ADDED
-    workerType: List[LabelValue]       # ✅ ADDED
+    employmentType: List[LabelValue]  # ✅ ADDED
+    workerType: List[LabelValue]  # ✅ ADDED
 
     nationality: List[LabelValue]
 
@@ -38,6 +39,7 @@ class DemographicsResponse(BaseModel):
 
 
 # -------- DEPARTMENT BASED --------
+
 
 class WorkerDeptStats(BaseModel):
     dept: str
@@ -61,6 +63,7 @@ class EmploymentDeptStats(BaseModel):
 
 
 # -------- DASHBOARD --------
+
 
 class DashboardResponse(BaseModel):
     demographics: DemographicsResponse

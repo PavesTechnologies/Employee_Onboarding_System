@@ -1,13 +1,11 @@
-from time import time
-from urllib import response
+import time
+from typing import Any
 import httpx
-from fastapi import HTTPException
 from ...config.env_loader import get_env_var
-
 
 ADMIN_USERS_API = get_env_var("ADMIN_USERS_API")
 
-_admin_cache = {"data": None, "expires": 0}
+_admin_cache: dict[str, Any] = {"data": None, "expires": 0}
 _admin_client: httpx.AsyncClient | None = None
 
 
@@ -18,11 +16,9 @@ async def get_admin_http_client():
     return _admin_client
 
 
-import time
-import httpx
-
-
-def _full_name(first_name: str | None, middle_name: str | None, last_name: str | None) -> str:
+def _full_name(
+    first_name: str | None, middle_name: str | None, last_name: str | None
+) -> str:
     parts = [first_name, middle_name, last_name]
     return " ".join(p.strip() for p in parts if p and p.strip())
 
@@ -35,7 +31,7 @@ async def fetch_admin_users_reformed(token: str) -> list[dict]:
         response = await client.get(
             ADMIN_USERS_API,
             headers={"Authorization": token},
-            params={"page": 1, "limit": 500}
+            params={"page": 1, "limit": 500},
         )
 
     data = response.json()
@@ -49,12 +45,11 @@ async def fetch_admin_users_reformed(token: str) -> list[dict]:
             "middle_name": u.get("middle_name"),
             "last_name": u.get("last_name"),
             "name": _full_name(
-                u.get("first_name"),
-                u.get("middle_name"),
-                u.get("last_name")
-            )
+                u.get("first_name"), u.get("middle_name"), u.get("last_name")
+            ),
         }
-        for u in users if u.get("is_active")
+        for u in users
+        if u.get("is_active")
     ]
 
     _admin_cache["data"] = result

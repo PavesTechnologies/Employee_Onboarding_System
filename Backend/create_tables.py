@@ -1,19 +1,18 @@
 import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
-from  DAL.models.models import Base   
+from DAL.models.models import Base
 
 
 async def create_all_tables():
-    DB_HOST = "paves-intranet-db-dev.czsgackimf7p.ap-south-1.rds.amazonaws.com"
+    DB_HOST = "paves-intranet-db-prod.czsgackimf7p.ap-south-1.rds.amazonaws.com"
     DB_PORT = "3306"
-    DB_USER = "admin_paves"
+    DB_USER = "PavesIntraProd"
     DB_NAME = "eos"
-    DB_PASSWORD = "PavesAdmin"
-    DB_DRIVER = "mysql+asyncmy"
+    DB_PASSWORD = "Paves190626"
+    DB_DRIVER = "mysql+aiomysql"
 
     DATABASE_URL = (
-        f"{DB_DRIVER}://{DB_USER}:{DB_PASSWORD}"
-        f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+        f"{DB_DRIVER}://{DB_USER}:{DB_PASSWORD}" f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
 
     engine = create_async_engine(
@@ -31,6 +30,7 @@ async def create_all_tables():
     finally:
         # Ensure all connections are closed before the event loop shuts down.
         await engine.dispose()
-    
+
+
 if __name__ == "__main__":
     asyncio.run(create_all_tables())

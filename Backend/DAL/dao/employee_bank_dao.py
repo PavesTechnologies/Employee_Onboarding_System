@@ -1,9 +1,12 @@
 from ..models.models import EmployeeBankDetails
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select
+
+
 class EmployeeBankDAO:
     def __init__(self, db: AsyncSession):
         self.db = db
+
     async def get_bank_details_by_uuid(self, bank_uuid):
         result = await self.db.execute(
             select(EmployeeBankDetails).where(
@@ -11,13 +14,18 @@ class EmployeeBankDAO:
             )
         )
         return result.scalar_one_or_none()
+
     async def get_bank_details_by_user_uuid(self, user_uuid: str):
-        query = select(EmployeeBankDetails).where(EmployeeBankDetails.user_uuid == user_uuid)
+        query = select(EmployeeBankDetails).where(
+            EmployeeBankDetails.user_uuid == user_uuid
+        )
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
+
     async def get_all_bank_details(self):
         result = await self.db.execute(select(EmployeeBankDetails))
         return result.scalars().all()
+
     async def create_bank_details(self, bank_uuid, request_data):
         bank = EmployeeBankDetails(
             bank_uuid=bank_uuid,
@@ -28,12 +36,13 @@ class EmployeeBankDAO:
             account_number=request_data.account_number,
             ifsc_code=request_data.ifsc_code,
             account_type=request_data.account_type.value,
-            status='uploaded'
+            status="uploaded",
         )
         self.db.add(bank)
         await self.db.commit()
         await self.db.refresh(bank)
         return bank
+
     async def update_bank_details(self, bank_uuid, request_data):
         result = await self.db.execute(
             select(EmployeeBankDetails).where(
@@ -52,6 +61,7 @@ class EmployeeBankDAO:
         await self.db.commit()
         await self.db.refresh(bank)
         return bank
+
     async def delete_bank_details(self, bank_uuid):
         result = await self.db.execute(
             select(EmployeeBankDetails).where(

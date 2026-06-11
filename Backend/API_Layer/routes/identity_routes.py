@@ -1,14 +1,21 @@
 import time
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.utils.dependencies import get_db
-from ..interfaces.identity_interfaces import(CountryIdentityDropdownResponse, IdentityCreateRequest, IdentityResponse, IdentityDetails,
-                                             CountryIdentityMappingDetails, CountryIdentityMappingRequest, CountryIdentityMappingResponse, EmployeeIdentityDocumentUpdateRequest, EmployeeIdentityDocumentUpdateResponse
-                                             )
+from ..interfaces.identity_interfaces import (
+    CountryIdentityDropdownResponse,
+    IdentityCreateRequest,
+    IdentityResponse,
+    IdentityDetails,
+    CountryIdentityMappingDetails,
+    CountryIdentityMappingRequest,
+    CountryIdentityMappingResponse,
+    EmployeeIdentityDocumentUpdateResponse,
+)
 from ...Business_Layer.services.identity_service import IdentityService
-from ..utils.role_based import require_roles
 
 router = APIRouter()
+
 
 @router.get("", response_model=list[IdentityDetails])
 async def get_all_identity_types(db: AsyncSession = Depends(get_db)):
@@ -20,8 +27,9 @@ async def get_all_identity_types(db: AsyncSession = Depends(get_db)):
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-@router.get("/{uuid}", response_model = IdentityDetails)
+
+
+@router.get("/{uuid}", response_model=IdentityDetails)
 async def get_identity_type_by_uuid(uuid: str, db: AsyncSession = Depends(get_db)):
     try:
         identity_service = IdentityService(db)
@@ -31,67 +39,77 @@ async def get_identity_type_by_uuid(uuid: str, db: AsyncSession = Depends(get_db
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-@router.post("", response_model = IdentityResponse)
-async def create_identity_type(request_data: IdentityCreateRequest, db: AsyncSession = Depends(get_db)):
+
+
+@router.post("", response_model=IdentityResponse)
+async def create_identity_type(
+    request_data: IdentityCreateRequest, db: AsyncSession = Depends(get_db)
+):
     try:
         identity_service = IdentityService(db)
         result = await identity_service.create_identity_type(request_data)
         return IdentityResponse(
-            identity_type_uuid = result.identity_type_uuid,
-            message = "Identity Type Created Successfully"
+            identity_type_uuid=result.identity_type_uuid,
+            message="Identity Type Created Successfully",
         )
     except HTTPException as he:
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.delete("/{uuid}", response_model = IdentityResponse)
+
+@router.delete("/{uuid}", response_model=IdentityResponse)
 async def delete_identity_type(uuid: str, db: AsyncSession = Depends(get_db)):
     try:
         identity_service = IdentityService(db)
         await identity_service.delete_identity_type(uuid)
         return IdentityResponse(
-            identity_type_uuid = uuid,
-            message = "Identity Type Deleted Successfully"
+            identity_type_uuid=uuid, message="Identity Type Deleted Successfully"
         )
     except HTTPException as he:
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.put("/{uuid}", response_model = IdentityResponse)
-async def update_identity_type(uuid: str, request_data: IdentityCreateRequest, db: AsyncSession = Depends(get_db)):
+
+@router.put("/{uuid}", response_model=IdentityResponse)
+async def update_identity_type(
+    uuid: str, request_data: IdentityCreateRequest, db: AsyncSession = Depends(get_db)
+):
     try:
         identity_service = IdentityService(db)
         await identity_service.update_identity_type(uuid, request_data)
         return IdentityResponse(
-            identity_type_uuid = uuid,
-            identity_type_name = request_data.identity_type_name,
-            message = "Identity Type Updated Successfully"
+            identity_type_uuid=uuid,
+            message="Identity Type Updated Successfully",
         )
     except HTTPException as he:
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-### Country Identity Mapping Routes ###
 
-@router.post("/country-mapping", response_model = CountryIdentityMappingResponse)
-async def create_country_identity_mapping(request_data: CountryIdentityMappingRequest, db: AsyncSession = Depends(get_db)):
+
+# Country Identity Mapping Routes #
+
+
+@router.post("/country-mapping", response_model=CountryIdentityMappingResponse)
+async def create_country_identity_mapping(
+    request_data: CountryIdentityMappingRequest, db: AsyncSession = Depends(get_db)
+):
     try:
         identity_service = IdentityService(db)
         result = await identity_service.create_country_identity_mapping(request_data)
         return CountryIdentityMappingResponse(
-            mapping_uuid = result.mapping_uuid,
-            message = "Country Identity Mapping Created Successfully"
+            mapping_uuid=result.mapping_uuid,
+            message="Country Identity Mapping Created Successfully",
         )
     except HTTPException as he:
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-@router.get("/country-mapping/", response_model = list[CountryIdentityMappingDetails])
+
+
+@router.get("/country-mapping/", response_model=list[CountryIdentityMappingDetails])
 async def get_all_country_identity_mappings(db: AsyncSession = Depends(get_db)):
     try:
         start = time.perf_counter()
@@ -103,9 +121,12 @@ async def get_all_country_identity_mappings(db: AsyncSession = Depends(get_db)):
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-@router.get("/country-mapping/{uuid}", response_model = CountryIdentityMappingDetails)
-async def get_country_identity_mapping_by_uuid(uuid: str, db: AsyncSession = Depends(get_db)):
+
+
+@router.get("/country-mapping/{uuid}", response_model=CountryIdentityMappingDetails)
+async def get_country_identity_mapping_by_uuid(
+    uuid: str, db: AsyncSession = Depends(get_db)
+):
     try:
         identity_service = IdentityService(db)
         result = await identity_service.get_country_identity_mapping_by_uuid(uuid)
@@ -114,41 +135,46 @@ async def get_country_identity_mapping_by_uuid(uuid: str, db: AsyncSession = Dep
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-@router.put("/country-mapping/{uuid}", response_model= CountryIdentityMappingResponse)
-async def update_country_identity_mapping(uuid: str, request_data: CountryIdentityMappingRequest, db: AsyncSession = Depends(get_db)):
+
+
+@router.put("/country-mapping/{uuid}", response_model=CountryIdentityMappingResponse)
+async def update_country_identity_mapping(
+    uuid: str,
+    request_data: CountryIdentityMappingRequest,
+    db: AsyncSession = Depends(get_db),
+):
     try:
         identity_service = IdentityService(db)
         await identity_service.update_country_identity_mapping(uuid, request_data)
         return CountryIdentityMappingResponse(
-            mapping_uuid = uuid,
-            message = "country Identity Mapping Updated Successfully"
+            mapping_uuid=uuid, message="country Identity Mapping Updated Successfully"
         )
     except HTTPException as he:
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-@router.delete(
-    "/country-mapping/{uuid}",
-    response_model=CountryIdentityMappingResponse
-)
+
+
+@router.delete("/country-mapping/{uuid}", response_model=CountryIdentityMappingResponse)
 async def delete_country_identity_mapping(
-    uuid: str,
-    db: AsyncSession = Depends(get_db)
+    uuid: str, db: AsyncSession = Depends(get_db)
 ):
     identity_service = IdentityService(db)
     await identity_service.delete_country_identity_mapping(uuid)
 
     return CountryIdentityMappingResponse(
-        mapping_uuid=uuid,
-        message="Country Identity Mapping Deleted Successfully"
+        mapping_uuid=uuid, message="Country Identity Mapping Deleted Successfully"
     )
 
 
-
-@router.get("/country-mapping/identities/{country_uuid}", response_model=list[CountryIdentityDropdownResponse])
-async def get_identities_by_country(country_uuid: str, db: AsyncSession = Depends(get_db),):
+@router.get(
+    "/country-mapping/identities/{country_uuid}",
+    response_model=list[CountryIdentityDropdownResponse],
+)
+async def get_identities_by_country(
+    country_uuid: str,
+    db: AsyncSession = Depends(get_db),
+):
     try:
         identity_service = IdentityService(db)
         result = await identity_service.get_identities_by_country(country_uuid)
@@ -157,33 +183,19 @@ async def get_identities_by_country(country_uuid: str, db: AsyncSession = Depend
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    UploadFile,
-    File,
-    Form
-)
 
 @router.put(
     "/employee-document/{document_uuid}",
-    response_model=EmployeeIdentityDocumentUpdateResponse
+    response_model=EmployeeIdentityDocumentUpdateResponse,
 )
 async def update_employee_identity_document(
     document_uuid: str,
-
     mapping_uuid: str = Form(...),
-
     identity_file_number: str = Form(...),
-
     expiry_date: str = Form(None),
-
     file: UploadFile = File(None),
-
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     try:
 
@@ -194,19 +206,16 @@ async def update_employee_identity_document(
             mapping_uuid=mapping_uuid,
             identity_file_number=identity_file_number,
             expiry_date=expiry_date,
-            file=file
+            file=file,
         )
 
         return EmployeeIdentityDocumentUpdateResponse(
             document_uuid=document_uuid,
-            message="Employee Identity Document Updated Successfully"
+            message="Employee Identity Document Updated Successfully",
         )
 
     except HTTPException as he:
         raise he
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=500, detail=str(e))

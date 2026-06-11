@@ -4,10 +4,10 @@ from pydantic import BaseModel, Field, validator
 from datetime import date, datetime
 from typing import Optional
 
-
 # --------------------------------
 # ENUM CLASSES
 # --------------------------------
+
 
 class EmploymentType(str, Enum):
     FULL_TIME = "Full-Time"
@@ -39,15 +39,17 @@ class MaritalStatus(str, Enum):
     DIVORCED = "Divorced"
     WIDOWED = "Widowed"
 
+
 class WorkMode(str, Enum):
     OFFICE = "Office"
     REMOTE = "Remote"
-    HYBRID = "Hybrid"    
+    HYBRID = "Hybrid"
 
 
 # --------------------------------
 # CREATE EMPLOYEE REQUEST
 # --------------------------------
+
 
 class CreatePermanentEmployeeRequest(BaseModel):
 
@@ -70,13 +72,11 @@ class CreatePermanentEmployeeRequest(BaseModel):
     marital_status: Optional[MaritalStatus] = None
     total_experience: Optional[float] = None
 
-
     @validator("contact_number")
     def validate_contact_number(cls, v):
         if v and not re.match(r"^[0-9]{10}$", v):
             raise ValueError("Contact number must contain exactly 10 digits")
         return v
-
 
     @validator("total_experience")
     def validate_experience(cls, v):
@@ -89,6 +89,7 @@ class CreatePermanentEmployeeRequest(BaseModel):
 # CREATE EMPLOYEE RESPONSE
 # --------------------------------
 
+
 class CreatePermanentEmployeeResponse(BaseModel):
 
     employee_uuid: str
@@ -100,6 +101,7 @@ class CreatePermanentEmployeeResponse(BaseModel):
 # --------------------------------
 # EMPLOYEE DETAILS RESPONSE
 # --------------------------------
+
 
 class PermanentEmployeeDetails(BaseModel):
 
@@ -129,6 +131,7 @@ class PermanentEmployeeDetails(BaseModel):
 # --------------------------------
 # UPDATE EMPLOYEE REQUEST
 # --------------------------------
+
 
 class UpdatePermanentEmployeeRequest(BaseModel):
 

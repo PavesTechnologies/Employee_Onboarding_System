@@ -1,18 +1,22 @@
 from enum import Enum
 import re
 from pydantic import BaseModel, Field, validator
-from datetime import date, datetime
+from datetime import date
 from typing import Optional
+
+
 class Gender(str, Enum):
     MALE = "Male"
     FEMALE = "Female"
     OTHER = "Other"
+
 
 class MaritalStatus(str, Enum):
     SINGLE = "Single"
     MARRIED = "Married"
     DIVORCED = "Divorced"
     WIDOWED = "Widowed"
+
 
 class PersonalDetailsRequest(BaseModel):
     user_uuid: str
@@ -25,23 +29,33 @@ class PersonalDetailsRequest(BaseModel):
     emergency_contact_name: str
     emergency_contact_phone: str
     emergency_contact_relation_uuid: str
+    profile_photo_path: Optional[str] = None
+
 
 class PersonalDetailsResponse(BaseModel):
     personal_uuid: str
     message: str
+
+
 class PersonalDetails(BaseModel):
     personal_uuid: str
     user_uuid: str
-    date_of_birth: date     # <-- accepts datetime.date automatically
+    date_of_birth: date  # <-- accepts datetime.date automatically
     gender: str
     marital_status: str
     blood_group: str
-    nationality_country_uuid: str
-    residence_country_uuid: str
+    nationality_country_uuid: Optional[str] = None
+    residence_country_uuid: Optional[str] = None
     emergency_contact_name: Optional[str] = None
     emergency_contact_phone: Optional[str] = None
     emergency_contact_relation_uuid: Optional[str] = None
+<<<<<<< HEAD
+    profile_photo_path: Optional[str]=None
         
+=======
+
+
+>>>>>>> 98587add12bde25c4c4640609ba0ea849ff0f6c3
 class UpdatePersonalRequest(BaseModel):
     date_of_birth: str
     gender: Gender
@@ -52,16 +66,24 @@ class UpdatePersonalRequest(BaseModel):
     emergency_contact_name: str
     emergency_contact_phone: str
     emergency_contact_relation_uuid: str
+<<<<<<< HEAD
+    profile_picture_path: Optional[str] = None
     
+=======
+
+>>>>>>> 98587add12bde25c4c4640609ba0ea849ff0f6c3
 
 class CreateRelationRequest(BaseModel):
     relation_name: str
+
 
 class CreateRelationResponse(BaseModel):
     relation_uuid: str
     message: str
 
+
 # Addresses Interfaces
+
 
 class AddressType(str, Enum):
     permanent = "permanent"
@@ -76,11 +98,11 @@ class CreateAddressRequest(BaseModel):
     city: str = Field(..., min_length=2, max_length=50)
     district_or_ward: Optional[str] = None
     state_or_region: str = Field(..., min_length=2, max_length=50)
-    postal_code: str = Field(..., min_length=6, max_length=6, pattern=r"^\d{6}$")  
+    postal_code: str = Field(..., min_length=6, max_length=6, pattern=r"^\d{6}$")
     country_uuid: str
 
     # Prevent empty strings
-    @validator("address_line1","address_line2", "city", "state_or_region")
+    @validator("address_line1", "address_line2", "city", "state_or_region")
     def validate_not_empty(cls, v):
         if not v.strip():
             raise ValueError("Field cannot be empty")
@@ -105,13 +127,18 @@ class CreateAddressRequest(BaseModel):
     def validate_location_fields(cls, v, values):
         city = values.get("city")
         state = values.get("state_or_region")
-        
+
         if not (city or state or v):
-            raise ValueError("At least one of city / district_or_ward / state_or_region must be provided")
+            raise ValueError(
+                "At least one of city / district_or_ward / state_or_region must be provided"
+            )
         return v
+
+
 class CreateAddressResponse(BaseModel):
     address_uuid: str
     message: str
+
 
 class AddressDetails(BaseModel):
     address_uuid: str
@@ -125,15 +152,18 @@ class AddressDetails(BaseModel):
     postal_code: str
     country_uuid: str
 
+
 class EmployeeIdentityResponse(BaseModel):
     identity_uuid: str
     identity_file_number: str
     file_path: str
     message: str
 
+
 class DeleteEmployeeIdentityResponse(BaseModel):
     document_uuid: str
     message: str
+
 
 class SocialLinkRequest(BaseModel):
     user_uuid: str
@@ -151,6 +181,7 @@ class SocialLinkDetails(BaseModel):
     user_uuid: str
     platform_name: str
     url: str
+
 
 class EmployeeAboutRequest(BaseModel):
     employee_uuid: str

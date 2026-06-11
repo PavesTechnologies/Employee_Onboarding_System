@@ -1,11 +1,9 @@
-from fastapi import APIRouter, Body, Depends, Request, HTTPException
+from fastapi import APIRouter, Depends, Request, HTTPException
 
-from Backend.Business_Layer.utils import email_utils
-from Backend.DAL.dao.offerresponse_dao import OfferResponseDAO
 from ...API_Layer.interfaces.offerresponse_interface import (
-    PandaDocWebhookRequest, 
+    PandaDocWebhookRequest,
     PandaDocWebhookResponse,
-    PandaDocExpirationData
+    PandaDocExpirationData,
 )
 from ...Business_Layer.services.offerresponse_service import OfferResponseService
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,11 +14,15 @@ from ..utils.role_based import require_roles
 
 router = APIRouter()
 
-@router.post("/offerletter-accepted", response_model=PandaDocWebhookResponse, dependencies=[Depends(require_roles("HR", "ADMIN"))])
+
+@router.post(
+    "/offerletter-accepted",
+    response_model=PandaDocWebhookResponse,
+    dependencies=[Depends(require_roles("HR", "ADMIN"))],
+)
 async def offerletter_accepted_webhook(
-    request: Request,
-    db: AsyncSession = Depends(get_db)
-    ):
+    request: Request, db: AsyncSession = Depends(get_db)
+):
     """
     Receives PandaDoc webhook when candidate signs the offer letter.
     """
@@ -28,11 +30,13 @@ async def offerletter_accepted_webhook(
     print("📬 API Layer: Received PandaDoc webhook for offer letter acceptance")
 
     # 1. Extract client IP
-    client_ip = request.client.host
+    client_ip = request.client.host if request.client else "unknown"
     print(f"[Offer Signed] Incoming IP: {client_ip}")
 
     # 2. Validate IP using utils
-    PANDADOC_ALLOWED_IPS = [ip.strip() for ip in get_env_var("PANDADOC_ALLOWED_IPS").split(",")]
+    PANDADOC_ALLOWED_IPS = [
+        ip.strip() for ip in get_env_var("PANDADOC_ALLOWED_IPS").split(",")
+    ]
 
     if not validate_webhook_origin(client_ip, PANDADOC_ALLOWED_IPS):
         print("[Offer Signed] ❌ Origin validation failed")
@@ -56,29 +60,33 @@ async def offerletter_accepted_webhook(
             try:
                 payload = PandaDocWebhookRequest(**p)
                 response_offer = OfferResponseService(db)
-                response = await response_offer.process_offer_acceptance_webhook(payload)
+                response = await response_offer.process_offer_acceptance_webhook(
+                    payload
+                )
                 responses.append(response)
             except HTTPException:
-                raise e
+                raise
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
         # Always return OK
         return PandaDocWebhookResponse(status="ok")
 
-
     except Exception as e:
         print("❌ Error processing webhook:", str(e))
         # Still return 200 OK so PandaDoc doesn't retry
         return PandaDocWebhookResponse(status="error")
-    
-    
-@router.post("/offerletter-expired", response_model=PandaDocWebhookResponse, dependencies=[Depends(require_roles("HR", "ADMIN"))])
+
+
+@router.post(
+    "/offerletter-expired",
+    response_model=PandaDocWebhookResponse,
+    dependencies=[Depends(require_roles("HR", "ADMIN"))],
+)
 async def offerletter_expired_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    payload: dict = Body(...),           # 👈 THIS LINE is just to test the webhook handling
-    ):
+):
     """
     Receives PandaDoc webhook when the offer letter is automatically expired
     (status = document.voided).
@@ -87,12 +95,14 @@ async def offerletter_expired_webhook(
     print("📬 API Layer: Received PandaDoc webhook for offer letter expiration")
 
     # 1. Extract client IP
-    client_ip = request.client.host
+    client_ip = request.client.host if request.client else "unknown"
     print(f"[Offer Signed] Incoming IP: {client_ip}")
 
     # 2. Validate IP using utils
-    PANDADOC_ALLOWED_IPS = [ip.strip() for ip in get_env_var("PANDADOC_ALLOWED_IPS").split(",")]
-    
+    PANDADOC_ALLOWED_IPS = [
+        ip.strip() for ip in get_env_var("PANDADOC_ALLOWED_IPS").split(",")
+    ]
+
     if not validate_webhook_origin(client_ip, PANDADOC_ALLOWED_IPS):
         print("[Offer Signed] ❌ Origin validation failed")
         raise HTTPException(401, "Unauthorized webhook origin")
@@ -123,11 +133,13 @@ async def offerletter_expired_webhook(
                     continue
 
                 response_offer = OfferResponseService(db)
-                response = await response_offer.process_offer_expiration_webhook(expiration_data)
+                response = await response_offer.process_offer_expiration_webhook(
+                    expiration_data
+                )
                 responses.append(response)
 
             except HTTPException:
-                raise e
+                raise
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 

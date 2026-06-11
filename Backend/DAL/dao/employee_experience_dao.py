@@ -32,10 +32,12 @@ class EmployeeExperienceDAO:
         result = await self.db.execute(select(EmployeeExperience))
         return result.scalars().all()
 
-    async def get_current_job(self, employee_uuid: str, exclude_uuid: str | None = None):
+    async def get_current_job(
+        self, employee_uuid: str, exclude_uuid: str | None = None
+    ):
         query = select(EmployeeExperience).where(
             EmployeeExperience.employee_uuid == employee_uuid,
-            EmployeeExperience.is_current == True
+            EmployeeExperience.is_current.is_(True),
         )
 
         if exclude_uuid:
@@ -48,7 +50,7 @@ class EmployeeExperienceDAO:
         result = await self.db.execute(
             select(EmployeeExperience).where(
                 EmployeeExperience.employee_uuid == employee_uuid,
-                EmployeeExperience.company_name == company_name
+                EmployeeExperience.company_name == company_name,
             )
         )
         return result.scalar_one_or_none()
@@ -76,12 +78,10 @@ class EmployeeExperienceDAO:
             end_date=request_data.end_date,
             is_current=request_data.is_current,
             notice_period_days=request_data.notice_period_days,
-
             exp_certificate_path=exp_certificate_path,
             payslip_path=payslip_path,
             internship_certificate_path=internship_certificate_path,
             contract_aggrement_path=contract_aggrement_path,
-
             status="uploaded",
             uploaded_at=datetime.utcnow(),
             created_at=datetime.utcnow(),
@@ -138,7 +138,6 @@ class EmployeeExperienceDAO:
             "message": "Experience updated successfully",
         }
 
-    
     # ----------------------------------------------------
     # DELETE
     # ----------------------------------------------------
@@ -172,10 +171,10 @@ class EmployeeExperienceDAO:
         await self.db.refresh(experience)
 
         return experience
-    
-    #----------------------------------------------------
+
+    # ----------------------------------------------------
     # DELETE CERTIFICATE PATH
-    #----------------------------------------------------
+    # ----------------------------------------------------
     async def delete_experience_certificate(self, experience_uuid: str):
         experience = await self.get_experience_by_uuid(experience_uuid)
         if not experience:
@@ -188,4 +187,3 @@ class EmployeeExperienceDAO:
         await self.db.commit()
         await self.db.refresh(experience)
         return experience
-

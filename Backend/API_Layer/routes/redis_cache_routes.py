@@ -4,18 +4,14 @@ from Backend.Business_Layer.utils.redis_cache import (
     get_cache,
     create_cache,
     delete_cache,
-    cache_exists
+    cache_exists,
 )
-from ..utils.role_based import require_roles
-
 
 router = APIRouter(prefix="/cache", tags=["Form Cache"])
+
+
 @router.post("/{form_name}/{user_uuid}")
-def upsert_form_cache(
-    form_name: str,
-    user_uuid: str,
-    payload: Dict[str, Any]
-):
+def upsert_form_cache(form_name: str, user_uuid: str, payload: Dict[str, Any]):
     """
     Create cache for a form.
     If cache already exists, delete and recreate.
@@ -32,10 +28,11 @@ def upsert_form_cache(
             "status": "success",
             "message": "Cache stored successfully",
             "form": form_name,
-            "user_uuid": user_uuid
+            "user_uuid": user_uuid,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/{form_name}/{user_uuid}")
 def get_form_cache(form_name: str, user_uuid: str):
@@ -50,5 +47,5 @@ def get_form_cache(form_name: str, user_uuid: str):
         "status": "success",
         "form": form_name,
         "user_uuid": user_uuid,
-        "data": data
+        "data": data,
     }

@@ -1,7 +1,6 @@
-
 from Backend.DAL.dao.dashboard_dao import DashboardDAO
 
-from ...API_Layer.interfaces.dashboard_interfaces import DashboardResponse
+
 class DashboardService:
 
     def __init__(self, dao: DashboardDAO):
@@ -9,12 +8,8 @@ class DashboardService:
 
     async def get_summary(self, start_date=None, end_date=None):
         return await self.dao.get_dashboard_summary(
-            start_date=start_date,
-            end_date=end_date
+            start_date=start_date, end_date=end_date
         )
 
     async def get_celebrations(self, start_date, end_date):
-        return await self.dao.get_celebrations(
-            start_date=start_date,
-            end_date=end_date
-        )
+        return await self.dao.get_celebrations(start_date=start_date, end_date=end_date)

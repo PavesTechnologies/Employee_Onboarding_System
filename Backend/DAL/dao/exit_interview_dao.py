@@ -13,7 +13,7 @@ class ExitInterviewDAO:
             reason_for_leaving=data.reason_for_leaving,
             company_feedback=data.company_feedback,
             manager_feedback=data.manager_feedback,
-            rating=data.rating
+            rating=data.rating,
         )
 
         db.add(interview)
@@ -24,25 +24,19 @@ class ExitInterviewDAO:
 
     async def get_exit_interview(self, db, interview_uuid):
         result = await db.execute(
-            select(ExitInterview).where(
-                ExitInterview.interview_uuid == interview_uuid
-            )
+            select(ExitInterview).where(ExitInterview.interview_uuid == interview_uuid)
         )
         return result.scalar_one_or_none()
 
     async def get_exit_interview_by_exit_uuid(self, db, exit_uuid):
         result = await db.execute(
-            select(ExitInterview).where(
-                ExitInterview.exit_uuid == exit_uuid
-            )
+            select(ExitInterview).where(ExitInterview.exit_uuid == exit_uuid)
         )
         return result.scalar_one_or_none()
 
     async def update_exit_interview(self, db, interview_uuid, data):
         result = await db.execute(
-            select(ExitInterview).where(
-                ExitInterview.interview_uuid == interview_uuid
-            )
+            select(ExitInterview).where(ExitInterview.interview_uuid == interview_uuid)
         )
 
         interview = result.scalar_one_or_none()
@@ -62,9 +56,7 @@ class ExitInterviewDAO:
 
     async def delete_exit_interview(self, db, interview_uuid):
         result = await db.execute(
-            select(ExitInterview).where(
-                ExitInterview.interview_uuid == interview_uuid
-            )
+            select(ExitInterview).where(ExitInterview.interview_uuid == interview_uuid)
         )
 
         interview = result.scalar_one_or_none()

@@ -2,6 +2,7 @@
 from typing import AsyncGenerator
 from .database import AsyncSessionLocal, AsyncSession
 
+
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency for FastAPI routes"""
     async with AsyncSessionLocal() as session:

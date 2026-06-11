@@ -4,6 +4,8 @@ from ..models.models import ExitApprovals, EmployeeExit
 from sqlalchemy.exc import SQLAlchemyError
 from Backend.Business_Layer.services.exit_clearance_service import ExitClearanceService
 from datetime import datetime
+
+
 class ExitApprovalDAO:
 
     async def create_exit_approval(self, db, data):
@@ -12,13 +14,13 @@ class ExitApprovalDAO:
             manager_approval = ExitApprovals(
                 approval_uuid=str(generate_uuid7()),
                 exit_uuid=data.exit_uuid,
-                approval_type="Manager"
+                approval_type="Manager",
             )
 
             hr_approval = ExitApprovals(
                 approval_uuid=str(generate_uuid7()),
                 exit_uuid=data.exit_uuid,
-                approval_type="HR"
+                approval_type="HR",
             )
 
             db.add(manager_approval)
@@ -38,19 +40,13 @@ class ExitApprovalDAO:
         except Exception as e:
             await db.rollback()
             raise Exception(f"Error creating approvals: {str(e)}")
-    async def manager_approve(
-        self,
-        db,
-        approval_uuid,
-        user_id,
-        status,
-        remarks
-    ):
+
+    async def manager_approve(self, db, approval_uuid, user_id, status, remarks):
         try:
 
             query = select(ExitApprovals).where(
                 ExitApprovals.approval_uuid == approval_uuid,
-                ExitApprovals.approval_type == "Manager"
+                ExitApprovals.approval_type == "Manager",
             )
 
             result = await db.execute(query)
@@ -85,19 +81,12 @@ class ExitApprovalDAO:
             await db.rollback()
             raise Exception(str(e))
 
-    async def hr_approve(
-        self,
-        db,
-        approval_uuid,
-        user_id,
-        status,
-        remarks
-    ):
+    async def hr_approve(self, db, approval_uuid, user_id, status, remarks):
         try:
 
             query = select(ExitApprovals).where(
                 ExitApprovals.approval_uuid == approval_uuid,
-                ExitApprovals.approval_type == "HR"
+                ExitApprovals.approval_type == "HR",
             )
 
             result = await db.execute(query)
@@ -127,9 +116,7 @@ class ExitApprovalDAO:
                     clearance_service = ExitClearanceService()
 
                     await clearance_service.create_clearances(
-                        db,
-                        approval.exit_uuid,
-                        exit_record.employee_uuid
+                        db, approval.exit_uuid, exit_record.employee_uuid
                     )
 
             await db.commit()
@@ -139,7 +126,8 @@ class ExitApprovalDAO:
 
         except Exception as e:
             await db.rollback()
-            raise Exception(str(e))    
+            raise Exception(str(e))
+
     async def get_all_approvals(self, db):
         try:
             query = select(ExitApprovals)
@@ -149,6 +137,7 @@ class ExitApprovalDAO:
             raise Exception(f"Database error: {str(e)}")
         except Exception as e:
             raise Exception(str(e))
+
     async def get_approvals_by_exit_uuid(self, db, exit_uuid):
         try:
             query = select(ExitApprovals).where(ExitApprovals.exit_uuid == exit_uuid)
@@ -158,6 +147,7 @@ class ExitApprovalDAO:
             raise Exception(f"Database error: {str(e)}")
         except Exception as e:
             raise Exception(str(e))
+
     async def get_approvals_by_employee_uuid(self, db, employee_uuid):
         try:
 
@@ -176,13 +166,13 @@ class ExitApprovalDAO:
 
         except Exception as e:
             raise Exception(str(e))
+
     async def get_my_pending_approvals(self, db, role):
         try:
             print("Role received in DAO:", role)
 
             query = select(ExitApprovals).where(
-                ExitApprovals.approval_type == role,
-                ExitApprovals.status == "Pending"
+                ExitApprovals.approval_type == role, ExitApprovals.status == "Pending"
             )
 
             result = await db.execute(query)
@@ -198,6 +188,7 @@ class ExitApprovalDAO:
 
         except Exception as e:
             raise Exception(str(e))
+
     async def get_approvals_history(self, db, exit_uuid):
         try:
             query = select(ExitApprovals).where(ExitApprovals.exit_uuid == exit_uuid)
