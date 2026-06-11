@@ -1,39 +1,58 @@
 # from apscheduler.schedulers.background import BackgroundScheduler
-from Backend.API_Layer.routes import hr_bulk_join_router
-from fastapi import HTTPException, Depends, APIRouter
-from Backend.DAL.utils.dependencies import get_db
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter
 from fastapi import FastAPI, Response
 
 from fastapi.openapi.utils import get_openapi
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import os
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from Backend.API_Layer.routes import addtask_routes, docusign_token_generation_route, employee_experience_routes, employee_export_routes, hr_bulk_join_router, hr_onboarding_routes, offer_approval_action_routes, organisationtree_routes, otp_routes, redis_cache_routes, rms_resource_integration_routes, weekly_dashboard_routes
-from .API_Layer.routes import (master_routes, offerletter_routes, education_routes, offerresponse_routes, employee_details_routes,
-                               identity_routes, employee_upload_routes,analytics_routes,)
+from Backend.API_Layer.routes import (
+    addtask_routes,
+    docusign_token_generation_route,
+    employee_experience_routes,
+    employee_export_routes,
+    hr_bulk_join_router,
+    hr_onboarding_routes,
+    offer_approval_action_routes,
+    organisationtree_routes,
+    otp_routes,
+    redis_cache_routes,
+    rms_resource_integration_routes,
+    weekly_dashboard_routes,
+)
+from .API_Layer.routes import (
+    master_routes,
+    offerletter_routes,
+    education_routes,
+    offerresponse_routes,
+    employee_details_routes,
+    identity_routes,
+    employee_upload_routes,
+    analytics_routes,
+)
 from .API_Layer.middleware.jwt_middleware import JWTMiddleware
 from fastapi.middleware.cors import CORSMiddleware
-from .API_Layer.middleware.audit_middleware import AuditMiddleware
 from Backend.API_Layer.routes import token_verification_router
 from Backend.API_Layer.routes import offer_acceptance_request_routes
+
 # from Backend.API_Layer.routes import offer_approval_action_routes
-from Backend.corn_jobs.joining_reminder import send_joining_date_reminders
 from Backend.API_Layer.routes import permanent_employee_details_route
 from Backend.API_Layer.routes import departments_routes
 from Backend.API_Layer.routes import designation_routes
 from Backend.API_Layer.routes import employee_pf_routes
 from Backend.API_Layer.routes import employee_bank_routes
-from Backend.API_Layer.routes import dashboard_routes, employee_exit_routes, exit_approval_routes, exit_clearance_items_routes, exit_clearance_routes, exit_interview_routes
+from Backend.API_Layer.routes import (
+    dashboard_routes,
+    employee_exit_routes,
+    exit_approval_routes,
+    exit_clearance_items_routes,
+    exit_clearance_routes,
+    exit_interview_routes,
+)
 from datetime import date
 from weasyprint import HTML
-from Backend.API_Layer.routes import addtask_routes
 from Backend.API_Layer.routes import exit_final_settlement_routes
 from Backend.API_Layer.routes import exit_documents_routes
-
-
-
 
 # from fastapi_cache.backends.redis import RedisBackend
 # import redis.asyncio as redis
@@ -49,7 +68,7 @@ from Backend.API_Layer.routes import exit_documents_routes
 app = FastAPI(
     title="Employee Onboarding System API",
     docs_url="/ems/docs",
-    openapi_url="/ems/openapi.json"
+    openapi_url="/ems/openapi.json",
 )
 
 api_router = APIRouter(prefix="/ems")
@@ -125,11 +144,7 @@ def custom_openapi():
         routes=app.routes,
     )
     openapi_schema["components"]["securitySchemes"] = {
-        "BearerAuth": {
-            "type": "http",
-            "scheme": "bearer",
-            "bearerFormat": "JWT"
-        }
+        "BearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}
     }
     for path in openapi_schema["paths"]:
         for method in openapi_schema["paths"][path]:
@@ -140,44 +155,105 @@ def custom_openapi():
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
-app.openapi = custom_openapi
 
-api_router.include_router(offerletter_routes.router, prefix="/offerletters", tags=["Offer Letters"])
-api_router.include_router(master_routes.router, prefix="/masters", tags=["Master (Countries, Education Levels, Contacts)"])
-api_router.include_router(education_routes.router, prefix="/education", tags=["Education Documents"])
-api_router.include_router(offerresponse_routes.router, prefix="/offerresponse", tags=["Offer Response"])
-api_router.include_router(employee_details_routes.router, prefix="/employee-details", tags=["Employee Details"])
-api_router.include_router(identity_routes.router, prefix="/identity", tags=["Identity Details"])
-api_router.include_router(employee_experience_routes.router, prefix="/experience", tags=["Employee Experience"])
+app.openapi = custom_openapi  # type: ignore[method-assign]
+
+api_router.include_router(
+    offerletter_routes.router, prefix="/offerletters", tags=["Offer Letters"]
+)
+api_router.include_router(
+    master_routes.router,
+    prefix="/masters",
+    tags=["Master (Countries, Education Levels, Contacts)"],
+)
+api_router.include_router(
+    education_routes.router, prefix="/education", tags=["Education Documents"]
+)
+api_router.include_router(
+    offerresponse_routes.router, prefix="/offerresponse", tags=["Offer Response"]
+)
+api_router.include_router(
+    employee_details_routes.router,
+    prefix="/employee-details",
+    tags=["Employee Details"],
+)
+api_router.include_router(
+    identity_routes.router, prefix="/identity", tags=["Identity Details"]
+)
+api_router.include_router(
+    employee_experience_routes.router,
+    prefix="/experience",
+    tags=["Employee Experience"],
+)
 api_router.include_router(employee_pf_routes.router, prefix="/pf", tags=["Employee PF"])
-api_router.include_router(employee_bank_routes.router, prefix="/bank", tags=["Employee Bank"])
-api_router.include_router(employee_upload_routes.router, prefix="/employee-upload", tags=["Employee Uploads"])
+api_router.include_router(
+    employee_bank_routes.router, prefix="/bank", tags=["Employee Bank"]
+)
+api_router.include_router(
+    employee_upload_routes.router, prefix="/employee-upload", tags=["Employee Uploads"]
+)
 api_router.include_router(otp_routes.router, prefix="/otp", tags=["Otp Verification"])
-api_router.include_router(token_verification_router.router, prefix="/token-verification", tags=["Token Verification"])
-api_router.include_router(offer_acceptance_request_routes.router, prefix="/offer-approval-requests", tags=["Offer Approval Requests"])
-api_router.include_router(offer_approval_action_routes.router, prefix="/offer-approval", tags=["Offer Approval"])
-api_router.include_router(hr_onboarding_routes.router, prefix="/hr", tags=["HR Onboarding"])
-api_router.include_router(docusign_token_generation_route.router, prefix="/docusign", tags=["DocuSign Token Generation"])
-api_router.include_router(redis_cache_routes.router, prefix="/cache", tags=["Redis Cache"])
-api_router.include_router(hr_bulk_join_router.router, prefix="/hr", tags=["HR Bulk Join"])
-api_router.include_router(permanent_employee_details_route.router, prefix="/permanent-employee", tags=["Permanent Employees"])
+api_router.include_router(
+    token_verification_router.router,
+    prefix="/token-verification",
+    tags=["Token Verification"],
+)
+api_router.include_router(
+    offer_acceptance_request_routes.router,
+    prefix="/offer-approval-requests",
+    tags=["Offer Approval Requests"],
+)
+api_router.include_router(
+    offer_approval_action_routes.router,
+    prefix="/offer-approval",
+    tags=["Offer Approval"],
+)
+api_router.include_router(
+    hr_onboarding_routes.router, prefix="/hr", tags=["HR Onboarding"]
+)
+api_router.include_router(
+    docusign_token_generation_route.router,
+    prefix="/docusign",
+    tags=["DocuSign Token Generation"],
+)
+api_router.include_router(
+    redis_cache_routes.router, prefix="/cache", tags=["Redis Cache"]
+)
+api_router.include_router(
+    hr_bulk_join_router.router, prefix="/hr", tags=["HR Bulk Join"]
+)
+api_router.include_router(
+    permanent_employee_details_route.router,
+    prefix="/permanent-employee",
+    tags=["Permanent Employees"],
+)
 api_router.include_router(departments_routes.router)
 api_router.include_router(designation_routes.router)
 
-api_router.include_router(analytics_routes.router, prefix="/analytics", tags=["Analytics"])
+api_router.include_router(
+    analytics_routes.router, prefix="/analytics", tags=["Analytics"]
+)
 api_router.include_router(dashboard_routes.router)
 api_router.include_router(employee_exit_routes.router)
 api_router.include_router(exit_interview_routes.router)
 api_router.include_router(exit_approval_routes.router)
-api_router.include_router(weekly_dashboard_routes.router, prefix="/weekly-dashboard", tags=["Dashboard"])
+api_router.include_router(
+    weekly_dashboard_routes.router, prefix="/weekly-dashboard", tags=["Dashboard"]
+)
 api_router.include_router(addtask_routes.router, prefix="/api")
 api_router.include_router(exit_clearance_items_routes.router)
 api_router.include_router(exit_clearance_routes.router)
 api_router.include_router(exit_final_settlement_routes.router)
 api_router.include_router(exit_documents_routes.router)
-api_router.include_router(employee_export_routes.router, prefix="/api", tags=["Employee Export"])
-api_router.include_router(rms_resource_integration_routes.router, prefix="/api", tags=["RMS Resources"])
-api_router.include_router(organisationtree_routes.router, prefix="/api", tags=["Organization Tree"])
+api_router.include_router(
+    employee_export_routes.router, prefix="/api", tags=["Employee Export"]
+)
+api_router.include_router(
+    rms_resource_integration_routes.router, prefix="/api", tags=["RMS Resources"]
+)
+api_router.include_router(
+    organisationtree_routes.router, prefix="/api", tags=["Organization Tree"]
+)
 app.include_router(api_router)
 # scheduler = AsyncIOScheduler()
 
@@ -190,7 +266,7 @@ app.include_router(api_router)
 #         "cron",
 #         second="*/10",  # Every 10 minutes
 #         # hour=9,          # 11 PM
-#         # minute=0, 
+#         # minute=0,
 #         id="joining_reminder",
 #         replace_existing=True,
 #         max_instances=1,
@@ -203,7 +279,6 @@ app.include_router(api_router)
 #     await scheduler.shutdown()
 
 
-
 # Base directory of Backend folder
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -211,7 +286,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 template_dir = os.path.join(BASE_DIR, "templates")
 
 # Initialize Jinja environment
-env = Environment(loader=FileSystemLoader(template_dir))
+env = Environment(
+    loader=FileSystemLoader(template_dir),
+    autoescape=select_autoescape(["html", "xml"]),
+)
 
 
 @app.get("/generate-offer")
@@ -235,10 +313,25 @@ def generate_offer():
         "designation": "Software Engineer",
         "total_ctc": "12,00,000",
         "compensation_components": [
-            {"name": "Basic Salary", "type": "Fixed", "frequency": "Monthly", "amount": "50,000"},
-            {"name": "HRA", "type": "Fixed", "frequency": "Monthly", "amount": "20,000"},
-            {"name": "Bonus", "type": "Variable", "frequency": "Yearly", "amount": "2,00,000"}
-        ]
+            {
+                "name": "Basic Salary",
+                "type": "Fixed",
+                "frequency": "Monthly",
+                "amount": "50,000",
+            },
+            {
+                "name": "HRA",
+                "type": "Fixed",
+                "frequency": "Monthly",
+                "amount": "20,000",
+            },
+            {
+                "name": "Bonus",
+                "type": "Variable",
+                "frequency": "Yearly",
+                "amount": "2,00,000",
+            },
+        ],
     }
 
     # Render HTML with data
@@ -251,8 +344,5 @@ def generate_offer():
     return Response(
         content=pdf,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": "inline; filename=offer_letter.pdf"
-        }
+        headers={"Content-Disposition": "inline; filename=offer_letter.pdf"},
     )
-

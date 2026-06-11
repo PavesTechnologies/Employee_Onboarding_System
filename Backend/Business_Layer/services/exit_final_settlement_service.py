@@ -7,7 +7,6 @@ class ExitFinalSettlementService:
     def __init__(self):
         self.dao = ExitFinalSettlementDAO()
 
-
     async def create_settlement(self, db, data):
 
         try:
@@ -15,7 +14,6 @@ class ExitFinalSettlementService:
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-
 
     async def get_settlement(self, db, exit_uuid):
 
@@ -25,44 +23,30 @@ class ExitFinalSettlementService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-
     async def approve_settlement(self, db, settlement_uuid, user_id, remarks):
 
         try:
 
             result = await self.dao.approve_settlement(
-                db,
-                settlement_uuid,
-                user_id,
-                remarks
+                db, settlement_uuid, user_id, remarks
             )
 
             if not result:
-                raise HTTPException(
-                    status_code=404,
-                    detail="Settlement not found"
-                )
+                raise HTTPException(status_code=404, detail="Settlement not found")
 
             return result
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-
     async def mark_paid(self, db, settlement_uuid):
 
         try:
 
-            result = await self.dao.mark_paid(
-                db,
-                settlement_uuid
-            )
+            result = await self.dao.mark_paid(db, settlement_uuid)
 
             if not result:
-                raise HTTPException(
-                    status_code=404,
-                    detail="Settlement not found"
-                )
+                raise HTTPException(status_code=404, detail="Settlement not found")
 
             return result
 

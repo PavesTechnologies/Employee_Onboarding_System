@@ -1,22 +1,28 @@
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
-from ...DAL.dao.employee_details_dao import EmployeeDetailsDAO, AddressDAO, EmployeeIdentityDAO, EmployeeSocialLinkDAO, EmployeeAboutDAO
+from ...DAL.dao.employee_details_dao import (
+    EmployeeDetailsDAO,
+    AddressDAO,
+    EmployeeIdentityDAO,
+    EmployeeSocialLinkDAO,
+    EmployeeAboutDAO,
+)
 from ...DAL.dao.master_dao import CountryDAO
 from ...DAL.dao.offerletter_dao import OfferLetterDAO
 from ...DAL.dao.identity_dao import IdentityDAO
 from ..utils.validation_utils import validate_date_of_birth, validate_blood_group
 from ..utils.uuid_generator import generate_uuid7
-from ..utils.postal_code_validator import validate_postal_code
-from ...DAL.utils.storage_utils import S3StorageService
-import time
 
 from time import perf_counter
+
+
 class EmployeeDetailsService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.dao = EmployeeDetailsDAO(self.db)
         self.countrydao = CountryDAO(self.db)
         self.offerdao = OfferLetterDAO(self.db)
+<<<<<<< HEAD
         self.storage_service = S3StorageService()
     
     async def get_all_personal_details(self):
@@ -99,18 +105,31 @@ class EmployeeDetailsService:
             }
     
     async def get_personal_details_by_user_uuid(self, uuid):
+=======
+
+    async def get_all_personal_details(self):
+>>>>>>> 98587add12bde25c4c4640609ba0ea849ff0f6c3
         try:
-            result = await self.dao.get_personal_details_by_uuid(uuid)
-            if not result:
-                raise HTTPException(status_code=200, detail="No Personal Details Found for this Employee")
+            result = await self.dao.get_all_personal_details()
             return result
         except HTTPException as he:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-    
 
-    
+    async def get_personal_details_by_user_uuid(self, uuid):
+        try:
+            result = await self.dao.get_personal_details_by_uuid(uuid)
+            if not result:
+                raise HTTPException(
+                    status_code=200,
+                    detail="No Personal Details Found for this Employee",
+                )
+            return result
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
     async def update_personal_details(self, uuid: str, request_data):
         try:
@@ -122,7 +141,9 @@ class EmployeeDetailsService:
             print("Time taken to get personal details:", perf_counter() - start)
 
             if not personal:
-                raise HTTPException(status_code=404, detail="Personal Details Not Found")
+                raise HTTPException(
+                    status_code=404, detail="Personal Details Not Found"
+                )
 
             # 2️⃣ Validate fields
             start = perf_counter()
@@ -156,7 +177,9 @@ class EmployeeDetailsService:
             print("Update query time:", perf_counter() - start)
 
             if not result:
-                raise HTTPException(status_code=404, detail="Personal Details Not Found")
+                raise HTTPException(
+                    status_code=404, detail="Personal Details Not Found"
+                )
 
             print("Total API time:", perf_counter() - api_start)
 
@@ -166,17 +189,21 @@ class EmployeeDetailsService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
     async def delete_personal_details(self, uuid):
         try:
             existing = await self.dao.get_personal_details_by_uuid(uuid)
             if not existing:
-                raise HTTPException(status_code = 404, detail= "Personal Details Not Found")
+                raise HTTPException(
+                    status_code=404, detail="Personal Details Not Found"
+                )
             result = await self.dao.delete_personal_details(uuid)
             return result
         except HTTPException as he:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
 
 # Addresses Service
 class AddressService:
@@ -185,29 +212,32 @@ class AddressService:
         self.dao = AddressDAO(self.db)
         self.countrydao = CountryDAO(self.db)
         self.offerdao = OfferLetterDAO(self.db)
-    
+
     async def get_all_addresses(self):
         try:
             result = await self.dao.get_all_addresses()
             if not result:
                 raise HTTPException(status_code=200, detail="No Addresses Found")
-    
+
             return result
         except HTTPException as he:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
     async def get_address_by_address_uuid(self, uuid):
         try:
             result = await self.dao.get_address_by_address_uuid(uuid)
             if not result:
-                raise HTTPException(status_code=200, detail="No Address Found for this User")
+                raise HTTPException(
+                    status_code=200, detail="No Address Found for this User"
+                )
             return result
         except HTTPException as he:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-          
+
     async def update_address(self, uuid, request_data):
         try:
             existing = await self.dao.get_address_by_address_uuid(uuid)
@@ -220,7 +250,6 @@ class AddressService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-            
     async def delete_address(self, uuid):
         try:
             existing = await self.dao.get_address_by_address_uuid(uuid)
@@ -232,7 +261,8 @@ class AddressService:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
+
+
 class EmployeeIdentityService:
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -241,15 +271,20 @@ class EmployeeIdentityService:
 
     async def delete_employee_identity(self, document_uuid):
         try:
-            existing = await self.dao.get_employee_identity_by_document_uuid(document_uuid)
+            existing = await self.dao.get_employee_identity_by_document_uuid(
+                document_uuid
+            )
             if not existing:
-                raise HTTPException(status_code=404, detail="Employee Identity Document Not Found")
+                raise HTTPException(
+                    status_code=404, detail="Employee Identity Document Not Found"
+                )
             result = await self.dao.delete_employee_identity(document_uuid)
             return result
         except HTTPException as he:
             raise he
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
 
 class EmployeeSocialLinkService:
     def __init__(self, db: AsyncSession):
@@ -262,9 +297,7 @@ class EmployeeSocialLinkService:
     async def create_social_link(self, user_uuid, request_data):
         social_link_uuid = generate_uuid7()
         return await self.dao.create_social_link(
-            social_link_uuid,
-            user_uuid,
-            request_data
+            social_link_uuid, user_uuid, request_data
         )
 
     async def update_social_link(self, social_link_uuid, request_data):
@@ -273,10 +306,7 @@ class EmployeeSocialLinkService:
         if not existing:
             raise HTTPException(status_code=404, detail="Social Link Not Found")
 
-        return await self.dao.update_social_link(
-            social_link_uuid,
-            request_data
-        )
+        return await self.dao.update_social_link(social_link_uuid, request_data)
 
     async def delete_social_link(self, social_link_uuid):
         existing = await self.dao.get_social_link_by_uuid(social_link_uuid)
@@ -285,7 +315,8 @@ class EmployeeSocialLinkService:
             raise HTTPException(status_code=404, detail="Social Link Not Found")
 
         return await self.dao.delete_social_link(social_link_uuid)
-    
+
+
 class EmployeeAboutService:
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -296,8 +327,7 @@ class EmployeeAboutService:
 
         if not result:
             raise HTTPException(
-                status_code=404,
-                detail="Employee About Details Not Found"
+                status_code=404, detail="Employee About Details Not Found"
             )
 
         return result
@@ -306,27 +336,20 @@ class EmployeeAboutService:
         existing = await self.dao.get_employee_about(employee_uuid)
 
         if existing:
-            return await self.dao.update_employee_about(
-                employee_uuid,
-                request_data
-            )
+            return await self.dao.update_employee_about(employee_uuid, request_data)
 
         employee_about_uuid = generate_uuid7()
 
         return await self.dao.create_employee_about(
-            employee_about_uuid,
-            employee_uuid,
-            request_data
+            employee_about_uuid, employee_uuid, request_data
         )
-    
+
     async def delete_employee_about(self, employee_uuid):
         existing = await self.dao.get_employee_about(employee_uuid)
 
         if not existing:
             raise HTTPException(
-                status_code=404,
-                detail="Employee About Details Not Found"
+                status_code=404, detail="Employee About Details Not Found"
             )
 
         return await self.dao.delete_employee_about(employee_uuid)
-    

@@ -1,20 +1,19 @@
 # Backend/API_Layer/routes/offerletter_routes.py
 
 import os
+import time
 
 from Backend.DAL.utils.database import get_read_db
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Request, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from Backend.API_Layer.interfaces.offerletter_interfaces import(
+from Backend.API_Layer.interfaces.offerletter_interfaces import (
     DeleteOfferResponse,
-    OfferCreateRequest, 
-    OfferCreateResponse, 
+    OfferCreateRequest,
+    OfferCreateResponse,
     BulkOfferCreateResponse,
-    OfferLetterDetailsResponse, 
+    OfferLetterDetailsResponse,
     OfferUpdateResponse,
-    BulkSendOfferLettersResponse, 
     BulkSendOfferLettersRequest,
-    BulkSendOfferLettersResult,
 )
 from Backend.Business_Layer.services.offerletter_services import OfferLetterService
 from Backend.Business_Layer.services.document_service import DocumentService
@@ -22,8 +21,6 @@ from fastapi.responses import FileResponse
 from Backend.DAL.utils.dependencies import get_db
 import pandas as pd
 from io import BytesIO
-from Backend.config import env_loader
-import requests
 from Backend.API_Layer.utils.role_based import require_roles
 
 router = APIRouter()
@@ -35,12 +32,17 @@ def get_current_employee_id(request: Request) -> str:
         raise HTTPException(status_code=401, detail="Employee ID missing in token")
     return str(employee_id)
 
+
 # ✅ Create single offer letter
-@router.post("/create", response_model=OfferCreateResponse, dependencies=[Depends(require_roles("HR"))])
+@router.post(
+    "/create",
+    response_model=OfferCreateResponse,
+    dependencies=[Depends(require_roles("HR"))],
+)
 async def create_offer_letter(
     request_data: OfferCreateRequest,
     request: Request,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Creates a single offer letter.
@@ -51,12 +53,11 @@ async def create_offer_letter(
         current_user_id = get_current_employee_id(request)
         print("current employee", current_user_id)
 
-        offer_service = OfferLetterService(db)           # ✅ pass injected session
+        offer_service = OfferLetterService(db)  # ✅ pass injected session
         offer_id = await offer_service.create_offer(request_data, current_user_id)
 
         return OfferCreateResponse(
-            message="Offer letter created successfully",
-            offer_id=offer_id
+            message="Offer letter created successfully", offer_id=offer_id
         )
 
     except HTTPException:
@@ -64,13 +65,15 @@ async def create_offer_letter(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# ✅ Bulk create offer letters
-@router.post("/bulk_create", response_model=BulkOfferCreateResponse, dependencies=[Depends(require_roles("HR"))])
 
+# ✅ Bulk create offer letters
+@router.post(
+    "/bulk_create",
+    response_model=BulkOfferCreateResponse,
+    dependencies=[Depends(require_roles("HR"))],
+)
 async def create_bulk_offer_letters(
-    request: Request,
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db)
+    request: Request, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)
 ):
     """
     Creates multiple offer letters from an uploaded Excel file.
@@ -81,33 +84,32 @@ async def create_bulk_offer_letters(
         # Validate file first
         if not file.filename:
             raise HTTPException(status_code=400, detail="No file provided")
-        
-        if not file.filename.lower().endswith(('.xlsx', '.xls', '.csv')):
+
+        if not file.filename.lower().endswith((".xlsx", ".xls", ".csv")):
             raise HTTPException(
-                status_code=400, 
-                detail="Invalid file format. Only .xlsx, .xls, .csv are allowed"
+                status_code=400,
+                detail="Invalid file format. Only .xlsx, .xls, .csv are allowed",
             )
 
         current_user_id = get_current_employee_id(request)
-        
+
         # Read file into DataFrame
         content = await file.read()
-        
+
         try:
             df = pd.read_excel(BytesIO(content), engine="openpyxl")
         except Exception as e:
             raise HTTPException(
-                status_code=400, 
-                detail=f"Failed to read Excel file: {str(e)}"
+                status_code=400, detail=f"Failed to read Excel file: {str(e)}"
             )
 
         # Service handles validation and data preparation
         offer_service = OfferLetterService(db)
         result = await offer_service.create_bulk_offers(df, current_user_id)
-        
+
         # Route handles transaction commit
         await db.commit()
-        
+
         return result
 
     except HTTPException:
@@ -115,22 +117,21 @@ async def create_bulk_offer_letters(
         if current_user_id:  # Only rollback if we had a valid session
             await db.rollback()
         raise
-        
+
     except Exception as e:
         # Catch any unexpected errors
         if current_user_id:
             await db.rollback()
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Unexpected error: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
 # ✅ Get all offers
-@router.get("/", response_model=list[OfferLetterDetailsResponse], dependencies=[Depends(require_roles("HR", "REPORTING_MANAGER", "Admin"))])
-async def get_all_offers(
-    db: AsyncSession = Depends(get_db)
-):
+@router.get(
+    "/",
+    response_model=list[OfferLetterDetailsResponse],
+    dependencies=[Depends(require_roles("HR", "REPORTING_MANAGER", "Admin"))],
+)
+async def get_all_offers(db: AsyncSession = Depends(get_db)):
     """
     Retrieves all offer letters.
     """
@@ -144,13 +145,14 @@ async def get_all_offers(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-import time
 
-@router.get("/user_id/details", response_model=list[OfferLetterDetailsResponse], dependencies=[Depends(require_roles("HR", "REPORTING_MANAGER"))])
-
+@router.get(
+    "/user_id/details",
+    response_model=list[OfferLetterDetailsResponse],
+    dependencies=[Depends(require_roles("HR", "REPORTING_MANAGER"))],
+)
 async def get_offer_by_user_id(
-    request: Request,
-    db: AsyncSession = Depends(get_read_db)
+    request: Request, db: AsyncSession = Depends(get_read_db)
 ):
     start = time.perf_counter()
 
@@ -160,14 +162,11 @@ async def get_offer_by_user_id(
 
     print("⏱ FULL endpoint:", time.perf_counter() - start)
     return result
-    
+
+
 # get offer by user uuid
 @router.get("/offer/{user_uuid}", response_model=OfferLetterDetailsResponse)
-
-async def get_offer_by_uuid(
-    user_uuid: str,
-    db: AsyncSession = Depends(get_db)
-):
+async def get_offer_by_uuid(user_uuid: str, db: AsyncSession = Depends(get_db)):
     """
     Retrieves an offer letter by its UUID.
     """
@@ -181,25 +180,30 @@ async def get_offer_by_uuid(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
 
 
-@router.put("/{user_uuid}", response_model=OfferUpdateResponse, dependencies=[Depends(require_roles("HR"))])
+@router.put(
+    "/{user_uuid}",
+    response_model=OfferUpdateResponse,
+    dependencies=[Depends(require_roles("HR"))],
+)
 async def update_offer_by_uuid(
     user_uuid: str,
     request_data: OfferCreateRequest,
     request: Request,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     try:
         offer_service = OfferLetterService(db)
         current_user_id = get_current_employee_id(request)
 
-        await offer_service.update_offer_by_uuid(user_uuid, request_data, current_user_id)
+        await offer_service.update_offer_by_uuid(
+            user_uuid, request_data, current_user_id
+        )
 
         return OfferUpdateResponse(
             message="Offer Details and Compensation Updated Successfully",
-            offer_id=user_uuid
+            offer_id=user_uuid,
         )
 
     except HTTPException:
@@ -207,53 +211,54 @@ async def update_offer_by_uuid(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/created", response_model=list[OfferLetterDetailsResponse], dependencies=[Depends(require_roles("HR", "ADMIN"))])
 
+@router.get(
+    "/created",
+    response_model=list[OfferLetterDetailsResponse],
+    dependencies=[Depends(require_roles("HR", "ADMIN"))],
+)
 async def get_created_offerletters(
-    request: Request,
-    db: AsyncSession = Depends(get_db)
+    request: Request, db: AsyncSession = Depends(get_db)
 ):
     print("Fetching created offer letters endpoint called")
     current_user_id = get_current_employee_id(request)
 
     offer_service = OfferLetterService(db)
-    result =  await offer_service.get_created_offerletters(current_user_id)
+    result = await offer_service.get_created_offerletters(current_user_id)
     for i in result:
         print("uuid", i.user_uuid)
     return result
 
 
 @router.post("/bulk-send", dependencies=[Depends(require_roles("HR"))])
-
 async def bulk_send_offer_letters(
     request_data: BulkSendOfferLettersRequest,
     request: Request,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
-    
+
     print("Bulk send offer letters endpoint called")
     offer_service = OfferLetterService(db)
-    print('offer_service created in route')
+    print("offer_service created in route")
     current_user_id = get_current_employee_id(request)
 
     result = await offer_service.send_bulk_offerletters_via_docusign_pdf(
-        request_data,
-        current_user_id
+        request_data, current_user_id
     )
 
     return result
 
 
-## delete offer letter by user_uuid only when it satisfies the following conditions:
+# delete offer letter by user_uuid only when it satisfies the following conditions:
 # 1. The offer letter status is 'rejected'
 # 2. The offer letter status was in 'created' and approval status is 'Rejected'
 # 3. the offer letter status is in  'created'(no action taken from approver
-@router.delete("/delete/{user_uuid}", response_model=DeleteOfferResponse, dependencies=[Depends(require_roles("HR"))])
-async def delete_offer_letter(
-
-    user_uuid: str,
-    db: AsyncSession = Depends(get_db)
-):
+@router.delete(
+    "/delete/{user_uuid}",
+    response_model=DeleteOfferResponse,
+    dependencies=[Depends(require_roles("HR"))],
+)
+async def delete_offer_letter(user_uuid: str, db: AsyncSession = Depends(get_db)):
     try:
         print("Delete offer letter endpoint called")
         offer_service = OfferLetterService(db)
@@ -261,42 +266,42 @@ async def delete_offer_letter(
         if result:
             return DeleteOfferResponse(message="Offer letter deleted successfully")
         else:
-            raise HTTPException(status_code=400, detail="Offer letter cannot be deleted due to its current status or it does not exist")
+            raise HTTPException(
+                status_code=400,
+                detail="Offer letter cannot be deleted due to its current status or it does not exist",
+            )
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/{user_uuid}/docusign-preview")   
+
+@router.get("/{user_uuid}/docusign-preview")
 async def get_docusign_preview(
     user_uuid: str,
     signer_email: str | None = Query(
         default=None,
         description="Optional signer email. Use this to open a manager signing view instead of the employee view.",
     ),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
-    
+
     offer_service = OfferLetterService(db)
     return await offer_service.get_docusign_preview(user_uuid, signer_email)
-        
+
 
 @router.get("/{user_uuid}/final-preview")
-async def get_final_offer_preview(
-    user_uuid: str,
-    db: AsyncSession = Depends(get_db)
-):
+async def get_final_offer_preview(user_uuid: str, db: AsyncSession = Depends(get_db)):
 
     offer_service = OfferLetterService(db)
     return await offer_service.get_final_offer_preview(user_uuid)
 
 
-
-@router.get("/{user_uuid}/generate-preview", dependencies=[Depends(require_roles("HR", "REPORTING_MANAGER"))])
-async def generate_offer_preview(
-    user_uuid: str,
-    db: AsyncSession = Depends(get_db)
-):
+@router.get(
+    "/{user_uuid}/generate-preview",
+    dependencies=[Depends(require_roles("HR", "REPORTING_MANAGER"))],
+)
+async def generate_offer_preview(user_uuid: str, db: AsyncSession = Depends(get_db)):
 
     # Ensure folder exists
     os.makedirs("generated_pdfs", exist_ok=True)
@@ -321,7 +326,7 @@ async def generate_offer_preview(
         "country_code": offer["country_code"],
         "contact_number": offer["contact_number"],
         "total_ctc": offer.get("total_ctc"),
-        "compensation_components": offer.get("compensation_components", [])
+        "compensation_components": offer.get("compensation_components", []),
     }
 
     print("DEBUG: offer_data for PDF generation:", offer_data)
@@ -332,7 +337,5 @@ async def generate_offer_preview(
 
     # 5️⃣ Return generated PDF
     return FileResponse(
-        pdf_path,
-        media_type="application/pdf",
-        filename=f"offer_{user_uuid}.pdf"
+        pdf_path, media_type="application/pdf", filename=f"offer_{user_uuid}.pdf"
     )

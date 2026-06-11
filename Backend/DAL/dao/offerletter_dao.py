@@ -1,9 +1,13 @@
 # Backend/DAL/dao/offerletter_dao.py
 import datetime
-from tracemalloc import start
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from ...DAL.models.models import OfferApprovalAction, OfferApprovalRequest, OfferCompensation, OfferLetterDetails
+from ...DAL.models.models import (
+    OfferApprovalAction,
+    OfferApprovalRequest,
+    OfferCompensation,
+    OfferLetterDetails,
+)
 from ...API_Layer.interfaces.offerletter_interfaces import OfferCreateRequest
 import time
 from sqlalchemy import delete
@@ -23,9 +27,7 @@ class OfferLetterDAO:
             emails = cc_emails
 
         cleaned_emails = [
-            str(email).strip()
-            for email in emails
-            if email and str(email).strip()
+            str(email).strip() for email in emails if email and str(email).strip()
         ]
         return ",".join(cleaned_emails) if cleaned_emails else None
 
@@ -55,9 +57,7 @@ class OfferLetterDAO:
     async def get_offer_by_user_uuid(self, user_uuid: str):
 
         result = await self.db.execute(
-            select(OfferLetterDetails).where(
-                OfferLetterDetails.user_uuid == user_uuid
-            )
+            select(OfferLetterDetails).where(OfferLetterDetails.user_uuid == user_uuid)
         )
 
         offer = result.scalar_one_or_none()
@@ -67,42 +67,34 @@ class OfferLetterDAO:
 
         # Normalize cc_emails
         cc_emails = (
-            [
-                mail.strip()
-                for mail in offer.cc_emails.split(",")
-                if mail.strip()
-            ]
+            [mail.strip() for mail in offer.cc_emails.split(",") if mail.strip()]
             if offer.cc_emails
             else []
         )
 
         return {
             "user_uuid": offer.user_uuid,
-
             "first_name": offer.first_name,
             "middle_name": offer.middle_name,
             "last_name": offer.last_name,
-
             "mail": offer.mail,
             "country_code": offer.country_code,
             "contact_number": offer.contact_number,
-
             "designation": offer.designation,
-
             # REQUIRED NEW FIELDS
             "employee_type": offer.employee_type,
             "reporting_manager": offer.reporting_manager,
             "joining_date": offer.joining_date,
-
             "currency": offer.currency,
             "total_ctc": offer.total_ctc,
-
             "created_by": offer.created_by,
             "status": offer.status,
-
-            "cc_emails": cc_emails
+            "cc_emails": cc_emails,
         }
-    async def create_offer(self, uuid: str, request_data: OfferCreateRequest, current_user_id: str) -> OfferLetterDetails:
+
+    async def create_offer(
+        self, uuid: str, request_data: OfferCreateRequest, current_user_id: str
+    ) -> OfferLetterDetails:
         """
         Create a single offer with immediate commit.
         Use for single offer creation.
@@ -127,20 +119,22 @@ class OfferLetterDAO:
         # ensure offer exists before children
         await self.db.flush()
 
-        #save compensation components
+        # save compensation components
         for comp in request_data.compensation_components:
-                row = OfferCompensation(
-                    offer_uuid=uuid,
-                    name=comp.name,
-                    type=comp.type,
-                    frequency=comp.frequency,
-                    amount=comp.amount
-                )
-                self.db.add(row)
-         
+            row = OfferCompensation(
+                offer_uuid=uuid,
+                name=comp.name,
+                type=comp.type,
+                frequency=comp.frequency,
+                amount=comp.amount,
+            )
+            self.db.add(row)
+
         return new_offer
 
-    async def create_offer_no_commit(self, uuid: str, request_data: OfferCreateRequest, current_user_id: str) -> OfferLetterDetails:
+    async def create_offer_no_commit(
+        self, uuid: str, request_data: OfferCreateRequest, current_user_id: str
+    ) -> OfferLetterDetails:
         """
         Create a single offer WITHOUT committing.
         Use inside a transaction context for bulk operations.
@@ -173,7 +167,7 @@ class OfferLetterDAO:
                 name=comp.name,
                 type=comp.type,
                 frequency=comp.frequency,
-                amount=comp.amount
+                amount=comp.amount,
             )
             self.db.add(row)
 
@@ -184,9 +178,7 @@ class OfferLetterDAO:
         """
         Get a single offer by email.
         """
-        result = await self.db.execute(
-            select(1).where(OfferLetterDetails.mail == mail)
-        )
+        result = await self.db.execute(select(1).where(OfferLetterDetails.mail == mail))
         return result.first()
 
     async def get_offers_by_emails(self, emails: list) -> list:
@@ -196,11 +188,11 @@ class OfferLetterDAO:
         """
         if not emails:
             return []
-        
+
         result = await self.db.execute(
             select(OfferLetterDetails.mail).where(OfferLetterDetails.mail.in_(emails))
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def get_all_offers(self):
         """
@@ -212,25 +204,22 @@ class OfferLetterDAO:
     async def get_offer_by_user_id(self, user_id: str):
         start = time.perf_counter()
 
-        stmt = (
-            select(
-                OfferLetterDetails.user_uuid,
-                OfferLetterDetails.first_name,
-                OfferLetterDetails.middle_name,   
-                OfferLetterDetails.last_name,
-                OfferLetterDetails.mail,
-                OfferLetterDetails.country_code,
-                OfferLetterDetails.contact_number,
-                OfferLetterDetails.designation,
-                OfferLetterDetails.employee_type,
-                OfferLetterDetails.currency,
-                OfferLetterDetails.total_ctc,
-                OfferLetterDetails.created_by,
-                OfferLetterDetails.status,
-                OfferLetterDetails.cc_emails
-            )
-            .where(OfferLetterDetails.created_by == user_id)
-        )
+        stmt = select(
+            OfferLetterDetails.user_uuid,
+            OfferLetterDetails.first_name,
+            OfferLetterDetails.middle_name,
+            OfferLetterDetails.last_name,
+            OfferLetterDetails.mail,
+            OfferLetterDetails.country_code,
+            OfferLetterDetails.contact_number,
+            OfferLetterDetails.designation,
+            OfferLetterDetails.employee_type,
+            OfferLetterDetails.currency,
+            OfferLetterDetails.total_ctc,
+            OfferLetterDetails.created_by,
+            OfferLetterDetails.status,
+            OfferLetterDetails.cc_emails,
+        ).where(OfferLetterDetails.created_by == user_id)
 
         t1 = time.perf_counter()
         result = await self.db.execute(stmt)
@@ -243,29 +232,31 @@ class OfferLetterDAO:
         formatted_rows = []
 
         for row in rows:
-            formatted_rows.append({
-                "user_uuid": row["user_uuid"],
-                "first_name": row["first_name"],
-                "middle_name": row["middle_name"],
-                "last_name": row["last_name"],
-                "mail": row["mail"],
-                "country_code": row["country_code"],
-                "contact_number": row["contact_number"],
-                "designation": row["designation"],
-                "employee_type": row["employee_type"],
-                "total_ctc": row["total_ctc"],
-                "created_by": row["created_by"],
-                "status": row["status"],
-                "cc_emails": (
-                    [
-                        email.strip()
-                        for email in row["cc_emails"].split(",")
-                        if email.strip()
-                    ]
-                    if row["cc_emails"]
-                    else []
-                )
-            })
+            formatted_rows.append(
+                {
+                    "user_uuid": row["user_uuid"],
+                    "first_name": row["first_name"],
+                    "middle_name": row["middle_name"],
+                    "last_name": row["last_name"],
+                    "mail": row["mail"],
+                    "country_code": row["country_code"],
+                    "contact_number": row["contact_number"],
+                    "designation": row["designation"],
+                    "employee_type": row["employee_type"],
+                    "total_ctc": row["total_ctc"],
+                    "created_by": row["created_by"],
+                    "status": row["status"],
+                    "cc_emails": (
+                        [
+                            email.strip()
+                            for email in row["cc_emails"].split(",")
+                            if email.strip()
+                        ]
+                        if row["cc_emails"]
+                        else []
+                    ),
+                }
+            )
 
         print("⏱ DAO total:", time.perf_counter() - start)
 
@@ -273,46 +264,44 @@ class OfferLetterDAO:
 
     async def get_offer_by_uuid(self, user_uuid: str):
         start = time.perf_counter()
-            
+
         stmt = (
-                 select(OfferLetterDetails)
-                .where(OfferLetterDetails.user_uuid == user_uuid)
-                .limit(1)
-            )
+            select(OfferLetterDetails)
+            .where(OfferLetterDetails.user_uuid == user_uuid)
+            .limit(1)
+        )
 
         result = await self.db.execute(stmt)
         offer = result.scalar_one_or_none()
 
         if not offer:
-             return None
+            return None
 
         # 2️⃣ Fetch compensation rows
-        comp_stmt = (
-                    select(OfferCompensation)
-                    .where(OfferCompensation.offer_uuid == user_uuid)
-                )
+        comp_stmt = select(OfferCompensation).where(
+            OfferCompensation.offer_uuid == user_uuid
+        )
 
         comp_result = await self.db.execute(comp_stmt)
         compensations = comp_result.scalars().all()
 
         # 3️⃣ Convert compensation rows to list of dicts
         compensation_list = [
-                {
-                    "name": c.name,
-                    "type": c.type,
-                    "frequency": c.frequency,
-                    "amount": float(c.amount)
-                }
-                for c in compensations
-            ]
+            {
+                "name": c.name,
+                "type": c.type,
+                "frequency": c.frequency,
+                "amount": float(c.amount) if c.amount is not None else 0.0,
+            }
+            for c in compensations
+        ]
 
         print("⏱ DAO total:", time.perf_counter() - start)
 
         result_data = {
-                
             "user_uuid": offer.user_uuid,
             "first_name": offer.first_name,
-            "middle_name":offer.middle_name,
+            "middle_name": offer.middle_name,
             "last_name": offer.last_name,
             "mail": offer.mail,
             "country_code": offer.country_code,
@@ -323,21 +312,20 @@ class OfferLetterDAO:
             "currency": offer.currency,
             "created_by": offer.created_by,
             "status": offer.status,
-            
             "cc_emails": offer.cc_emails.split(",") if offer.cc_emails else [],
             "total_ctc": offer.total_ctc,
-            "compensation_components": compensation_list
+            "compensation_components": compensation_list,
         }
         print("DEBUG: DAO returning offer data:", result_data)
         return result_data
 
     async def update_offer_by_uuid(
-    self,
-    user_uuid: str,
-    request_data: OfferCreateRequest,
-    current_user_id: str,
-) -> bool:
-    # 1. Update the main OfferLetterDetails record
+        self,
+        user_uuid: str,
+        request_data: OfferCreateRequest,
+        current_user_id: str,
+    ) -> bool:
+        # 1. Update the main OfferLetterDetails record
         stmt = (
             update(OfferLetterDetails)
             .where(OfferLetterDetails.user_uuid == user_uuid)
@@ -351,18 +339,17 @@ class OfferLetterDAO:
                 designation=request_data.designation,
                 employee_type=request_data.employee_type,
                 currency=request_data.currency,
-                total_ctc=request_data.total_ctc, # Matching your latest POST logic
+                total_ctc=request_data.total_ctc,  # Matching your latest POST logic
                 cc_emails=self._cc_emails_to_db(request_data.cc_emails),
-                
             )
         )
 
         result = await self.db.execute(stmt)
-        if result.rowcount == 0:
+        if result.rowcount == 0:  # type: ignore[attr-defined]
             return False
 
         # 2. Sync Compensation Components (The "Delete and Re-insert" pattern)
-        
+
         # Remove all old components for this UUID
         await self.db.execute(
             delete(OfferCompensation).where(OfferCompensation.offer_uuid == user_uuid)
@@ -375,7 +362,7 @@ class OfferLetterDAO:
                 name=comp.name,
                 type=comp.type,
                 frequency=comp.frequency,
-                amount=comp.amount
+                amount=comp.amount,
             )
             self.db.add(row)
 
@@ -383,7 +370,6 @@ class OfferLetterDAO:
         await self.db.flush()
         return True
 
-    
     async def fetch_created_offerletters(self, created_by: str):
         """
         Returns all offer letters:
@@ -391,18 +377,17 @@ class OfferLetterDAO:
         - created_by = <current user>
         """
 
-        query = (
-            select(OfferLetterDetails)
-            .where(
-                OfferLetterDetails.status == "Created",
-                OfferLetterDetails.created_by == created_by
-            )
+        query = select(OfferLetterDetails).where(
+            OfferLetterDetails.status == "Created",
+            OfferLetterDetails.created_by == created_by,
         )
 
         result = await self.db.execute(query)
         return result.scalars().all()
 
-    async def update_offerletter_status(self, user_uuid: str, new_status: str, current_user_id: str):
+    async def update_offerletter_status(
+        self, user_uuid: str, new_status: str, current_user_id: str
+    ):
         """
         Update only the status of an offer letter by UUID.
         """
@@ -452,8 +437,9 @@ class OfferLetterDAO:
 
         # 1. Fetch only the draft_id column
         result = await self.db.execute(
-            select(OfferLetterDetails.pandadoc_draft_id)
-            .where(OfferLetterDetails.user_uuid == user_uuid)
+            select(OfferLetterDetails.pandadoc_draft_id).where(
+                OfferLetterDetails.user_uuid == user_uuid
+            )
         )
         draft_id = result.scalar_one_or_none()
 
@@ -464,24 +450,20 @@ class OfferLetterDAO:
 
         today = datetime.date.today()
         three_days_later = today + datetime.timedelta(days=3)
-    
-        stmt = (
-            select(OfferLetterDetails)
-            .where(
-                OfferLetterDetails.joining_date == three_days_later
-            )
+
+        stmt = select(OfferLetterDetails).where(
+            OfferLetterDetails.joining_date == three_days_later
         )
 
         result = await self.db.execute(stmt)
 
         return result.scalars().all()
 
-    async def get_approval_request_by_user_uuid(self, user_uuid:str):
+    async def get_approval_request_by_user_uuid(self, user_uuid: str):
         stmt = (
             select(OfferApprovalRequest)
             .where(OfferApprovalRequest.user_uuid == user_uuid)
             .limit(1)
-
         )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
@@ -502,4 +484,4 @@ class OfferLetterDAO:
         result = await self.db.execute(
             delete(OfferLetterDetails).where(OfferLetterDetails.user_uuid == user_uuid)
         )
-        return result.rowcount > 0
+        return result.rowcount > 0  # type: ignore[attr-defined]

@@ -1,6 +1,8 @@
 from datetime import date
 from typing import Optional
-from Backend.API_Layer.interfaces.employee_details_interfaces import PersonalDetailsRequest
+from Backend.API_Layer.interfaces.employee_details_interfaces import (
+    PersonalDetailsRequest,
+)
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.dao.master_dao import CountryDAO
@@ -12,7 +14,6 @@ from ..utils.uuid_generator import generate_uuid7
 from ..utils.postal_code_validator import validate_postal_code
 from ...DAL.utils.storage_utils import S3StorageService
 import time
-import asyncio
 
 
 class EmployeeUploadService:
@@ -22,13 +23,13 @@ class EmployeeUploadService:
         self.countrydao = CountryDAO(self.db)
         self.offerdao = OfferLetterDAO(self.db)
         self.identitydao = IdentityDAO(self.db)
-        
+
     async def create_personal_details(self, request_data: PersonalDetailsRequest):
 
         try:
             validate_blood_group(request_data.blood_group)
             validate_date_of_birth(request_data.date_of_birth)
-           
+
             offer = await self.offerdao.get_offer_by_uuid(request_data.user_uuid)
 
             if not offer:
@@ -39,22 +40,23 @@ class EmployeeUploadService:
             )
 
             if not nationality:
-                raise HTTPException(status_code=404, detail="Nationality Country Not Found")
+                raise HTTPException(
+                    status_code=404, detail="Nationality Country Not Found"
+                )
 
-           
             residence = await self.countrydao.country_exists(
                 request_data.residence_country_uuid
             )
 
             if not residence:
-                raise HTTPException(status_code=404, detail="Residence Country Not Found")
+                raise HTTPException(
+                    status_code=404, detail="Residence Country Not Found"
+                )
 
-         
             result = await self.dao.create_personal_details(
-                request_data,
-                generate_uuid7()
+                request_data, generate_uuid7()
             )
-           
+
             return result
 
         except HTTPException:
@@ -80,7 +82,6 @@ class EmployeeUploadService:
             raise
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
 
     async def create_address(self, request_data):
         start_total = time.perf_counter()
@@ -88,7 +89,9 @@ class EmployeeUploadService:
         try:
             # 🔹 User check timing
             t1 = time.perf_counter()
-            existing_user = await self.offerdao.get_offer_by_uuid(request_data.user_uuid)
+            existing_user = await self.offerdao.get_offer_by_uuid(
+                request_data.user_uuid
+            )
             print(f"⏱ User query: {time.perf_counter() - t1:.4f} sec")
 
             if not existing_user:
@@ -96,7 +99,9 @@ class EmployeeUploadService:
 
             # 🔹 Country exists timing
             t2 = time.perf_counter()
-            country_exists = await self.countrydao.country_exists(request_data.country_uuid)
+            country_exists = await self.countrydao.country_exists(
+                request_data.country_uuid
+            )
             print(f"⏱ Country exists query: {time.perf_counter() - t2:.4f} sec")
 
             if not country_exists:
@@ -111,8 +116,7 @@ class EmployeeUploadService:
             # 🔹 Existing address lookup timing
             t4 = time.perf_counter()
             existing = await self.dao.get_address_by_user_uuid_and_address_type(
-                request_data.user_uuid,
-                request_data.address_type
+                request_data.user_uuid, request_data.address_type
             )
             print(f"⏱ Existing address query: {time.perf_counter() - t4:.4f} sec")
 
@@ -124,7 +128,9 @@ class EmployeeUploadService:
                 result = await self.dao.create_address(request_data, uuid)
                 print(f"⏱ Insert + commit: {time.perf_counter() - t5:.4f} sec")
 
-                print(f"🚀 TOTAL SERVICE TIME: {time.perf_counter() - start_total:.4f} sec")
+                print(
+                    f"🚀 TOTAL SERVICE TIME: {time.perf_counter() - start_total:.4f} sec"
+                )
                 return result
 
             # 🔵 UPDATE timing
@@ -148,22 +154,27 @@ class EmployeeUploadService:
 
         except Exception as e:
             await self.db.rollback()
-            print(f"❌ Service error after: {time.perf_counter() - start_total:.4f} sec")
+            print(
+                f"❌ Service error after: {time.perf_counter() - start_total:.4f} sec"
+            )
             raise HTTPException(status_code=500, detail=str(e))
-            
 
     async def update_address(self, uuid, request_data):
         try:
             existing = await self.dao.get_address_by_address_uuid(uuid)
             if not existing:
                 raise HTTPException(status_code=404, detail="Address Not Found")
-            existing_user = await self.offerdao.get_offer_by_uuid(request_data.user_uuid)
+            existing_user = await self.offerdao.get_offer_by_uuid(
+                request_data.user_uuid
+            )
             if not existing_user:
-                raise HTTPException(status_code = 404, detail = "User Not Found")
-            country_existing = await self.countrydao.get_country_by_uuid(request_data.country_uuid)
+                raise HTTPException(status_code=404, detail="User Not Found")
+            country_existing = await self.countrydao.get_country_by_uuid(
+                request_data.country_uuid
+            )
             if not country_existing:
-                raise HTTPException(status_code = 404, detail = "Country Not Found")
-            
+                raise HTTPException(status_code=404, detail="Country Not Found")
+
             calling_code = country_existing.calling_code
             validate_postal_code(calling_code, request_data.postal_code)
             result = await self.dao.update_address(uuid, request_data)
@@ -174,12 +185,7 @@ class EmployeeUploadService:
             raise HTTPException(status_code=500, detail=str(e))
 
     async def create_employee_identity(
-        self,
-        mapping_uuid,
-        user_uuid,
-        identity_file_number,
-        expiry_date,
-        file
+        self, mapping_uuid, user_uuid, identity_file_number, expiry_date, file
     ):
         start_total = time.perf_counter()
 
@@ -199,8 +205,7 @@ class EmployeeUploadService:
 
             if existing:
                 raise HTTPException(
-                    status_code=409,
-                    detail="Employee identity mapping already found"
+                    status_code=409, detail="Employee identity mapping already found"
                 )
 
             # 🔹 S3 upload timing (usually biggest part)
@@ -208,10 +213,7 @@ class EmployeeUploadService:
             blob_service = S3StorageService()
             folder = "identity_documents"
             file_path = await blob_service.upload_file(
-                file,
-                folder,
-                original_filename=file.filename,
-                employee_uuid=user_uuid
+                file, folder, original_filename=file.filename, employee_uuid=user_uuid
             )
             print(f"⏱ S3 upload: {time.perf_counter() - t3:.4f} sec")
 
@@ -224,7 +226,7 @@ class EmployeeUploadService:
                 identity_file_number,
                 expiry_date,
                 file_path,
-                uuid
+                uuid,
             )
             print(f"⏱ Insert + commit: {time.perf_counter() - t4:.4f} sec")
 
@@ -239,6 +241,7 @@ class EmployeeUploadService:
         except Exception as e:
             print(f"❌ Failed after: {time.perf_counter() - start_total:.4f} sec")
             raise HTTPException(status_code=500, detail=str(e))
+
     async def update_employee_identity(
         self,
         identity_uuid: str,
@@ -260,8 +263,8 @@ class EmployeeUploadService:
             file_path = await blob_service.upload_file(
                 file,
                 "identity_documents",
-                original_filename=file.filename,
-                employee_uuid=user_uuid
+                original_filename=file.filename or "",
+                employee_uuid=user_uuid,
             )
 
         return await self.dao.update_employee_identity(
@@ -270,5 +273,5 @@ class EmployeeUploadService:
             identity_file_number,
             user_uuid,
             expiry_date,
-            file_path
+            file_path,
         )

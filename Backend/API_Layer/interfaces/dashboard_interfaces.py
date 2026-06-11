@@ -1,10 +1,10 @@
 from pydantic import BaseModel
 from typing import List, Optional
 
-
 # ---------------------------------------------------------------------------
 # Dashboard Summary
 # ---------------------------------------------------------------------------
+
 
 class DashboardSummary(BaseModel):
     total_candidates: int
@@ -16,6 +16,7 @@ class DashboardSummary(BaseModel):
 # ---------------------------------------------------------------------------
 # Overview
 # ---------------------------------------------------------------------------
+
 
 class OfferManagement(BaseModel):
     created: int
@@ -47,6 +48,7 @@ class Overview(BaseModel):
 # Pipeline
 # ---------------------------------------------------------------------------
 
+
 class PipelineStage(BaseModel):
     count: int
     label: str
@@ -66,6 +68,7 @@ class Pipeline(BaseModel):
 # Pending Actions
 # ---------------------------------------------------------------------------
 
+
 class ActionItem(BaseModel):
     count: int
     description: str
@@ -82,6 +85,7 @@ class PendingActions(BaseModel):
 # Action Required Summary
 # ---------------------------------------------------------------------------
 
+
 class ActionRequiredSummary(BaseModel):
     total_pending_actions: int
     high_priority: int
@@ -92,6 +96,7 @@ class ActionRequiredSummary(BaseModel):
 # ---------------------------------------------------------------------------
 # Metrics
 # ---------------------------------------------------------------------------
+
 
 class MetricItem(BaseModel):
     value: str
@@ -107,6 +112,7 @@ class Metrics(BaseModel):
 # ---------------------------------------------------------------------------
 # Documents (per-type breakdown)
 # ---------------------------------------------------------------------------
+
 
 class DocumentStat(BaseModel):
     verified_count: int
@@ -130,6 +136,7 @@ class Documents(BaseModel):
 # Document Summary (aggregated across all types)
 # ---------------------------------------------------------------------------
 
+
 class DocumentSummary(BaseModel):
     total_documents: int
     verified_documents: int
@@ -141,6 +148,7 @@ class DocumentSummary(BaseModel):
 # ---------------------------------------------------------------------------
 # Process Delays
 # ---------------------------------------------------------------------------
+
 
 class DelayItem(BaseModel):
     count: int
@@ -156,6 +164,7 @@ class ProcessDelays(BaseModel):
 # Department Summary
 # ---------------------------------------------------------------------------
 
+
 class DepartmentSummaryItem(BaseModel):
     department: str
     count: int
@@ -165,6 +174,7 @@ class DepartmentSummaryItem(BaseModel):
 # ---------------------------------------------------------------------------
 # Recent Activity
 # ---------------------------------------------------------------------------
+
 
 class RecentActivityItem(BaseModel):
     user_uuid: str
@@ -186,6 +196,7 @@ class RecentActivityItem(BaseModel):
 # Top-level Dashboard Response
 # ---------------------------------------------------------------------------
 
+
 class DashboardResponse(BaseModel):
     dashboard_summary: DashboardSummary
     overview: Overview
@@ -204,6 +215,7 @@ class DashboardResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Celebrations
 # ---------------------------------------------------------------------------
+
 
 class CelebrationItem(BaseModel):
     name: str

@@ -1,4 +1,3 @@
-from Backend.API_Layer.interfaces import exit_final_settlement_interface
 from datetime import date
 
 from fastapi import HTTPException
@@ -19,13 +18,12 @@ class HrBulkJoinService:
 
         if not manager:
             raise HTTPException(
-                status_code=400,
-                detail="Invalid reporting manager selected"
+                status_code=400, detail="Invalid reporting manager selected"
             )
 
         return {
             "employee_id": manager.employee_id,
-            "name": f"{manager.first_name} {manager.last_name}".strip()
+            "name": f"{manager.first_name} {manager.last_name}".strip(),
         }
 
     # ✅ Status Logic
@@ -59,7 +57,7 @@ class HrBulkJoinService:
         reporting_time: str,
         department: str,
         reporting_manager_name: str,
-        custom_message: str | None = None
+        custom_message: str | None = None,
     ):
         return {
             "user_uuid": user.user_uuid,
@@ -75,27 +73,21 @@ class HrBulkJoinService:
             "reporting_time": reporting_time,
             "location": location,
             "reporting_manager": reporting_manager_name,
-            "custom_message": custom_message
+            "custom_message": custom_message,
         }
 
     # ✅ First-time Bulk Joining
     async def generate_bulk_join_preview(self, payload):
 
         if not payload.user_emails_list:
-            raise HTTPException(
-                status_code=400,
-                detail="No users selected"
-            )
+            raise HTTPException(status_code=400, detail="No users selected")
 
         verified_users = await self.dao.get_verified_users_by_emails(
             payload.user_emails_list
         )
 
         if not verified_users:
-            raise HTTPException(
-                status_code=400,
-                detail="No VERIFIED candidates found"
-            )
+            raise HTTPException(status_code=400, detail="No VERIFIED candidates found")
 
         user = verified_users[0]
         reporting_manager = await self.resolve_reporting_manager(
@@ -109,7 +101,7 @@ class HrBulkJoinService:
             reporting_time=payload.reporting_time,
             department=payload.department,
             reporting_manager_name=reporting_manager["name"],
-            custom_message=payload.custom_message
+            custom_message=payload.custom_message,
         )
 
         return DocumentService().generate_joining_pdf(joining_pdf_data)
@@ -121,10 +113,7 @@ class HrBulkJoinService:
         print("PAYLOAD :", payload)
 
         if not payload.user_emails_list:
-            raise HTTPException(
-                status_code=400,
-                detail="No users selected"
-            )
+            raise HTTPException(status_code=400, detail="No users selected")
 
         print("USER EMAIL LIST :", payload.user_emails_list)
 
@@ -135,15 +124,10 @@ class HrBulkJoinService:
         print("VERIFIED USERS FOUND :", len(verified_users))
 
         if not verified_users:
-            raise HTTPException(
-                status_code=400,
-                detail="No VERIFIED candidates found"
-            )
+            raise HTTPException(status_code=400, detail="No VERIFIED candidates found")
 
         # ✅ First-time joining
-        status = self.get_joining_status(
-            payload.joining_date
-        )
+        status = self.get_joining_status(payload.joining_date)
 
         print("FINAL STATUS FROM FUNCTION :", status)
 
@@ -156,7 +140,7 @@ class HrBulkJoinService:
             payload.joining_date,
             payload,
             status,
-            reporting_manager["employee_id"]
+            reporting_manager["employee_id"],
         )
 
         print("UPDATED ROWS :", updated_rows)
@@ -174,7 +158,7 @@ class HrBulkJoinService:
                 reporting_time=payload.reporting_time,
                 department=payload.department,
                 reporting_manager_name=reporting_manager["name"],
-                custom_message=payload.custom_message
+                custom_message=payload.custom_message,
             )
             pdf_path = document_service.generate_joining_pdf(joining_pdf_data)
 
@@ -191,7 +175,7 @@ class HrBulkJoinService:
                 reporting_manager=reporting_manager["name"],
                 custom_message=payload.custom_message,
                 attachment_bytes=pdf_bytes,
-                attachment_filename=f"joining_letter_{user.user_uuid}.pdf"
+                attachment_filename=f"joining_letter_{user.user_uuid}.pdf",
             )
 
         skipped = len(payload.user_emails_list) - updated_rows
@@ -203,7 +187,7 @@ class HrBulkJoinService:
             "joining_date": payload.joining_date,
             "status": status,
             "updated_verified_users": updated_rows,
-            "skipped_not_verified": skipped
+            "skipped_not_verified": skipped,
         }
 
     # ✅ Reassign Joining Date
@@ -213,23 +197,15 @@ class HrBulkJoinService:
         print("CURRENT USER ID :", current_user_id)
         print("PAYLOAD :", payload)
 
-        user = await self.dao.get_user_by_uuid(
-            payload.user_uuid
-        )
+        user = await self.dao.get_user_by_uuid(payload.user_uuid)
 
         print("USER FOUND :", user)
 
         if not user:
-            raise HTTPException(
-                status_code=404,
-                detail="User not found"
-            )
+            raise HTTPException(status_code=404, detail="User not found")
 
         # ✅ Reassigned joining date
-        status = self.get_joining_status(
-            payload.new_joining_date,
-            is_reassigned=True
-        )
+        status = self.get_joining_status(payload.new_joining_date, is_reassigned=True)
 
         print("FINAL STATUS FROM FUNCTION :", status)
 
@@ -238,10 +214,7 @@ class HrBulkJoinService:
         )
 
         await self.dao.update_joining_date_for_user(
-            payload.user_uuid,
-            payload,
-            status,
-            reporting_manager["employee_id"]
+            payload.user_uuid, payload, status, reporting_manager["employee_id"]
         )
 
         print("DATABASE UPDATED SUCCESSFULLY")
@@ -255,7 +228,7 @@ class HrBulkJoinService:
             reporting_time=payload.reporting_time,
             department=payload.department,
             reporting_manager_name=reporting_manager["name"],
-            custom_message=payload.joining_comments
+            custom_message=payload.joining_comments,
         )
         pdf_path = document_service.generate_joining_pdf(joining_pdf_data)
 
@@ -274,15 +247,14 @@ class HrBulkJoinService:
             reporting_manager=reporting_manager["name"],
             custom_message=payload.joining_comments,
             attachment_bytes=pdf_bytes,
-            attachment_filename=f"joining_letter_{user.user_uuid}.pdf"
+            attachment_filename=f"joining_letter_{user.user_uuid}.pdf",
         )
 
         return {
             "message": "Joining date reassigned successfully",
             "status": status,
-            "user_uuid": payload.user_uuid
+            "user_uuid": payload.user_uuid,
         }
-    
 
     async def get_employees_under_manager(self, employee_id: str):
         """
@@ -296,13 +268,14 @@ class HrBulkJoinService:
                 "employee_id": employee.employee_id,
                 "user_uuid": employee.user_uuid,
                 "name": " ".join(
-                    part for part in [
+                    part
+                    for part in [
                         employee.first_name,
                         employee.middle_name,
-                        employee.last_name
+                        employee.last_name,
                     ]
                     if part
-                ).strip()
+                ).strip(),
             }
             for employee in employees
         ]

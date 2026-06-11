@@ -6,10 +6,10 @@ from datetime import date, datetime
 from typing import Optional
 import re
 
-
 # ---------------------------------------------------------
 # ENUMS (MATCH DB ENUMS EXACTLY)
 # ---------------------------------------------------------
+
 
 class EmploymentType(str, Enum):
     FULL_TIME = "Full-Time"
@@ -25,6 +25,7 @@ class CertificateStatus(str, Enum):
     VERIFIED = "verified"
     REJECTED = "rejected"
 
+
 class ExperienceDocumentType(str, Enum):
     EXPERIENCE_LETTER = "experience_letter"
     PAYSLIP = "payslip"
@@ -33,9 +34,11 @@ class ExperienceDocumentType(str, Enum):
     INTERN_CERTIFICATE = "intern_certificate"
     OTHER = "other"
 
+
 # ---------------------------------------------------------
 # BASE VALIDATION UTILS
 # ---------------------------------------------------------
+
 
 def clean_text(value: Optional[str]) -> Optional[str]:
     """
@@ -46,12 +49,7 @@ def clean_text(value: Optional[str]) -> Optional[str]:
     """
     if value is None:
         return value
-    return (
-        value
-        .replace("\n", " ")
-        .replace("\t", " ")
-        .strip()
-    )
+    return value.replace("\n", " ").replace("\t", " ").strip()
 
 
 # ---------------------------------------------------------
@@ -61,7 +59,7 @@ def clean_text(value: Optional[str]) -> Optional[str]:
 
 class ExperienceCreateRequest(BaseModel):
     employee_uuid: str
-    company_name: str 
+    company_name: str
     start_date: date
     end_date: Optional[date] = None
     role_title: Optional[str] = Field(None, max_length=100)
@@ -103,6 +101,7 @@ class ExperienceCreateRequest(BaseModel):
 
         return end_date
 
+
 class ExperienceUpdateRequest(BaseModel):
     company_name: Optional[str] = Field(None, min_length=2, max_length=150)
     start_date: Optional[date] = None
@@ -129,12 +128,14 @@ class ExperienceUpdateRequest(BaseModel):
 # RESPONSE MODELS
 # ---------------------------------------------------------
 
+
 class ExperienceDocumentResponse(BaseModel):
     doc_uuid: str
     doc_type: ExperienceDocumentType
     file_name: str
     status: CertificateStatus
     uploaded_at: datetime
+
 
 class ExperienceResponse(BaseModel):
     experience_uuid: str
@@ -155,6 +156,7 @@ class ExperienceResponse(BaseModel):
     status: str
     uploaded_at: datetime
 
+
 class GenericMessageResponse(BaseModel):
     experience_uuid: str
     message: str
@@ -163,6 +165,7 @@ class GenericMessageResponse(BaseModel):
 class ExperienceCreateResponse(BaseModel):
     experience_uuid: str
     message: str
+
 
 class ExperienceUpdate(BaseModel):
     company_name: str
@@ -179,6 +182,6 @@ class ExperienceUpdate(BaseModel):
     status: str | None = None
     verified_by: str | None = None
     verified_at: datetime | None = None
-   # remarks: str | None
-    
 
+
+# remarks: str | None

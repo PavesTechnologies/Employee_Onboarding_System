@@ -8,21 +8,16 @@ class EmployeePfDAO:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-
     async def get_pf_details_by_uuid(self, pf_uuid):
         result = await self.db.execute(
-            select(EmployeePfDetails).where(
-                EmployeePfDetails.pf_uuid == pf_uuid
-            )
+            select(EmployeePfDetails).where(EmployeePfDetails.pf_uuid == pf_uuid)
         )
         return result.scalar_one_or_none()
 
     async def get_pf_details_by_user_uuid(self, user_uuid: str):
 
         result = await self.db.execute(
-            select(EmployeePfDetails).where(
-                EmployeePfDetails.user_uuid == user_uuid
-            )
+            select(EmployeePfDetails).where(EmployeePfDetails.user_uuid == user_uuid)
         )
 
         return result.scalar_one_or_none()
@@ -31,14 +26,13 @@ class EmployeePfDAO:
         result = await self.db.execute(select(EmployeePfDetails))
         return result.scalars().all()
 
-
     async def create_pf_details(self, pf_uuid, request_data):
 
         pf = EmployeePfDetails(
             pf_uuid=pf_uuid,
             user_uuid=request_data.user_uuid,
             pf_member=request_data.pf_member,
-            uan_number=request_data.uan_number
+            uan_number=request_data.uan_number,
         )
 
         self.db.add(pf)
@@ -47,13 +41,10 @@ class EmployeePfDAO:
 
         return pf
 
-
     async def update_pf_details(self, pf_uuid, request_data):
 
         result = await self.db.execute(
-            select(EmployeePfDetails).where(
-                EmployeePfDetails.pf_uuid == pf_uuid
-            )
+            select(EmployeePfDetails).where(EmployeePfDetails.pf_uuid == pf_uuid)
         )
 
         pf = result.scalar_one_or_none()
@@ -69,13 +60,10 @@ class EmployeePfDAO:
 
         return pf
 
-
     async def delete_pf_details(self, pf_uuid):
 
         result = await self.db.execute(
-            select(EmployeePfDetails).where(
-                EmployeePfDetails.pf_uuid == pf_uuid
-            )
+            select(EmployeePfDetails).where(EmployeePfDetails.pf_uuid == pf_uuid)
         )
 
         pf = result.scalar_one_or_none()
