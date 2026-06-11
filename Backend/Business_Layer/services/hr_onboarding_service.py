@@ -23,6 +23,7 @@ class HrOnboardingService:
         self.offer_dao = OfferLetterDAO(db)
 
     async def get_full_onboarding_details(self, user_uuid: str, current_user_id: int):
+        
         return await self.dao.get_full_onboarding_details(
             user_uuid, current_user_id
         )

@@ -6,6 +6,8 @@ from sqlalchemy import update
 from datetime import datetime
 import time
 import asyncio
+
+from ...DAL.utils.storage_utils import S3StorageService
 from ...DAL.utils.database import AsyncSessionLocal
 
 from ...DAL.models.models import (
@@ -34,6 +36,7 @@ from sqlalchemy.orm import noload
 class HrOnboardingDAO:
     def __init__(self, db: AsyncSession):
         self.db = db
+        self.storage_service = S3StorageService()
     def build_experience_documents(e):
         documents = []
 
@@ -393,6 +396,13 @@ class HrOnboardingDAO:
                 "emergency_contact_phone": personal_row.emergency_contact_phone,
                 "emergency_contact_relation_uuid": personal_row.emergency_contact_relation_uuid,
                 "emergency_contact_relation": relation.get(personal_row.emergency_contact_relation_uuid),
+                "profile_photo_path": (
+                    await self.storage_service.get_presigned_url(
+                        personal_row.profile_photo_path
+                        )
+                        if personal_row.profile_photo_path
+                        else None
+                    )
             }
 
         # -------- Addresses --------

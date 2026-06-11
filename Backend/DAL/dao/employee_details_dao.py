@@ -33,6 +33,25 @@ class EmployeeDetailsDAO:
 
     import time
 
+    async def update_profile_photo_path(
+        self,
+        user_uuid: str,
+        profile_photo_path: str
+    ):
+        personal_details = await self.get_personal_details_by_user_uuid(
+            user_uuid
+        )
+
+        if not personal_details:
+            return None
+
+        personal_details.profile_photo_path = profile_photo_path
+
+        await self.db.commit()
+        await self.db.refresh(personal_details)
+
+        return personal_details
+
     async def update_personal_details(self, personal_uuid: str, request_data):
         try:
             start = perf_counter()
@@ -60,7 +79,8 @@ class EmployeeDetailsDAO:
                 "residence_country_uuid": request_data.residence_country_uuid,
                 "emergency_contact_name": request_data.emergency_contact_name,
                 "emergency_contact_phone": request_data.emergency_contact_phone,
-                "emergency_contact_relation_uuid": request_data.emergency_contact_relation_uuid
+                "emergency_contact_relation_uuid": request_data.emergency_contact_relation_uuid,
+     
             }
             end = perf_counter()
             print("Time taken to update personal details:", end - start)

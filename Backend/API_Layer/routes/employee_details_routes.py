@@ -147,7 +147,18 @@ async def delete_personal_details(personal_uuid: str, db: AsyncSession = Depends
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+@router.post("/profile-photo/{user_uuid}")
+async def upload_profile_photo(
+    user_uuid: str,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db)
+):
+    service = EmployeeDetailsService(db)
 
+    return await service.upload_profile_photo(
+        user_uuid,
+        file
+    )
     
 @router.get("/address/", response_model = list[AddressDetails], )
 async def get_all_addresses(db: AsyncSession = Depends(get_db)):
