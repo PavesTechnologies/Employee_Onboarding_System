@@ -34,8 +34,7 @@ class PersonalDetailsRequest(BaseModel):
     emergency_contact_name: str
     emergency_contact_phone: str
     emergency_contact_relation_uuid: str
-
-
+   
 class PersonalDetailsResponse(BaseModel):
     personal_uuid: str
     message: str
@@ -56,6 +55,8 @@ class PersonalDetails(BaseModel):
     emergency_contact_name: Optional[str] = None
     emergency_contact_phone: Optional[str] = None
     emergency_contact_relation_uuid: Optional[str] = None
+    profile_photo_path: Optional[str] = None
+    profile_photo_url: Optional[str] = None
 
 
 class UpdatePersonalRequest(BaseModel):
@@ -68,8 +69,20 @@ class UpdatePersonalRequest(BaseModel):
     emergency_contact_name: str
     emergency_contact_phone: str
     emergency_contact_relation_uuid: str
+  
+class UploadProfilePhotoResponse(BaseModel):
+    message: str
+    profile_photo_path: Optional[str] = None
+    profile_photo_url: Optional[str] = None
 
 
+class ProfilePhotoResponse(BaseModel):
+    profile_photo_path: Optional[str] = None
+    profile_photo_url: Optional[str] = None
+
+class DeleteProfilePhotoResponse(BaseModel):
+    message: str
+    
 class CreateRelationRequest(BaseModel):
     relation_name: str
 
