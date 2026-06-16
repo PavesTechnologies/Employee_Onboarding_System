@@ -164,7 +164,7 @@ async def delete_personal_details(
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-<<<<<<< HEAD
+
     
 @router.post("/profile-photo/{user_uuid}")
 async def upload_profile_photo(
@@ -180,7 +180,7 @@ async def upload_profile_photo(
     )
     
 @router.get("/address/", response_model = list[AddressDetails], )
-=======
+
 
 
 @router.get(

@@ -22,7 +22,6 @@ class EmployeeDetailsService:
         self.dao = EmployeeDetailsDAO(self.db)
         self.countrydao = CountryDAO(self.db)
         self.offerdao = OfferLetterDAO(self.db)
-<<<<<<< HEAD
         self.storage_service = S3StorageService()
     
     async def get_all_personal_details(self):
@@ -105,10 +104,6 @@ class EmployeeDetailsService:
             }
     
     async def get_personal_details_by_user_uuid(self, uuid):
-=======
-
-    async def get_all_personal_details(self):
->>>>>>> 98587add12bde25c4c4640609ba0ea849ff0f6c3
         try:
             result = await self.dao.get_all_personal_details()
             return result
