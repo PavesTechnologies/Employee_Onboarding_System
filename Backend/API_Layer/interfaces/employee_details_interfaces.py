@@ -49,13 +49,8 @@ class PersonalDetails(BaseModel):
     emergency_contact_name: Optional[str] = None
     emergency_contact_phone: Optional[str] = None
     emergency_contact_relation_uuid: Optional[str] = None
-<<<<<<< HEAD
     profile_photo_path: Optional[str]=None
         
-=======
-
-
->>>>>>> 98587add12bde25c4c4640609ba0ea849ff0f6c3
 class UpdatePersonalRequest(BaseModel):
     date_of_birth: str
     gender: Gender
@@ -66,12 +61,8 @@ class UpdatePersonalRequest(BaseModel):
     emergency_contact_name: str
     emergency_contact_phone: str
     emergency_contact_relation_uuid: str
-<<<<<<< HEAD
     profile_picture_path: Optional[str] = None
     
-=======
-
->>>>>>> 98587add12bde25c4c4640609ba0ea849ff0f6c3
 
 class CreateRelationRequest(BaseModel):
     relation_name: str

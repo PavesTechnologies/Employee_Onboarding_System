@@ -34,11 +34,7 @@ from sqlalchemy.orm import noload
 class HrOnboardingDAO:
     def __init__(self, db: AsyncSession):
         self.db = db
-<<<<<<< HEAD
         self.storage_service = S3StorageService()
-=======
-
->>>>>>> 98587add12bde25c4c4640609ba0ea849ff0f6c3
     def build_experience_documents(e):
         documents = []
 
@@ -398,7 +394,6 @@ class HrOnboardingDAO:
                 "emergency_contact_name": personal_row.emergency_contact_name,
                 "emergency_contact_phone": personal_row.emergency_contact_phone,
                 "emergency_contact_relation_uuid": personal_row.emergency_contact_relation_uuid,
-<<<<<<< HEAD
                 "emergency_contact_relation": relation.get(personal_row.emergency_contact_relation_uuid),
                 "profile_photo_path": (
                     await self.storage_service.get_presigned_url(
@@ -407,11 +402,6 @@ class HrOnboardingDAO:
                         if personal_row.profile_photo_path
                         else None
                     )
-=======
-                "emergency_contact_relation": relation.get(
-                    personal_row.emergency_contact_relation_uuid
-                ),
->>>>>>> 98587add12bde25c4c4640609ba0ea849ff0f6c3
             }
 
         # -------- Addresses --------

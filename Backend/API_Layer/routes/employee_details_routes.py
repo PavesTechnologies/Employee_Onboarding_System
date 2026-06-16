@@ -1,6 +1,6 @@
 # Backend/API_Layer/routes/employee_details_routes.py
 from time import perf_counter
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.utils.dependencies import get_db
 from ..interfaces.employee_details_interfaces import (

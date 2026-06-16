@@ -996,15 +996,14 @@ class PersonalDetails(Base):
     residence_country_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))
     emergency_contact_name: Mapped[Optional[str]] = mapped_column(String(100))
     emergency_contact_phone: Mapped[Optional[str]] = mapped_column(String(20))
-<<<<<<< HEAD
+
     emergency_contact_relation_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))   
     status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'verified', 'rejected'), server_default=text("'uploaded'"))
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
     profile_photo_path: Mapped[Optional[str]] = mapped_column(String(500))
     countries: Mapped[Optional['Countries']] = relationship(
-        'Countries',
-=======
+        'Countries'),
     emergency_contact_relation_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))
     status: Mapped[Optional[str]] = mapped_column(
         Enum("uploaded", "verified", "rejected"), server_default=text("'uploaded'")
@@ -1018,19 +1017,18 @@ class PersonalDetails(Base):
 
     countries: Mapped[Optional["Countries"]] = relationship(
         "Countries",
->>>>>>> 98587add12bde25c4c4640609ba0ea849ff0f6c3
         foreign_keys=[nationality_country_uuid],
         back_populates="personal_details",
         lazy="selectin",
     )
 
-    countries_: Mapped[Optional["Countries"]] = relationship(
+    countries: Mapped[Optional["Countries"]] = relationship(
         "Countries",
-        foreign_keys=[residence_country_uuid],
-        back_populates="personal_details_",
+        foreign_keys=[nationality_country_uuid],
+        back_populates="personal_details",
         lazy="selectin",
     )
-
+    
     offer_letter_details: Mapped["OfferLetterDetails"] = relationship(
         "OfferLetterDetails", back_populates="personal_details", lazy="selectin"
     )
