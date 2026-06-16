@@ -5,6 +5,8 @@ from sqlalchemy import update
 from datetime import datetime
 import time
 import asyncio
+
+from ...DAL.utils.storage_utils import S3StorageService
 from ...DAL.utils.database import AsyncSessionLocal
 
 from ...DAL.models.models import (
@@ -32,7 +34,7 @@ from sqlalchemy.orm import noload
 class HrOnboardingDAO:
     def __init__(self, db: AsyncSession):
         self.db = db
-
+        self.storage_service = S3StorageService()
     def build_experience_documents(e):
         documents = []
 

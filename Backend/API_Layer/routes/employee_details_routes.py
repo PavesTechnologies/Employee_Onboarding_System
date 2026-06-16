@@ -166,10 +166,8 @@ async def delete_personal_details(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get(
-    "/address/",
-    response_model=list[AddressDetails],
-)
+
+@router.get("/address/", response_model=list[AddressDetails])
 async def get_all_addresses(db: AsyncSession = Depends(get_db)):
     try:
         address_service = AddressService(db)
