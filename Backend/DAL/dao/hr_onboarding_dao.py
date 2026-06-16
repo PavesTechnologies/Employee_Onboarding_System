@@ -394,7 +394,9 @@ class HrOnboardingDAO:
                 "emergency_contact_name": personal_row.emergency_contact_name,
                 "emergency_contact_phone": personal_row.emergency_contact_phone,
                 "emergency_contact_relation_uuid": personal_row.emergency_contact_relation_uuid,
-                "emergency_contact_relation": relation.get(personal_row.emergency_contact_relation_uuid),
+                "emergency_contact_relation": relation.get(
+                    personal_row.emergency_contact_relation_uuid
+                ),
             }
 
         # -------- Addresses --------
