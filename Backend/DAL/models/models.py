@@ -60,12 +60,28 @@ class Countries(Base):
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
 
-    addresses: Mapped[list['Addresses']] = relationship('Addresses', back_populates='countries')
-    contacts: Mapped[list['Contacts']] = relationship('Contacts', back_populates='countries')
-    country_education_document_mapping: Mapped[list['CountryEducationDocumentMapping']] = relationship('CountryEducationDocumentMapping', back_populates='countries')
-    country_identity_mapping: Mapped[list['CountryIdentityMapping']] = relationship('CountryIdentityMapping', back_populates='countries')
-    personal_details: Mapped[list['PersonalDetails']] = relationship('PersonalDetails', foreign_keys='[PersonalDetails.nationality_country_uuid]', back_populates='countries')
-    personal_details_: Mapped[list['PersonalDetails']] = relationship('PersonalDetails', foreign_keys='[PersonalDetails.residence_country_uuid]', back_populates='countries_')
+    addresses: Mapped[list["Addresses"]] = relationship(
+        "Addresses", back_populates="countries"
+    )
+    contacts: Mapped[list["Contacts"]] = relationship(
+        "Contacts", back_populates="countries"
+    )
+    country_education_document_mapping: Mapped[
+        list["CountryEducationDocumentMapping"]
+    ] = relationship("CountryEducationDocumentMapping", back_populates="countries")
+    country_identity_mapping: Mapped[list["CountryIdentityMapping"]] = relationship(
+        "CountryIdentityMapping", back_populates="countries"
+    )
+    nationality_personal_details: Mapped[list["PersonalDetails"]] = relationship(
+        "PersonalDetails",
+        foreign_keys="[PersonalDetails.nationality_country_uuid]",
+        back_populates="nationality_country",
+    )
+    residence_personal_details: Mapped[list["PersonalDetails"]] = relationship(
+        "PersonalDetails",
+        foreign_keys="[PersonalDetails.residence_country_uuid]",
+        back_populates="residence_country",
+    )
 
 
 class DeliverableItems(Base):
@@ -970,22 +986,31 @@ class PersonalDetails(Base):
     residence_country_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))
     emergency_contact_name: Mapped[Optional[str]] = mapped_column(String(100))
     emergency_contact_phone: Mapped[Optional[str]] = mapped_column(String(20))
-    emergency_contact_relation_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))   
-    status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'verified', 'rejected'), server_default=text("'uploaded'"))
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
-    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
 
-    countries: Mapped[Optional['Countries']] = relationship(
-        'Countries',
+    emergency_contact_relation_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))
+    status: Mapped[Optional[str]] = mapped_column(
+        Enum("uploaded", "verified", "rejected"), server_default=text("'uploaded'")
+    )
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP")
+    )
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    )
+    profile_photo_path: Mapped[Optional[str]] = mapped_column(
+    String(500)
+)
+    nationality_country: Mapped[Optional["Countries"]] = relationship(
+        "Countries",
         foreign_keys=[nationality_country_uuid],
-        back_populates="personal_details",
+        back_populates="nationality_personal_details",
         lazy="selectin",
     )
 
-    countries_: Mapped[Optional["Countries"]] = relationship(
+    residence_country: Mapped[Optional["Countries"]] = relationship(
         "Countries",
         foreign_keys=[residence_country_uuid],
-        back_populates="personal_details_",
+        back_populates="residence_personal_details",
         lazy="selectin",
     )
 
@@ -993,10 +1018,10 @@ class PersonalDetails(Base):
         "OfferLetterDetails", back_populates="personal_details", lazy="selectin"
     )
 
-    # Relation Master Relationship
     relation_master: Mapped[Optional["RelationMaster"]] = relationship(
         "RelationMaster",
         foreign_keys=[emergency_contact_relation_uuid],
+        back_populates="personal_details",
         lazy="selectin",
     )
 
@@ -1093,7 +1118,7 @@ class EmployeeEducationDocument(Base):
     )
 
     degree_master: Mapped["DegreeMaster"] = relationship(
-        "DegreeMaster", lazy="selectin"
+        "DegreeMaster", back_populates="employee_education_document", lazy="selectin"
     )
 
 
@@ -1842,6 +1867,15 @@ class OfferApprovalAction(Base):
 
 #     offer_letter_details: Mapped['OfferLetterDetails'] = relationship('OfferLetterDetails', back_populates='employee_pf_details')
 
+# class EmployeeReceivables(Base):
+#     __tablename__ = 'employee_receivables'
+#     __table_args__ = (
+#         ForeignKeyConstraint(['receivable_uuid'], ['receivable_items.receivable_uuid'], name='employee_receivables_ibfk_2'),
+#         ForeignKeyConstraint(['user_uuid'], ['offer_letter_details.user_uuid'], name='employee_receivables_ibfk_1'),
+#         Index('employee_receivable_uuid', 'employee_receivable_uuid', unique=True),
+#         Index('receivable_uuid', 'receivable_uuid'),
+#         Index('user_uuid', 'user_uuid')
+#     )
 
 # class EmployeeReceivables(Base):
 #     __tablename__ = 'employee_receivables'
@@ -1865,6 +1899,12 @@ class OfferApprovalAction(Base):
 #     receivable_items: Mapped['ReceivableItems'] = relationship('ReceivableItems', back_populates='employee_receivables')
 #     offer_letter_details: Mapped['OfferLetterDetails'] = relationship('OfferLetterDetails', back_populates='employee_receivables')
 
+# class EmployeeSocialLinks(Base):
+#     __tablename__ = 'employee_social_links'
+#     __table_args__ = (
+#         ForeignKeyConstraint(['user_uuid'], ['offer_letter_details.user_uuid'], name='employee_social_links_ibfk_1'),
+#         Index('employee_social_links_ibfk_1', 'user_uuid')
+#     )
 
 # class EmployeeSocialLinks(Base):
 #     __tablename__ = 'employee_social_links'
