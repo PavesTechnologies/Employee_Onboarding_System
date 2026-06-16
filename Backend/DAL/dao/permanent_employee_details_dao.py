@@ -181,14 +181,14 @@ class PermanentEmployeeDetailsDAO:
         query = text("""
             SELECT employee_id
             FROM employee_details
-            WHERE employee_id = employee_id
+            WHERE employee_id = :employee_id
             LIMIT 1
         """)
 
         result = await db.execute(query, {"employee_id": employee_id})
 
         return result.scalar() is not None
-
+        
     async def check_work_email_exists(self, db, work_email):
 
         query = text("""
