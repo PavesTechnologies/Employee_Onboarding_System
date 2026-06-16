@@ -35,40 +35,30 @@ class AuditTrail(Base):
     audit_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
     entity_name: Mapped[str] = mapped_column(String(100), nullable=False)
     entity_id: Mapped[str] = mapped_column(String(100), nullable=False)
-    operation: Mapped[str] = mapped_column(
-        Enum("CREATE", "UPDATE", "DELETE"), nullable=False
-    )
+    operation: Mapped[str] = mapped_column(Enum('CREATE', 'UPDATE', 'DELETE'), nullable=False)
     user_id: Mapped[Optional[str]] = mapped_column(String(100))
     old_data: Mapped[Optional[dict]] = mapped_column(JSON)
     new_data: Mapped[Optional[dict]] = mapped_column(JSON)
     ip_address: Mapped[Optional[str]] = mapped_column(String(50))
     host: Mapped[Optional[str]] = mapped_column(String(255))
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP")
-    )
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     endpoint: Mapped[Optional[str]] = mapped_column(String(100))
 
 
 class Countries(Base):
     __tablename__ = "countries"
     __table_args__ = (
-        Index("country_uuid", "country_uuid", unique=True),
-        Index("idx_country_uuid", "country_uuid"),
+        Index('country_uuid', 'country_uuid', unique=True),
+        Index('idx_country_uuid', 'country_uuid')
     )
 
     country_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     country_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
     country_name: Mapped[str] = mapped_column(String(100), nullable=False)
     calling_code: Mapped[Optional[str]] = mapped_column(String(5))
-    is_active: Mapped[Optional[int]] = mapped_column(
-        TINYINT(1), server_default=text("'1'")
-    )
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP")
-    )
-    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
-    )
+    is_active: Mapped[Optional[int]] = mapped_column(TINYINT(1), server_default=text("'1'"))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
 
     addresses: Mapped[list["Addresses"]] = relationship(
         "Addresses", back_populates="countries"
@@ -95,16 +85,16 @@ class Countries(Base):
 
 
 class DeliverableItems(Base):
-    __tablename__ = "deliverable_items"
-    __table_args__ = (Index("deliverable_uuid", "deliverable_uuid", unique=True),)
+    __tablename__ = 'deliverable_items'
+    __table_args__ = (
+        Index('deliverable_uuid', 'deliverable_uuid', unique=True),
+    )
 
     deliverable_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     deliverable_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
     item_name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(255))
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP")
-    )
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
 
     employee_deliverables: Mapped[list["EmployeeDeliverables"]] = relationship(
         "EmployeeDeliverables", back_populates="deliverable_items"

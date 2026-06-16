@@ -149,7 +149,7 @@ async def get_all_offers(db: AsyncSession = Depends(get_db)):
 @router.get(
     "/user_id/details",
     response_model=list[OfferLetterDetailsResponse],
-    dependencies=[Depends(require_roles("HR", "REPORTING_MANAGER"))],
+    dependencies=[Depends(require_roles("HR", "REPORTING_MANAGER", "ADMIN"))],
 )
 async def get_offer_by_user_id(
     request: Request, db: AsyncSession = Depends(get_read_db)

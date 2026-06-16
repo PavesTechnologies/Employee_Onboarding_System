@@ -2,7 +2,10 @@ from enum import Enum
 import re
 from pydantic import BaseModel, Field, validator
 from datetime import date
+
 from typing import Optional
+
+
 
 
 class Gender(str, Enum):
@@ -11,11 +14,13 @@ class Gender(str, Enum):
     OTHER = "Other"
 
 
+
 class MaritalStatus(str, Enum):
     SINGLE = "Single"
     MARRIED = "Married"
     DIVORCED = "Divorced"
     WIDOWED = "Widowed"
+
 
 
 class PersonalDetailsRequest(BaseModel):
@@ -35,9 +40,12 @@ class PersonalDetailsResponse(BaseModel):
     message: str
 
 
+
+
 class PersonalDetails(BaseModel):
     personal_uuid: str
     user_uuid: str
+    date_of_birth: date  # <-- accepts datetime.date automatically
     date_of_birth: date  # <-- accepts datetime.date automatically
     gender: str
     marital_status: str
@@ -79,12 +87,15 @@ class CreateRelationRequest(BaseModel):
     relation_name: str
 
 
+
 class CreateRelationResponse(BaseModel):
     relation_uuid: str
     message: str
 
 
+
 # Addresses Interfaces
+
 
 
 class AddressType(str, Enum):
@@ -101,9 +112,11 @@ class CreateAddressRequest(BaseModel):
     district_or_ward: Optional[str] = None
     state_or_region: str = Field(..., min_length=2, max_length=50)
     postal_code: str = Field(..., min_length=6, max_length=6, pattern=r"^\d{6}$")
+    postal_code: str = Field(..., min_length=6, max_length=6, pattern=r"^\d{6}$")
     country_uuid: str
 
     # Prevent empty strings
+    @validator("address_line1", "address_line2", "city", "state_or_region")
     @validator("address_line1", "address_line2", "city", "state_or_region")
     def validate_not_empty(cls, v):
         if not v.strip():
@@ -130,16 +143,23 @@ class CreateAddressRequest(BaseModel):
         city = values.get("city")
         state = values.get("state_or_region")
 
+
         if not (city or state or v):
+            raise ValueError(
+                "At least one of city / district_or_ward / state_or_region must be provided"
+            )
             raise ValueError(
                 "At least one of city / district_or_ward / state_or_region must be provided"
             )
         return v
 
 
+
+
 class CreateAddressResponse(BaseModel):
     address_uuid: str
     message: str
+
 
 
 class AddressDetails(BaseModel):
@@ -155,6 +175,7 @@ class AddressDetails(BaseModel):
     country_uuid: str
 
 
+
 class EmployeeIdentityResponse(BaseModel):
     identity_uuid: str
     identity_file_number: str
@@ -162,9 +183,11 @@ class EmployeeIdentityResponse(BaseModel):
     message: str
 
 
+
 class DeleteEmployeeIdentityResponse(BaseModel):
     document_uuid: str
     message: str
+
 
 
 class SocialLinkRequest(BaseModel):
@@ -183,6 +206,7 @@ class SocialLinkDetails(BaseModel):
     user_uuid: str
     platform_name: str
     url: str
+
 
 
 class EmployeeAboutRequest(BaseModel):
