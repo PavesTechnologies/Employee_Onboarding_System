@@ -1,6 +1,6 @@
 # Backend/API_Layer/routes/employee_details_routes.py
 from time import perf_counter
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.utils.dependencies import get_db
 from ..interfaces.employee_details_interfaces import (
@@ -165,29 +165,9 @@ async def delete_personal_details(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    
-@router.post("/profile-photo/{user_uuid}")
-async def upload_profile_photo(
-    user_uuid: str,
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db)
-):
-    service = EmployeeDetailsService(db)
-
-    return await service.upload_profile_photo(
-        user_uuid,
-        file
-    )
-    
-@router.get("/address/", response_model = list[AddressDetails], )
 
 
-
-@router.get(
-    "/address/",
-    response_model=list[AddressDetails],
-)
-
+@router.get("/address/", response_model=list[AddressDetails])
 async def get_all_addresses(db: AsyncSession = Depends(get_db)):
     try:
         address_service = AddressService(db)

@@ -82,15 +82,15 @@ class Countries(Base):
     country_identity_mapping: Mapped[list["CountryIdentityMapping"]] = relationship(
         "CountryIdentityMapping", back_populates="countries"
     )
-    personal_details: Mapped[list["PersonalDetails"]] = relationship(
+    nationality_personal_details: Mapped[list["PersonalDetails"]] = relationship(
         "PersonalDetails",
         foreign_keys="[PersonalDetails.nationality_country_uuid]",
-        back_populates="countries",
+        back_populates="nationality_country",
     )
-    personal_details_: Mapped[list["PersonalDetails"]] = relationship(
+    residence_personal_details: Mapped[list["PersonalDetails"]] = relationship(
         "PersonalDetails",
         foreign_keys="[PersonalDetails.residence_country_uuid]",
-        back_populates="countries_",
+        back_populates="residence_country",
     )
 
 
@@ -997,13 +997,6 @@ class PersonalDetails(Base):
     emergency_contact_name: Mapped[Optional[str]] = mapped_column(String(100))
     emergency_contact_phone: Mapped[Optional[str]] = mapped_column(String(20))
 
-    emergency_contact_relation_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))   
-    status: Mapped[Optional[str]] = mapped_column(Enum('uploaded', 'verified', 'rejected'), server_default=text("'uploaded'"))
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
-    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
-    profile_photo_path: Mapped[Optional[str]] = mapped_column(String(500))
-    countries: Mapped[Optional['Countries']] = relationship(
-        'Countries'),
     emergency_contact_relation_uuid: Mapped[Optional[str]] = mapped_column(CHAR(36))
     status: Mapped[Optional[str]] = mapped_column(
         Enum("uploaded", "verified", "rejected"), server_default=text("'uploaded'")
@@ -1014,29 +1007,28 @@ class PersonalDetails(Base):
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     )
-
-    countries: Mapped[Optional["Countries"]] = relationship(
+    nationality_country: Mapped[Optional["Countries"]] = relationship(
         "Countries",
         foreign_keys=[nationality_country_uuid],
-        back_populates="personal_details",
+        back_populates="nationality_personal_details",
         lazy="selectin",
     )
 
-    countries: Mapped[Optional["Countries"]] = relationship(
+    residence_country: Mapped[Optional["Countries"]] = relationship(
         "Countries",
-        foreign_keys=[nationality_country_uuid],
-        back_populates="personal_details",
+        foreign_keys=[residence_country_uuid],
+        back_populates="residence_personal_details",
         lazy="selectin",
     )
-    
+
     offer_letter_details: Mapped["OfferLetterDetails"] = relationship(
         "OfferLetterDetails", back_populates="personal_details", lazy="selectin"
     )
 
-    # Relation Master Relationship
     relation_master: Mapped[Optional["RelationMaster"]] = relationship(
         "RelationMaster",
         foreign_keys=[emergency_contact_relation_uuid],
+        back_populates="personal_details",
         lazy="selectin",
     )
 
@@ -1133,7 +1125,7 @@ class EmployeeEducationDocument(Base):
     )
 
     degree_master: Mapped["DegreeMaster"] = relationship(
-        "DegreeMaster", lazy="selectin"
+        "DegreeMaster", back_populates="employee_education_document", lazy="selectin"
     )
 
 
