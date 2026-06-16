@@ -5,6 +5,7 @@ from ..utils.jwt_validator import validate_jwt
 import time
 
 
+
 class JWTMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
@@ -40,6 +41,7 @@ class JWTMiddleware(BaseHTTPMiddleware):
             "/ems/employee-upload/relations",
             "/ems/identity",
             "/ems/education/education-document",
+            
         ]
 
     async def dispatch(self, request: Request, call_next):

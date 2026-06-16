@@ -1,4 +1,4 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.dao.employee_details_dao import (
     EmployeeDetailsDAO,
@@ -22,8 +22,92 @@ class EmployeeDetailsService:
         self.dao = EmployeeDetailsDAO(self.db)
         self.countrydao = CountryDAO(self.db)
         self.offerdao = OfferLetterDAO(self.db)
+        self.storage_service = S3StorageService()
 
     async def get_all_personal_details(self):
+            try:
+                result = await self.dao.get_all_personal_details()
+                return result
+            except HTTPException as he:
+                raise he
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+    
+    async def upload_profile_photo(
+            self,
+            user_uuid: str,
+            file: UploadFile
+        ):
+
+            personal = await self.dao.get_personal_details_by_user_uuid(
+                user_uuid
+            )
+
+            if not personal:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Personal details not found"
+                )
+
+            allowed_types = (
+                ".jpg",
+                ".jpeg",
+                ".png"
+            )
+
+            if not file.filename.lower().endswith(
+                allowed_types
+            ):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Only JPG, JPEG and PNG files are allowed"
+                )
+
+            max_size = 5 * 1024 * 1024
+
+            content = await file.read()
+
+            if len(content) > max_size:
+                raise HTTPException(
+                    status_code=400,
+                    detail="File size exceeds 5MB"
+                )
+
+            file.file.seek(0)
+
+            # delete existing image
+            if personal.profile_photo_path:
+                await self.storage_service.delete_file(
+                    personal.profile_photo_path
+                )
+
+            profile_photo_path = await self.storage_service.upload_file(
+                file=file,
+                folder="employee_profile",
+                original_filename=file.filename,
+                employee_uuid=user_uuid
+            )
+
+            await self.dao.update_profile_photo_path(
+                user_uuid,
+                profile_photo_path
+            )
+
+            profile_photo_url = await self.storage_service.get_presigned_url(
+                profile_photo_path
+            )
+
+            return {
+                "message": "Profile photo uploaded successfully",
+                "profile_photo_path": profile_photo_path,
+                "profile_photo_url": profile_photo_url
+            }
+    
+    async def get_personal_details_by_user_uuid(self, uuid):
+=======
+
+    async def get_all_personal_details(self):
+>>>>>>> 98587add12bde25c4c4640609ba0ea849ff0f6c3
         try:
             result = await self.dao.get_all_personal_details()
             return result
