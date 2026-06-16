@@ -187,7 +187,7 @@ async def upload_profile_photo(
     "/address/",
     response_model=list[AddressDetails],
 )
->>>>>>> 98587add12bde25c4c4640609ba0ea849ff0f6c3
+
 async def get_all_addresses(db: AsyncSession = Depends(get_db)):
     try:
         address_service = AddressService(db)
