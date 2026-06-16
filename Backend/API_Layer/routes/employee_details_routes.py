@@ -1,12 +1,14 @@
 # Backend/API_Layer/routes/employee_details_routes.py
 from time import perf_counter
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...DAL.utils.dependencies import get_db
 from ..interfaces.employee_details_interfaces import (
+    DeleteProfilePhotoResponse,
     PersonalDetails,
     DeleteEmployeeIdentityResponse,
     PersonalDetailsResponse,
+    UploadProfilePhotoResponse,
     UpdatePersonalRequest,
     CreateAddressRequest,
     CreateAddressResponse,
@@ -17,6 +19,7 @@ from ..interfaces.employee_details_interfaces import (
     EmployeeAboutResponse,
     EmployeeAboutRequest,
     EmployeeAboutDetails,
+    ProfilePhotoResponse
 )
 from ...Business_Layer.services.employee_details_service import (
     EmployeeDetailsService,
@@ -296,4 +299,68 @@ async def delete_social_link(social_link_uuid: str, db: AsyncSession = Depends(g
 
     return SocialLinkResponse(
         social_link_uuid=social_link_uuid, message="Social Link Deleted Successfully"
+    )
+
+@router.post(
+    "/profile-photo/{user_uuid}",
+    response_model=UploadProfilePhotoResponse,
+    summary="Upload Profile Photo"
+)
+async def upload_profile_photo(
+    user_uuid: str,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db)
+):
+    service = EmployeeDetailsService(db)
+
+    return await service.upload_profile_photo(
+        user_uuid,
+        file
+    )
+
+@router.get(
+    "/profile-photo/{user_uuid}",
+    response_model=ProfilePhotoResponse,
+    summary="Get Profile Photo"
+)
+async def get_profile_photo(
+    user_uuid: str,
+    db: AsyncSession = Depends(get_db)
+):
+    service = EmployeeDetailsService(db)
+
+    return await service.get_profile_photo(
+        user_uuid
+    )
+
+@router.put(
+    "/profile-photo/{user_uuid}",
+    response_model=UploadProfilePhotoResponse,
+    summary="Update Profile Photo"
+)
+async def update_profile_photo(
+    user_uuid: str,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db)
+):
+    service = EmployeeDetailsService(db)
+
+    return await service.update_profile_photo(
+        user_uuid,
+        file
+    )
+
+@router.delete(
+    "/profile-photo/{user_uuid}",
+    response_model=DeleteProfilePhotoResponse,
+    summary="Delete Profile Photo"
+)
+async def delete_profile_photo(
+    user_uuid: str,
+    db: AsyncSession = Depends(get_db)
+):
+    service = EmployeeDetailsService(db)
+
+    return await service.delete_profile_photo(
+        user_uuid
     )
