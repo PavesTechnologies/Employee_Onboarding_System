@@ -7,6 +7,7 @@ from ..models.models import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
+from time import perf_counter
 
 
 class EmployeeDetailsDAO:

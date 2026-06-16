@@ -1867,6 +1867,15 @@ class OfferApprovalAction(Base):
 
 #     offer_letter_details: Mapped['OfferLetterDetails'] = relationship('OfferLetterDetails', back_populates='employee_pf_details')
 
+# class EmployeeReceivables(Base):
+#     __tablename__ = 'employee_receivables'
+#     __table_args__ = (
+#         ForeignKeyConstraint(['receivable_uuid'], ['receivable_items.receivable_uuid'], name='employee_receivables_ibfk_2'),
+#         ForeignKeyConstraint(['user_uuid'], ['offer_letter_details.user_uuid'], name='employee_receivables_ibfk_1'),
+#         Index('employee_receivable_uuid', 'employee_receivable_uuid', unique=True),
+#         Index('receivable_uuid', 'receivable_uuid'),
+#         Index('user_uuid', 'user_uuid')
+#     )
 
 # class EmployeeReceivables(Base):
 #     __tablename__ = 'employee_receivables'
@@ -1890,6 +1899,12 @@ class OfferApprovalAction(Base):
 #     receivable_items: Mapped['ReceivableItems'] = relationship('ReceivableItems', back_populates='employee_receivables')
 #     offer_letter_details: Mapped['OfferLetterDetails'] = relationship('OfferLetterDetails', back_populates='employee_receivables')
 
+# class EmployeeSocialLinks(Base):
+#     __tablename__ = 'employee_social_links'
+#     __table_args__ = (
+#         ForeignKeyConstraint(['user_uuid'], ['offer_letter_details.user_uuid'], name='employee_social_links_ibfk_1'),
+#         Index('employee_social_links_ibfk_1', 'user_uuid')
+#     )
 
 # class EmployeeSocialLinks(Base):
 #     __tablename__ = 'employee_social_links'
