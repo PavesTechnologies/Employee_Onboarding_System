@@ -44,7 +44,8 @@ async def create_education_document(
 
 @router.get(
     "/education-document",
-    response_model=list[EducDocDetails],)
+    response_model=list[EducDocDetails],
+)
 async def get_all_education_documents(db: AsyncSession = Depends(get_db)):
     try:
         education_service = EducationDocService(db)
