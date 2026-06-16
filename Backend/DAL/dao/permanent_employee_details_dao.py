@@ -188,7 +188,7 @@ class PermanentEmployeeDetailsDAO:
         result = await db.execute(query, {"employee_id": employee_id})
 
         return result.scalar() is not None
-        
+
     async def check_work_email_exists(self, db, work_email):
 
         query = text("""
