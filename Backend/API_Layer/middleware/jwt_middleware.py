@@ -5,6 +5,7 @@ from ..utils.jwt_validator import validate_jwt
 import time
 
 
+
 class JWTMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)

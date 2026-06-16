@@ -23,14 +23,7 @@ class HrOnboardingService:
         self.offer_dao = OfferLetterDAO(db)
 
     async def get_full_onboarding_details(self, user_uuid: str, current_user_id: int):
-<<<<<<< HEAD
-        
-        return await self.dao.get_full_onboarding_details(
-            user_uuid, current_user_id
-        )
-=======
         return await self.dao.get_full_onboarding_details(user_uuid, current_user_id)
->>>>>>> 98587add12bde25c4c4640609ba0ea849ff0f6c3
 
     # =================================================
     # FINAL SUBMIT – STORE ALL DETAILS (CANDIDATE)
