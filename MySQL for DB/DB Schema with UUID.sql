@@ -406,3 +406,75 @@ CREATE TABLE employee_tasks (
     completed_by VARCHAR(150),
     completed_at DATETIME NULL
 );
+
+-- =========================================================
+-- 22. Background Checks
+-- =========================================================
+CREATE TABLE background_checks (
+    background_check_id INT PRIMARY KEY AUTO_INCREMENT,
+    check_uuid CHAR(36) NOT NULL,
+    user_uuid VARCHAR(100) NOT NULL,
+    check_type VARCHAR(100) NOT NULL,
+    label VARCHAR(255) NOT NULL,
+    check_group VARCHAR(50) NOT NULL,
+    status ENUM('NOT_STARTED', 'IN_REVIEW', 'VERIFIED', 'REJECTED') NOT NULL DEFAULT 'NOT_STARTED',
+    notes TEXT,
+    details JSON,
+    doc_category VARCHAR(100),
+    document_id VARCHAR(100),
+    created_by VARCHAR(100),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE INDEX check_uuid (check_uuid),
+    INDEX idx_background_checks_user_uuid (user_uuid),
+    UNIQUE INDEX uq_background_checks_user_check_type (user_uuid, check_type)
+);
+
+-- =========================================================
+-- 23. Background Check Documents
+-- =========================================================
+CREATE TABLE background_check_documents (
+    background_check_document_id INT PRIMARY KEY AUTO_INCREMENT,
+    document_id CHAR(36) NOT NULL,
+    user_uuid VARCHAR(100) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    document_name VARCHAR(255),
+    doc_type VARCHAR(255),
+    file_path VARCHAR(1000) NOT NULL,
+    uploaded_by VARCHAR(100),
+    uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE INDEX document_id (document_id),
+    INDEX idx_background_check_documents_user_uuid (user_uuid),
+    INDEX idx_background_check_documents_category (category)
+);
+
+-- =========================================================
+-- BGV Status Workflow Migration (run once on existing DB)
+-- =========================================================
+
+-- 1. Rename PENDING → NOT_STARTED in background_checks
+ALTER TABLE background_checks
+    MODIFY COLUMN status ENUM('NOT_STARTED', 'IN_REVIEW', 'VERIFIED', 'REJECTED')
+    NOT NULL DEFAULT 'NOT_STARTED';
+
+UPDATE background_checks SET status = 'NOT_STARTED' WHERE status = 'PENDING';
+
+-- 2. Add employee-level BGV status column to employee_details
+ALTER TABLE employee_details
+    ADD COLUMN bgv_status ENUM(
+        'NOT_STARTED',
+        'IN_PROGRESS',
+        'ACTION_REQUIRED',
+        'READY_TO_SEND',
+        'AWAITING_BGV_RESULT',
+        'CLEARED',
+        'REJECTED'
+    ) DEFAULT NULL,
+    ADD COLUMN bgv_remarks TEXT DEFAULT NULL,
+    ADD COLUMN bgv_decided_by VARCHAR(100) DEFAULT NULL;
+
+-- If upgrading from old schema (had SENT_TO_CONSULTANCY / BGV_RESULT_RECEIVED), run these first:
+-- UPDATE employee_details SET bgv_status = 'AWAITING_BGV_RESULT' WHERE bgv_status IN ('SENT_TO_CONSULTANCY', 'BGV_RESULT_RECEIVED');
+-- Then modify the column to drop old enum values:
+-- ALTER TABLE employee_details MODIFY COLUMN bgv_status ENUM('NOT_STARTED','IN_PROGRESS','ACTION_REQUIRED','READY_TO_SEND','AWAITING_BGV_RESULT','CLEARED','REJECTED') DEFAULT NULL;
