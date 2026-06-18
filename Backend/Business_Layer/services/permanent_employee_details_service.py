@@ -7,6 +7,7 @@ from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook.defined_name import DefinedName
 from openpyxl.worksheet.datavalidation import DataValidation
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from Backend.API_Layer.interfaces.permenent_employee_details_interfaces import (
@@ -18,7 +19,7 @@ from Backend.API_Layer.interfaces.permenent_employee_details_interfaces import (
 from Backend.Business_Layer.utils.excel_parcer import parse_excel
 from Backend.Business_Layer.utils.uuid_generator import generate_uuid7
 from Backend.DAL.dao.permanent_employee_details_dao import PermanentEmployeeDetailsDAO
-from Backend.DAL.models.models import EmployeeDetails
+from Backend.DAL.models.models import EmployeeDetails, OfferLetterDetails
 
 
 class PermanentEmployeeDetailsService:
@@ -181,6 +182,12 @@ class PermanentEmployeeDetailsService:
         )
 
         employee = await self.dao.create_employee(db, employee)
+
+        await db.execute(
+            update(OfferLetterDetails)
+            .where(OfferLetterDetails.user_uuid == payload.user_uuid)
+            .values(status="Completed")
+        )
 
         await db.commit()
 
