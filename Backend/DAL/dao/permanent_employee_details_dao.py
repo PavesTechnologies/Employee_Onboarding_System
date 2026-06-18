@@ -130,28 +130,49 @@ class PermanentEmployeeDetailsDAO:
 
     async def get_all_employees(self, db: AsyncSession):
 
-        query = select(
-            EmployeeDetails.user_uuid,
-            EmployeeDetails.employee_uuid,
-            EmployeeDetails.employee_id,
-            EmployeeDetails.first_name,
-            EmployeeDetails.middle_name,
-            EmployeeDetails.last_name,
-            EmployeeDetails.date_of_birth,
-            EmployeeDetails.work_email,
-            EmployeeDetails.contact_number,
-            EmployeeDetails.department_uuid,
-            EmployeeDetails.designation_uuid,
-            EmployeeDetails.reporting_manager_uuid,
-            EmployeeDetails.employment_type,
-            EmployeeDetails.joining_date,
-            EmployeeDetails.location,
-            EmployeeDetails.work_mode,
-            EmployeeDetails.employment_status,
-            EmployeeDetails.blood_group,
-            EmployeeDetails.gender,
-            EmployeeDetails.marital_status,
-        )
+        query = text("""
+            SELECT
+                ed.user_uuid,
+                ed.employee_uuid,
+                ed.employee_id,
+                ed.first_name,
+                ed.middle_name,
+                ed.last_name,
+                ed.date_of_birth,
+                ed.work_email,
+                ed.contact_number,
+                ed.department_uuid,
+                ed.designation_uuid,
+                ed.reporting_manager_uuid,
+                ed.employment_type,
+                ed.joining_date,
+                ed.location,
+                ed.work_mode,
+                ed.employment_status,
+                ed.blood_group,
+                ed.gender,
+                ed.marital_status,
+                ed.bgv_status,
+                CASE
+                    WHEN COUNT(bc.check_uuid) = 0 THEN 'PENDING'
+                    WHEN SUM(CASE WHEN bc.status = 'VERIFIED'  THEN 1 ELSE 0 END) = COUNT(bc.check_uuid) THEN 'VERIFIED'
+                    WHEN SUM(CASE WHEN bc.status = 'REJECTED'  THEN 1 ELSE 0 END) > 0 THEN 'REJECTED'
+                    WHEN SUM(CASE WHEN bc.status IN ('IN_REVIEW', 'VERIFIED') THEN 1 ELSE 0 END) > 0 THEN 'IN_REVIEW'
+                    ELSE 'PENDING'
+                END AS bg_status
+            FROM employee_details ed
+            LEFT JOIN background_checks bc
+                ON bc.user_uuid = ed.user_uuid
+                AND (bc.check_type NOT LIKE '__session__%' AND bc.check_type NOT LIKE '__hidden__%')
+            GROUP BY
+                ed.user_uuid, ed.employee_uuid, ed.employee_id,
+                ed.first_name, ed.middle_name, ed.last_name,
+                ed.date_of_birth, ed.work_email, ed.contact_number,
+                ed.department_uuid, ed.designation_uuid, ed.reporting_manager_uuid,
+                ed.employment_type, ed.joining_date, ed.location, ed.work_mode,
+                ed.employment_status, ed.blood_group, ed.gender, ed.marital_status,
+                ed.bgv_status
+        """)
 
         result = await db.execute(query)
 

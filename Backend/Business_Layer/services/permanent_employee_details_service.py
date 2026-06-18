@@ -272,6 +272,8 @@ class PermanentEmployeeDetailsService:
                     "gender": emp.get("gender"),
                     "marital_status": emp.get("marital_status"),
                     "total_experience": emp.get("total_experience"),
+                    "bg_status": emp.get("bg_status", "NOT_STARTED"),
+                    "bgv_status": emp.get("bgv_status"),
                 }
             )
 
@@ -359,6 +361,27 @@ class PermanentEmployeeDetailsService:
             "employee_uuid": employee.employee_uuid,
             "employee_id": employee.employee_id,
             "message": "Employee updated successfully",
+        }
+
+    # =========================================================
+    # UPDATE EMPLOYEE BGV STATUS
+    # =========================================================
+
+    async def update_bgv_status(self, db: AsyncSession, user_uuid: str, bgv_status: str):
+
+        employee = await self.dao.get_employee_by_user_uuid(db, user_uuid)
+
+        if not employee:
+            raise ValueError("Employee not found")
+
+        await self.dao.update_bgv_status(db, user_uuid, bgv_status)
+
+        await db.commit()
+
+        return {
+            "user_uuid": user_uuid,
+            "bgv_status": bgv_status,
+            "message": "BGV status updated successfully",
         }
 
     # =========================================================

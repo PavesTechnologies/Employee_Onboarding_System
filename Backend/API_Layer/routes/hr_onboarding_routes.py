@@ -1,14 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from typing import Optional
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from urllib.parse import unquote
 
 from ...Business_Layer.services.hr_onboarding_service import HrOnboardingService
+from ...Business_Layer.services.background_check_service import BackgroundCheckService
 from ...API_Layer.interfaces.candidate_submit_forms_interfaces import (
     HrOnboardingSubmitRequest,
 )
 from ...API_Layer.interfaces.hr_onboarding_interfaces import (
     HRVerificationRequest,
     VerifyDocumentRequest,
+)
+from ...API_Layer.interfaces.background_check_interfaces import (
+    BackgroundCheckDocumentMessageResponse,
+    BackgroundCheckDocumentResponse,
 )
 from ..utils.role_based import require_roles
 from sqlalchemy.future import select
@@ -116,6 +123,52 @@ async def verify_document(
     await service.verify_document(payload=payload, current_user_id=current_user_id)
 
     return {"message": "Document status updated successfully"}
+
+
+@router.post("/upload-document", response_model=BackgroundCheckDocumentResponse)
+async def upload_hr_background_check_document(
+    request: Request,
+    user_uuid: str = Form(...),
+    category: str = Form(...),
+    document_name: Optional[str] = Form(None),
+    doc_type: Optional[str] = Form(None),
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        raw_id = request.state.user.get("employee_id") or request.state.user.get("user_id")
+        uploaded_by = str(raw_id) if raw_id is not None else None
+        print(f"[BGV] upload_document uploaded_by={uploaded_by} | JWT keys={list(request.state.user.keys())}")
+        service = BackgroundCheckService(db)
+        return await service.upload_document(
+            user_uuid=user_uuid,
+            category=category,
+            document_name=document_name,
+            doc_type=doc_type,
+            file=file,
+            uploaded_by=uploaded_by,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete(
+    "/delete-document/{document_id}",
+    response_model=BackgroundCheckDocumentMessageResponse,
+)
+async def delete_hr_background_check_document(
+    document_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        service = BackgroundCheckService(db)
+        return await service.delete_document(document_id)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # @router.get("/employees/documents")
