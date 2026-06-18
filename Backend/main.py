@@ -11,6 +11,7 @@ from Backend.API_Layer.routes import (
     docusign_token_generation_route,
     employee_experience_routes,
     employee_export_routes,
+    hr_background_check_routes,
     hr_bulk_join_router,
     hr_onboarding_routes,
     offer_approval_action_routes,
@@ -45,6 +46,7 @@ from Backend.API_Layer.routes import (
     dashboard_routes,
     employee_exit_routes,
     exit_approval_routes,
+    background_check_routes,
     exit_clearance_items_routes,
     exit_clearance_routes,
     exit_interview_routes,
@@ -212,6 +214,11 @@ api_router.include_router(
     hr_onboarding_routes.router, prefix="/hr", tags=["HR Onboarding"]
 )
 api_router.include_router(
+    hr_background_check_routes.router,
+    prefix="/hr/background-checks",
+    tags=["HR Background Checks"],
+)
+api_router.include_router(
     docusign_token_generation_route.router,
     prefix="/docusign",
     tags=["DocuSign Token Generation"],
@@ -234,6 +241,11 @@ api_router.include_router(
     analytics_routes.router, prefix="/analytics", tags=["Analytics"]
 )
 api_router.include_router(dashboard_routes.router)
+api_router.include_router(
+    background_check_routes.router,
+    prefix="/background-checks",
+    tags=["Background Checks"],
+)
 api_router.include_router(employee_exit_routes.router)
 api_router.include_router(exit_interview_routes.router)
 api_router.include_router(exit_approval_routes.router)
