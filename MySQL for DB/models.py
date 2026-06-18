@@ -1081,6 +1081,9 @@ class PersonalDetails(Base):
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     )
+    profile_photo_path: Mapped[Optional[str]] = mapped_column(
+        String(500)
+    )
 
     countries: Mapped[Optional["Countries"]] = relationship(
         "Countries",

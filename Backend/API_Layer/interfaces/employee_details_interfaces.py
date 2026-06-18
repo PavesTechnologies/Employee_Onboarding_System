@@ -1,22 +1,20 @@
 from enum import Enum
 import re
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from datetime import date
-from typing import Optional
 
+from typing import Optional
 
 class Gender(str, Enum):
     MALE = "Male"
     FEMALE = "Female"
     OTHER = "Other"
 
-
 class MaritalStatus(str, Enum):
     SINGLE = "Single"
     MARRIED = "Married"
     DIVORCED = "Divorced"
     WIDOWED = "Widowed"
-
 
 class PersonalDetailsRequest(BaseModel):
     user_uuid: str
@@ -29,11 +27,12 @@ class PersonalDetailsRequest(BaseModel):
     emergency_contact_name: str
     emergency_contact_phone: str
     emergency_contact_relation_uuid: str
-
-
+   
 class PersonalDetailsResponse(BaseModel):
     personal_uuid: str
     message: str
+
+
 
 
 class PersonalDetails(BaseModel):
@@ -43,11 +42,13 @@ class PersonalDetails(BaseModel):
     gender: str
     marital_status: str
     blood_group: str
-    nationality_country_uuid: str
-    residence_country_uuid: str
+    nationality_country_uuid: Optional[str] = None
+    residence_country_uuid: Optional[str] = None
     emergency_contact_name: Optional[str] = None
     emergency_contact_phone: Optional[str] = None
     emergency_contact_relation_uuid: Optional[str] = None
+    profile_photo_path: Optional[str] = None
+    profile_photo_url: Optional[str] = None
 
 
 class UpdatePersonalRequest(BaseModel):
@@ -60,10 +61,23 @@ class UpdatePersonalRequest(BaseModel):
     emergency_contact_name: str
     emergency_contact_phone: str
     emergency_contact_relation_uuid: str
+  
+class UploadProfilePhotoResponse(BaseModel):
+    message: str
+    profile_photo_path: Optional[str] = None
+    profile_photo_url: Optional[str] = None
 
 
+class ProfilePhotoResponse(BaseModel):
+    profile_photo_path: Optional[str] = None
+    profile_photo_url: Optional[str] = None
+
+class DeleteProfilePhotoResponse(BaseModel):
+    message: str
+    
 class CreateRelationRequest(BaseModel):
     relation_name: str
+
 
 
 class CreateRelationResponse(BaseModel):
@@ -71,7 +85,9 @@ class CreateRelationResponse(BaseModel):
     message: str
 
 
+
 # Addresses Interfaces
+
 
 
 class AddressType(str, Enum):
@@ -91,42 +107,49 @@ class CreateAddressRequest(BaseModel):
     country_uuid: str
 
     # Prevent empty strings
-    @validator("address_line1", "address_line2", "city", "state_or_region")
+    @field_validator("address_line1", "address_line2", "city", "state_or_region")
+    @classmethod
     def validate_not_empty(cls, v):
         if not v.strip():
             raise ValueError("Field cannot be empty")
         return v
 
     # City validation
-    @validator("city")
+    @field_validator("city")
+    @classmethod
     def validate_city(cls, v):
         if not re.match(r"^[A-Za-z\s\-'.]+$", v):
             raise ValueError("City name contains invalid characters")
         return v
 
     # State validation
-    @validator("state_or_region")
+    @field_validator("state_or_region")
+    @classmethod
     def validate_state(cls, v):
         if not re.match(r"^[A-Za-z\s\-'.]+$", v):
             raise ValueError("State/Region contains invalid characters")
         return v
 
     # At least one location field required
-    @validator("district_or_ward", always=True)
-    def validate_location_fields(cls, v, values):
-        city = values.get("city")
-        state = values.get("state_or_region")
-
-        if not (city or state or v):
+    @model_validator(mode="after")
+    def validate_location_fields(cls, values):
+        if not (
+            values.city
+            or values.state_or_region
+            or values.district_or_ward
+        ):
             raise ValueError(
                 "At least one of city / district_or_ward / state_or_region must be provided"
             )
-        return v
+
+        return values
+
 
 
 class CreateAddressResponse(BaseModel):
     address_uuid: str
     message: str
+
 
 
 class AddressDetails(BaseModel):
@@ -142,6 +165,7 @@ class AddressDetails(BaseModel):
     country_uuid: str
 
 
+
 class EmployeeIdentityResponse(BaseModel):
     identity_uuid: str
     identity_file_number: str
@@ -149,9 +173,11 @@ class EmployeeIdentityResponse(BaseModel):
     message: str
 
 
+
 class DeleteEmployeeIdentityResponse(BaseModel):
     document_uuid: str
     message: str
+
 
 
 class SocialLinkRequest(BaseModel):
@@ -170,6 +196,7 @@ class SocialLinkDetails(BaseModel):
     user_uuid: str
     platform_name: str
     url: str
+
 
 
 class EmployeeAboutRequest(BaseModel):

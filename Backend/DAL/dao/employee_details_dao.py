@@ -36,12 +36,44 @@ class EmployeeDetailsDAO:
     async def get_all_personal_details(self):
         result = await self.db.execute(select(PersonalDetails))
         return result.scalars().all()
+    async def update_profile_photo_path(
+        self,
+        user_uuid: str,
+        profile_photo_path: str
+    ):
+        personal = await self.get_personal_details_by_user_uuid(
+            user_uuid
+        )
 
-    import time
+        if not personal:
+            return None
+
+        personal.profile_photo_path = profile_photo_path
+
+        await self.db.commit()
+        await self.db.refresh(personal)
+
+        return personal
+    async def delete_profile_photo_path(
+        self,
+        user_uuid: str
+    ):
+        personal = await self.get_personal_details_by_user_uuid(
+            user_uuid
+        )
+
+        if not personal:
+            return None
+
+        personal.profile_photo_path = None
+
+        await self.db.commit()
+        await self.db.refresh(personal)
+
+        return personal
 
     async def update_personal_details(self, personal_uuid: str, request_data):
         try:
-            start = perf_counter()
             update_stmt = (
                 update(PersonalDetails)
                 .where(PersonalDetails.personal_uuid == personal_uuid)
@@ -55,7 +87,6 @@ class EmployeeDetailsDAO:
 
             await self.db.commit()
 
-            # return only required fields
             return {
                 "personal_uuid": personal_uuid,
                 "date_of_birth": request_data.date_of_birth,
@@ -68,8 +99,6 @@ class EmployeeDetailsDAO:
                 "emergency_contact_phone": request_data.emergency_contact_phone,
                 "emergency_contact_relation_uuid": request_data.emergency_contact_relation_uuid,
             }
-            end = perf_counter()
-            print("Time taken to update personal details:", end - start)
 
         except Exception as e:
             raise e

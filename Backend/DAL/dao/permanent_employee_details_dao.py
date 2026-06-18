@@ -202,7 +202,7 @@ class PermanentEmployeeDetailsDAO:
         query = text("""
             SELECT employee_id
             FROM employee_details
-            WHERE employee_id = employee_id
+            WHERE employee_id = :employee_id
             LIMIT 1
         """)
 
