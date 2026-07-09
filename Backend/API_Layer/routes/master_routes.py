@@ -49,7 +49,7 @@ async def create_country(calling_code: str, db: AsyncSession = Depends(get_db)):
 @router.put(
     "/country/deactivateoractivate/{country_uuid}",
     response_model=CreateCountryResponse,
-    dependencies=[Depends(require_roles("HR", "ADMIN"))],
+    
 )
 async def update_country(
     country_uuid: str,
