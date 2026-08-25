@@ -303,6 +303,56 @@ class EmployeeDetailsService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
+    async def patch_personal_details(self, uuid: str, request_data):
+        try:
+            personal = await self.dao.get_personal_details_by_uuid(uuid)
+
+            if not personal:
+                raise HTTPException(
+                    status_code=404, detail="Personal Details Not Found"
+                )
+
+            update_data = request_data.dict(exclude_unset=True, exclude_none=True)
+
+            if not update_data:
+                raise HTTPException(
+                    status_code=400, detail="No fields provided to update"
+                )
+
+            if "blood_group" in update_data:
+                validate_blood_group(update_data["blood_group"])
+
+            if "date_of_birth" in update_data:
+                validate_date_of_birth(update_data["date_of_birth"])
+
+            if "nationality_country_uuid" in update_data:
+                nationality = await self.countrydao.get_country_by_uuid(
+                    update_data["nationality_country_uuid"]
+                )
+                if not nationality:
+                    raise ValueError("Nationality Country Not Found")
+
+            if "residence_country_uuid" in update_data:
+                residence = await self.countrydao.get_country_by_uuid(
+                    update_data["residence_country_uuid"]
+                )
+                if not residence:
+                    raise ValueError("Residence Country Not Found")
+
+            result = await self.dao.patch_personal_details(uuid, update_data)
+
+            if not result:
+                raise HTTPException(
+                    status_code=404, detail="Personal Details Not Found"
+                )
+
+            return result
+
+        except HTTPException as he:
+            raise he
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
     async def delete_personal_details(self, uuid):
         try:
             existing = await self.dao.get_personal_details_by_uuid(uuid)

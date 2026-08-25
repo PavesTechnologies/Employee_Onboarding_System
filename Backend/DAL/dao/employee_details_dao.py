@@ -103,6 +103,29 @@ class EmployeeDetailsDAO:
         except Exception as e:
             raise e
 
+    async def patch_personal_details(self, personal_uuid: str, update_data: dict):
+        try:
+            if not update_data:
+                return await self.get_personal_details_by_uuid(personal_uuid)
+
+            update_stmt = (
+                update(PersonalDetails)
+                .where(PersonalDetails.personal_uuid == personal_uuid)
+                .values(**update_data)
+            )
+
+            result = await self.db.execute(update_stmt)
+
+            if result.rowcount == 0:  # type: ignore[attr-defined]
+                return None
+
+            await self.db.commit()
+
+            return await self.get_personal_details_by_uuid(personal_uuid)
+
+        except Exception as e:
+            raise e
+
     async def delete_personal_details(self, personal_uuid):
         result = await self.db.execute(
             select(PersonalDetails).where(

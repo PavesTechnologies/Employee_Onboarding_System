@@ -396,6 +396,62 @@ class OfferLetterService:
                 status_code=500, detail=f"Internal Server Error: {str(e)}"
             )
 
+    async def patch_offer_personal_info(self, user_uuid: str, request_data):
+        try:
+            offer = await self.dao.get_offer_by_uuid(user_uuid)
+            if not offer:
+                raise HTTPException(status_code=404, detail="Offer not found")
+
+            update_data = request_data.model_dump(exclude_unset=True, exclude_none=True)
+
+            if not update_data:
+                raise HTTPException(
+                    status_code=400, detail="No fields provided to update"
+                )
+
+            if "first_name" in update_data:
+                update_data["first_name"] = validate_name(update_data["first_name"])
+
+            if "last_name" in update_data:
+                update_data["last_name"] = validate_name(update_data["last_name"])
+
+            if "mail" in update_data:
+                update_data["mail"] = validate_email(update_data["mail"])
+
+                if update_data["mail"] != offer["mail"]:
+                    existing = await self.dao.get_offer_by_email(update_data["mail"])
+                    if existing:
+                        raise HTTPException(
+                            status_code=409,
+                            detail="Email already belongs to another offer",
+                        )
+
+            if "contact_number" in update_data or "country_code" in update_data:
+                calling_code = update_data.get("country_code", offer["country_code"])
+                phone_number = update_data.get("contact_number", offer["contact_number"])
+                validate_phone_number(calling_code, phone_number, type="contact_number")
+
+            success = await self.dao.patch_offer_personal_info(user_uuid, update_data)
+
+            if not success:
+                raise HTTPException(status_code=404, detail="Offer not found")
+
+            await self.db.commit()
+
+            return await self.dao.get_offer_by_uuid(user_uuid)
+
+        except HTTPException:
+            await self.db.rollback()
+            raise
+        except ValueError as e:
+            await self.db.rollback()
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            await self.db.rollback()
+            raise HTTPException(
+                status_code=500, detail=f"Internal Server Error: {str(e)}"
+            )
+
     async def get_offer_by_user_uuid(self, user_uuid: str):
         return await self.dao.get_offer_by_user_uuid(user_uuid)
 
