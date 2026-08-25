@@ -65,6 +65,14 @@ class OfferUpdateResponse(BaseModel):
     offer_id: str
 
 
+class PatchOfferPersonalInfoRequest(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    mail: Optional[str] = None
+    country_code: Optional[str] = None
+    contact_number: Optional[str] = None
+
+
 class BulkOfferCreateResponse(BaseModel):
     message: Optional[str] = None
     total_rows: int

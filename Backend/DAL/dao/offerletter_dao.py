@@ -370,6 +370,22 @@ class OfferLetterDAO:
         await self.db.flush()
         return True
 
+    async def patch_offer_personal_info(self, user_uuid: str, update_data: dict) -> bool:
+        if not update_data:
+            return True
+
+        stmt = (
+            update(OfferLetterDetails)
+            .where(OfferLetterDetails.user_uuid == user_uuid)
+            .values(**update_data)
+        )
+
+        result = await self.db.execute(stmt)
+        if result.rowcount == 0:  # type: ignore[attr-defined]
+            return False
+
+        return True
+
     async def fetch_created_offerletters(self, created_by: str):
         """
         Returns all offer letters:

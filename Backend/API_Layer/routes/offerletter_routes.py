@@ -14,6 +14,7 @@ from Backend.API_Layer.interfaces.offerletter_interfaces import (
     OfferLetterDetailsResponse,
     OfferUpdateResponse,
     BulkSendOfferLettersRequest,
+    PatchOfferPersonalInfoRequest,
 )
 from Backend.Business_Layer.services.offerletter_services import OfferLetterService
 from Backend.Business_Layer.services.document_service import DocumentService
@@ -203,6 +204,30 @@ async def update_offer_by_uuid(
 
         return OfferUpdateResponse(
             message="Offer Details and Compensation Updated Successfully",
+            offer_id=user_uuid,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch(
+    "/{user_uuid}",
+    response_model=OfferUpdateResponse,
+)
+async def patch_offer_personal_info(
+    user_uuid: str,
+    request_data: PatchOfferPersonalInfoRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        offer_service = OfferLetterService(db)
+        await offer_service.patch_offer_personal_info(user_uuid, request_data)
+
+        return OfferUpdateResponse(
+            message="Personal Information Updated Successfully",
             offer_id=user_uuid,
         )
 

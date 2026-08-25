@@ -10,6 +10,7 @@ from ..interfaces.employee_details_interfaces import (
     PersonalDetailsResponse,
     UploadProfilePhotoResponse,
     UpdatePersonalRequest,
+    PatchPersonalRequest,
     CreateAddressRequest,
     CreateAddressResponse,
     AddressDetails,
@@ -145,6 +146,27 @@ async def update_personal_details(
         print("Total API time:", end - start)
         return PersonalDetailsResponse(
             personal_uuid=result["personal_uuid"],
+            message="Personal Details Updated Successfully",
+        )
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/{personal_uuid}", response_model=PersonalDetailsResponse)
+async def patch_personal_details(
+    personal_uuid: str,
+    request_data: PatchPersonalRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        employee_service = EmployeeDetailsService(db)
+        result = await employee_service.patch_personal_details(
+            personal_uuid, request_data
+        )
+        return PersonalDetailsResponse(
+            personal_uuid=result.personal_uuid,
             message="Personal Details Updated Successfully",
         )
     except HTTPException as he:
