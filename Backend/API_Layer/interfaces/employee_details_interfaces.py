@@ -33,8 +33,6 @@ class PersonalDetailsResponse(BaseModel):
     message: str
 
 
-
-
 class PersonalDetails(BaseModel):
     personal_uuid: str
     user_uuid: str
@@ -50,7 +48,6 @@ class PersonalDetails(BaseModel):
     profile_photo_path: Optional[str] = None
     profile_photo_url: Optional[str] = None
 
-
 class UpdatePersonalRequest(BaseModel):
     date_of_birth: str
     gender: Gender
@@ -61,12 +58,22 @@ class UpdatePersonalRequest(BaseModel):
     emergency_contact_name: str
     emergency_contact_phone: str
     emergency_contact_relation_uuid: str
-  
+
+class PatchPersonalRequest(BaseModel):
+    date_of_birth: Optional[str] = None
+    gender: Optional[Gender] = None
+    marital_status: Optional[MaritalStatus] = None
+    blood_group: Optional[str] = None
+    nationality_country_uuid: Optional[str] = None
+    residence_country_uuid: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    emergency_contact_relation_uuid: Optional[str] = None
+
 class UploadProfilePhotoResponse(BaseModel):
     message: str
     profile_photo_path: Optional[str] = None
     profile_photo_url: Optional[str] = None
-
 
 class ProfilePhotoResponse(BaseModel):
     profile_photo_path: Optional[str] = None
@@ -78,17 +85,12 @@ class DeleteProfilePhotoResponse(BaseModel):
 class CreateRelationRequest(BaseModel):
     relation_name: str
 
-
-
 class CreateRelationResponse(BaseModel):
     relation_uuid: str
     message: str
 
 
-
-# Addresses Interfaces
-
-
+# Addresses Interfacespython -m uvicorn Backend.main:app --reload
 
 class AddressType(str, Enum):
     permanent = "permanent"
@@ -217,3 +219,4 @@ class EmployeeAboutDetails(BaseModel):
     about_me: Optional[str] = ""
     work_enjoyment: Optional[str] = ""
     interests_hobbies: Optional[str] = ""
+  
