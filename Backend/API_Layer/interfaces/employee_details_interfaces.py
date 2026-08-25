@@ -1,10 +1,9 @@
 from enum import Enum
 import re
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from datetime import date
 
 from typing import Optional
-
 
 class Gender(str, Enum):
     MALE = "Male"
@@ -37,7 +36,6 @@ class PersonalDetailsResponse(BaseModel):
 class PersonalDetails(BaseModel):
     personal_uuid: str
     user_uuid: str
-    date_of_birth: date  # <-- accepts datetime.date automatically
     date_of_birth: date  # <-- accepts datetime.date automatically
     gender: str
     marital_status: str
@@ -108,47 +106,45 @@ class CreateAddressRequest(BaseModel):
     district_or_ward: Optional[str] = None
     state_or_region: str = Field(..., min_length=2, max_length=50)
     postal_code: str = Field(..., min_length=6, max_length=6, pattern=r"^\d{6}$")
-    postal_code: str = Field(..., min_length=6, max_length=6, pattern=r"^\d{6}$")
     country_uuid: str
 
     # Prevent empty strings
-    @validator("address_line1", "address_line2", "city", "state_or_region")
-    @validator("address_line1", "address_line2", "city", "state_or_region")
+    @field_validator("address_line1", "address_line2", "city", "state_or_region")
+    @classmethod
     def validate_not_empty(cls, v):
         if not v.strip():
             raise ValueError("Field cannot be empty")
         return v
 
     # City validation
-    @validator("city")
+    @field_validator("city")
+    @classmethod
     def validate_city(cls, v):
         if not re.match(r"^[A-Za-z\s\-'.]+$", v):
             raise ValueError("City name contains invalid characters")
         return v
 
     # State validation
-    @validator("state_or_region")
+    @field_validator("state_or_region")
+    @classmethod
     def validate_state(cls, v):
         if not re.match(r"^[A-Za-z\s\-'.]+$", v):
             raise ValueError("State/Region contains invalid characters")
         return v
 
     # At least one location field required
-    @validator("district_or_ward", always=True)
-    def validate_location_fields(cls, v, values):
-        city = values.get("city")
-        state = values.get("state_or_region")
-
-
-        if not (city or state or v):
+    @model_validator(mode="after")
+    def validate_location_fields(cls, values):
+        if not (
+            values.city
+            or values.state_or_region
+            or values.district_or_ward
+        ):
             raise ValueError(
                 "At least one of city / district_or_ward / state_or_region must be provided"
             )
-            raise ValueError(
-                "At least one of city / district_or_ward / state_or_region must be provided"
-            )
-        return v
 
+        return values
 
 
 

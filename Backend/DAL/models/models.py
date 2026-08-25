@@ -45,6 +45,67 @@ class AuditTrail(Base):
     endpoint: Mapped[Optional[str]] = mapped_column(String(100))
 
 
+class BackgroundCheck(Base):
+    __tablename__ = "background_checks"
+    __table_args__ = (
+        Index("check_uuid", "check_uuid", unique=True),
+        Index("idx_background_checks_user_uuid", "user_uuid"),
+        Index(
+            "uq_background_checks_user_check_type",
+            "user_uuid",
+            "check_type",
+            unique=True,
+        ),
+    )
+
+    background_check_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    check_uuid: Mapped[str] = mapped_column(CHAR(36), nullable=False)
+    user_uuid: Mapped[str] = mapped_column(String(100), nullable=False)
+    check_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    label: Mapped[str] = mapped_column(String(255), nullable=False)
+    check_group: Mapped[str] = mapped_column("check_group", String(50), nullable=False)
+    status: Mapped[str] = mapped_column(
+        Enum("NOT_STARTED", "IN_REVIEW", "VERIFIED", "REJECTED"),
+        nullable=False,
+        server_default=text("'NOT_STARTED'"),
+    )
+    notes: Mapped[Optional[str]] = mapped_column(Text)
+    details: Mapped[Optional[dict[str, Any]]] = mapped_column(JSON)
+    doc_category: Mapped[Optional[str]] = mapped_column(String(100))
+    document_id: Mapped[Optional[str]] = mapped_column(String(100))
+    created_by: Mapped[Optional[str]] = mapped_column(String(100))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP")
+    )
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    )
+
+
+class BackgroundCheckDocument(Base):
+    __tablename__ = "background_check_documents"
+    __table_args__ = (
+        Index("document_id", "document_id", unique=True),
+        Index("idx_background_check_documents_user_uuid", "user_uuid"),
+        Index("idx_background_check_documents_category", "category"),
+    )
+
+    background_check_document_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    document_id: Mapped[str] = mapped_column(CHAR(36), nullable=False)
+    user_uuid: Mapped[str] = mapped_column(String(100), nullable=False)
+    category: Mapped[str] = mapped_column(String(100), nullable=False)
+    document_name: Mapped[Optional[str]] = mapped_column(String(255))
+    doc_type: Mapped[Optional[str]] = mapped_column(String(100))
+    file_path: Mapped[str] = mapped_column(String(1000), nullable=False)
+    uploaded_by: Mapped[Optional[str]] = mapped_column(String(100))
+    uploaded_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP")
+    )
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    )
+
+
 class Countries(Base):
     __tablename__ = "countries"
     __table_args__ = (
@@ -699,6 +760,20 @@ class EmployeeDetails(Base):
     )
     export_error: Mapped[Optional[str]] = mapped_column(Text)
     exported_at: Mapped[Optional[datetime.datetime]] = mapped_column(TIMESTAMP)
+    bgv_status: Mapped[Optional[str]] = mapped_column(
+        Enum(
+            "NOT_STARTED",
+            "IN_PROGRESS",
+            "ACTION_REQUIRED",
+            "READY_TO_SEND",
+            "AWAITING_BGV_RESULT",
+            "CLEARED",
+            "REJECTED",
+        ),
+        server_default=text("'NOT_STARTED'"),
+    )
+    bgv_remarks: Mapped[Optional[str]] = mapped_column(Text)
+    bgv_decided_by: Mapped[Optional[str]] = mapped_column(String(100))
     departments: Mapped[Optional["Departments"]] = relationship(
         "Departments", back_populates="employee_details"
     )

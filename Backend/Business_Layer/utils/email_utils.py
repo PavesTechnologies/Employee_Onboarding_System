@@ -25,7 +25,14 @@ EMAIL_PORT = int(get_env_var("EMAIL_PORT"))
 
 
 def send_email(
-    to_email: str, subject: str, content: str, cc_emails: list[str] | None = None
+    to_email: str,
+    subject: str,
+    content: str,
+    cc_emails: list[str] | None = None,
+    attachment_bytes: bytes | None = None,
+    attachment_filename: str | None = None,
+    attachment_maintype: str = "application",
+    attachment_subtype: str = "zip",
 ):
     msg = EmailMessage()
     msg["Subject"] = subject
@@ -36,6 +43,14 @@ def send_email(
         msg["Cc"] = ", ".join(cc_emails)
         recipients += cc_emails
     msg.set_content(content)
+
+    if attachment_bytes and attachment_filename:
+        msg.add_attachment(
+            attachment_bytes,
+            maintype=attachment_maintype,
+            subtype=attachment_subtype,
+            filename=attachment_filename,
+        )
 
     try:
         with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as smtp:

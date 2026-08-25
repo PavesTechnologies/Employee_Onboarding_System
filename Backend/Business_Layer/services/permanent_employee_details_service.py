@@ -7,6 +7,7 @@ from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook.defined_name import DefinedName
 from openpyxl.worksheet.datavalidation import DataValidation
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from Backend.API_Layer.interfaces.permenent_employee_details_interfaces import (
@@ -18,7 +19,7 @@ from Backend.API_Layer.interfaces.permenent_employee_details_interfaces import (
 from Backend.Business_Layer.utils.excel_parcer import parse_excel
 from Backend.Business_Layer.utils.uuid_generator import generate_uuid7
 from Backend.DAL.dao.permanent_employee_details_dao import PermanentEmployeeDetailsDAO
-from Backend.DAL.models.models import EmployeeDetails
+from Backend.DAL.models.models import EmployeeDetails, OfferLetterDetails
 
 
 class PermanentEmployeeDetailsService:
@@ -182,6 +183,12 @@ class PermanentEmployeeDetailsService:
 
         employee = await self.dao.create_employee(db, employee)
 
+        await db.execute(
+            update(OfferLetterDetails)
+            .where(OfferLetterDetails.user_uuid == payload.user_uuid)
+            .values(status="Completed")
+        )
+
         await db.commit()
 
         return CreatePermanentEmployeeResponse(
@@ -265,6 +272,8 @@ class PermanentEmployeeDetailsService:
                     "gender": emp.get("gender"),
                     "marital_status": emp.get("marital_status"),
                     "total_experience": emp.get("total_experience"),
+                    "bg_status": emp.get("bg_status", "NOT_STARTED"),
+                    "bgv_status": emp.get("bgv_status"),
                 }
             )
 
@@ -352,6 +361,27 @@ class PermanentEmployeeDetailsService:
             "employee_uuid": employee.employee_uuid,
             "employee_id": employee.employee_id,
             "message": "Employee updated successfully",
+        }
+
+    # =========================================================
+    # UPDATE EMPLOYEE BGV STATUS
+    # =========================================================
+
+    async def update_bgv_status(self, db: AsyncSession, user_uuid: str, bgv_status: str):
+
+        employee = await self.dao.get_employee_by_user_uuid(db, user_uuid)
+
+        if not employee:
+            raise ValueError("Employee not found")
+
+        await self.dao.update_bgv_status(db, user_uuid, bgv_status)
+
+        await db.commit()
+
+        return {
+            "user_uuid": user_uuid,
+            "bgv_status": bgv_status,
+            "message": "BGV status updated successfully",
         }
 
     # =========================================================
