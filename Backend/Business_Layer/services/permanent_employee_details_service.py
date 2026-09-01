@@ -318,11 +318,16 @@ class PermanentEmployeeDetailsService:
 
         if request.reporting_manager_uuid is not None:
 
-            employee.reporting_manager_uuid = (
+            reporting_manager_employee_id = (
                 await self.resolve_reporting_manager_employee_id(
                     db, request.reporting_manager_uuid
                 )
             )
+
+            if reporting_manager_employee_id == employee.employee_id:
+                raise ValueError("Employee cannot report to themselves")
+
+            employee.reporting_manager_uuid = reporting_manager_employee_id
 
         if request.employment_type is not None:
             employee.employment_type = request.employment_type
