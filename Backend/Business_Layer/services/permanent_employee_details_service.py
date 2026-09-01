@@ -1,7 +1,8 @@
 import uuid
+import httpx
 from io import BytesIO
 from datetime import datetime
-
+from typing import Any
 from fastapi.responses import StreamingResponse
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
@@ -288,12 +289,63 @@ class PermanentEmployeeDetailsService:
         db: AsyncSession,
         employee_uuid: str,
         request: UpdatePermanentEmployeeRequest,
+        authorization: str,
     ):
-
-        employee = await self.dao.get_employee_by_uuid(db, employee_uuid)
+        employee = await self.dao.get_employee_by_uuid(
+            db,
+            employee_uuid,
+        )
 
         if not employee:
             raise ValueError("Employee not found")
+
+        # ---------------------------------------------------------
+        # 1. Prepare UMS payload
+        # ---------------------------------------------------------
+        ums_payload: dict[str, Any] = {}
+
+        if request.first_name is not None:
+            ums_payload["first_name"] = request.first_name
+
+        if request.last_name is not None:
+            ums_payload["last_name"] = request.last_name
+
+        if request.contact_number is not None:
+            ums_payload["contact"] = request.contact_number
+
+        # ---------------------------------------------------------
+        # 2. Call UMS FIRST
+        # ---------------------------------------------------------
+        if ums_payload:
+
+            headers = {
+                "accept": "application/json",
+                "Authorization": authorization,
+                "Content-Type": "application/json",
+            }
+
+            ums_url = (
+                "https://enterpriseappdev.pavestechnologies.net"
+                "/ums/general_user/profile"
+            )
+
+            async with httpx.AsyncClient(timeout=10.0) as client:
+
+                response = await client.put(
+                    ums_url,
+                    headers=headers,
+                    json=ums_payload,
+                )
+
+            if response.status_code >= 400:
+                raise ValueError(
+                    f"UMS profile update failed: "
+                    f"{response.text}"
+                )
+
+        # ---------------------------------------------------------
+        # 3. UMS succeeded → update EMS DB
+        # ---------------------------------------------------------
 
         if request.first_name is not None:
             employee.first_name = request.first_name
@@ -320,7 +372,8 @@ class PermanentEmployeeDetailsService:
 
             reporting_manager_employee_id = (
                 await self.resolve_reporting_manager_employee_id(
-                    db, request.reporting_manager_uuid
+                    db,
+                    request.reporting_manager_uuid,
                 )
             )
 
@@ -358,7 +411,10 @@ class PermanentEmployeeDetailsService:
 
         employee.updated_at = datetime.utcnow()
 
-        employee = await self.dao.update_employee(db, employee)
+        employee = await self.dao.update_employee(
+            db,
+            employee,
+        )
 
         await db.commit()
 

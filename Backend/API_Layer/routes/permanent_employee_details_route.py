@@ -2,7 +2,7 @@
 # permanent_employee_details_router.py
 # =========================================================
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request, Header
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -86,15 +86,21 @@ async def update_employee(
     employee_uuid: str,
     request: UpdatePermanentEmployeeRequest,
     db: AsyncSession = Depends(get_db),
+    authorization: str = Header(...),
 ):
-
     try:
-
-        return await service.update_employee(db, employee_uuid, request)
+        return await service.update_employee(
+            db,
+            employee_uuid,
+            request,
+            authorization,
+        )
 
     except ValueError as e:
-
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(
+            status_code=400,
+            detail=str(e),
+        )
 
 
 # =========================================================
