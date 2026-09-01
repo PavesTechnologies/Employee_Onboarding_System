@@ -2,7 +2,7 @@
 # permanent_employee_details_router.py
 # =========================================================
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request, Header
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -83,6 +83,33 @@ async def get_all_employees(db: AsyncSession = Depends(get_db)):
 
 @router.put("/{employee_uuid}")
 async def update_employee(
+    employee_uuid: str,
+    request: UpdatePermanentEmployeeRequest,
+    db: AsyncSession = Depends(get_db),
+    authorization: str = Header(...),
+):
+    try:
+        return await service.update_employee(
+            db,
+            employee_uuid,
+            request,
+            authorization,
+        )
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e),
+        )
+
+
+# =========================================================
+# PATCH EMPLOYEE (partial update - any single field, e.g. reporting manager)
+# =========================================================
+
+
+@router.patch("/{employee_uuid}")
+async def patch_employee(
     employee_uuid: str,
     request: UpdatePermanentEmployeeRequest,
     db: AsyncSession = Depends(get_db),
