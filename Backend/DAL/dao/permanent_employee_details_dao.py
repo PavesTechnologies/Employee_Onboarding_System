@@ -40,6 +40,14 @@ class PermanentEmployeeDetailsDAO:
 
         return result.scalars().first()
 
+    async def get_employee_by_employee_id(self, db: AsyncSession, employee_id: str):
+
+        result = await db.execute(
+            select(EmployeeDetails).where(EmployeeDetails.employee_id == employee_id)
+        )
+
+        return result.scalars().first()
+
     async def get_employee_by_manager_value(self, db: AsyncSession, reporting_manager):
 
         if reporting_manager is None:
