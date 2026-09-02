@@ -14,6 +14,7 @@ from Backend.API_Layer.interfaces.permenent_employee_details_interfaces import (
 
 from Backend.Business_Layer.services.permanent_employee_details_service import (
     PermanentEmployeeDetailsService,
+    PermissionDeniedError,
 )
 
 from Backend.DAL.utils.dependencies import get_db
@@ -85,15 +86,26 @@ async def get_all_employees(db: AsyncSession = Depends(get_db)):
 async def update_employee(
     employee_uuid: str,
     request: UpdatePermanentEmployeeRequest,
+    http_request: Request,
     db: AsyncSession = Depends(get_db),
     authorization: str = Header(...),
 ):
     try:
+        current_user_id = get_current_employee_id(http_request)
+
         return await service.update_employee(
             db,
             employee_uuid,
             request,
             authorization,
+            current_user_id,
+            is_admin_user(http_request),
+        )
+
+    except PermissionDeniedError as e:
+        raise HTTPException(
+            status_code=403,
+            detail=str(e),
         )
 
     except ValueError as e:
@@ -112,13 +124,27 @@ async def update_employee(
 async def patch_employee(
     employee_uuid: str,
     request: UpdatePermanentEmployeeRequest,
+    http_request: Request,
     db: AsyncSession = Depends(get_db),
     authorization: str = Header(...),
 ):
 
     try:
 
-        return await service.update_employee(db, employee_uuid, request, authorization)
+        current_user_id = get_current_employee_id(http_request)
+
+        return await service.update_employee(
+            db,
+            employee_uuid,
+            request,
+            authorization,
+            current_user_id,
+            is_admin_user(http_request),
+        )
+
+    except PermissionDeniedError as e:
+
+        raise HTTPException(status_code=403, detail=str(e))
 
     except ValueError as e:
 
@@ -131,11 +157,23 @@ async def patch_employee(
 
 
 @router.delete("/{employee_uuid}")
-async def delete_employee(employee_uuid: str, db: AsyncSession = Depends(get_db)):
+async def delete_employee(
+    employee_uuid: str,
+    http_request: Request,
+    db: AsyncSession = Depends(get_db),
+):
 
     try:
 
-        return await service.delete_employee(db, employee_uuid)
+        current_user_id = get_current_employee_id(http_request)
+
+        return await service.delete_employee(
+            db, employee_uuid, current_user_id, is_admin_user(http_request)
+        )
+
+    except PermissionDeniedError as e:
+
+        raise HTTPException(status_code=403, detail=str(e))
 
     except ValueError as e:
 
@@ -156,6 +194,15 @@ def get_current_employee_id(request: Request) -> str:
         raise HTTPException(status_code=401, detail="Employee ID missing in token")
 
     return str(employee_id)
+
+
+def is_admin_user(request: Request) -> bool:
+
+    user = getattr(request.state, "user", None) or {}
+
+    roles = [str(role).upper() for role in user.get("roles", [])]
+
+    return "ADMIN" in roles
 
 
 # =========================================================
