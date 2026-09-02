@@ -113,11 +113,12 @@ async def patch_employee(
     employee_uuid: str,
     request: UpdatePermanentEmployeeRequest,
     db: AsyncSession = Depends(get_db),
+    authorization: str = Header(...),
 ):
 
     try:
 
-        return await service.update_employee(db, employee_uuid, request)
+        return await service.update_employee(db, employee_uuid, request, authorization)
 
     except ValueError as e:
 
