@@ -23,6 +23,11 @@ from Backend.DAL.dao.permanent_employee_details_dao import PermanentEmployeeDeta
 from Backend.DAL.models.models import EmployeeDetails, OfferLetterDetails
 
 
+class PermissionDeniedError(Exception):
+    """Raised when the caller is not above the target employee in the
+    reporting chain."""
+
+
 class PermanentEmployeeDetailsService:
 
     CURRENCIES = ["INR", "USD", "EUR", "GBP", "AED", "SGD", "AUD", "CAD"]
@@ -126,6 +131,39 @@ class PermanentEmployeeDetailsService:
             raise ValueError("Invalid reporting manager selected")
 
         return manager.employee_id
+
+    async def ensure_direct_manager(
+        self, db: AsyncSession, employee: EmployeeDetails, current_user_id: str
+    ):
+        """Allow the caller only if they sit above `employee` in the reporting
+        chain (direct manager, skip-level manager, ...). Self, peers, and
+        unrelated branches are rejected."""
+
+        if not current_user_id:
+            raise PermissionDeniedError(
+                "You can only edit or delete employees in your reporting chain"
+            )
+
+        manager_id = employee.reporting_manager_uuid
+        visited = set()
+
+        while manager_id:
+
+            if manager_id == current_user_id:
+                return
+
+            if manager_id in visited:
+                break  # cyclic hierarchy guard
+
+            visited.add(manager_id)
+
+            manager = await self.dao.get_employee_by_employee_id(db, manager_id)
+
+            manager_id = manager.reporting_manager_uuid if manager else None
+
+        raise PermissionDeniedError(
+            "You can only edit or delete employees in your reporting chain"
+        )
 
     # =========================================================
     # CREATE EMPLOYEE
@@ -290,6 +328,8 @@ class PermanentEmployeeDetailsService:
         employee_uuid: str,
         request: UpdatePermanentEmployeeRequest,
         authorization: str,
+        current_user_id: str,
+        is_admin: bool = False,
     ):
         employee = await self.dao.get_employee_by_uuid(
             db,
@@ -298,6 +338,9 @@ class PermanentEmployeeDetailsService:
 
         if not employee:
             raise ValueError("Employee not found")
+
+        if not is_admin:
+            await self.ensure_direct_manager(db, employee, current_user_id)
 
         # ---------------------------------------------------------
         # 1. Prepare UMS payload
@@ -449,12 +492,21 @@ class PermanentEmployeeDetailsService:
     # DELETE EMPLOYEE
     # =========================================================
 
-    async def delete_employee(self, db: AsyncSession, employee_uuid: str):
+    async def delete_employee(
+        self,
+        db: AsyncSession,
+        employee_uuid: str,
+        current_user_id: str,
+        is_admin: bool = False,
+    ):
 
         employee = await self.dao.get_employee_by_uuid(db, employee_uuid)
 
         if not employee:
             raise ValueError("Employee not found")
+
+        if not is_admin:
+            await self.ensure_direct_manager(db, employee, current_user_id)
 
         await self.dao.delete_employee(db, employee_uuid)
 
