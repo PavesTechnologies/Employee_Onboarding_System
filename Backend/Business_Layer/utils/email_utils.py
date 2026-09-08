@@ -872,7 +872,7 @@ def send_hr_onboarding_submitted_email(
                 <!-- CTA BUTTON -->
                 <div style="text-align:center; margin:32px 0;">
  
-                    <a href="https://d2id2c6d521acd.cloudfront.net"
+                    <a href="{FRONTEND_URL}"
                        style="
                            background:#1A4DFF;
                            padding:12px 32px;
@@ -1115,7 +1115,7 @@ def send_candidate_onboarding_submitted_email(
                         <!-- CTA BUTTON -->
                         <div style="text-align:center; margin:32px 0;">
  
-                            <a href="{ONBOARDING_LINK_BASE_URL}"
+                            <a href="{FRONTEND_URL}"
                             style="
                                 background:#1A4DFF;
                                 padding:12px 32px;
