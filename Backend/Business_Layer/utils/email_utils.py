@@ -21,6 +21,7 @@ EMAIL_PASSWORD = get_env_var("EMAIL_PASSWORD")
 EMAIL_HOST = get_env_var("EMAIL_HOST")
 EMAIL_PORT = int(get_env_var("EMAIL_PORT"))
 FRONTEND_URL = get_env_var("FRONTEND_URL")
+ONBOARDING_LINK_BASE_URL = get_env_var("ONBOARDING_LINK_BASE_URL")
 
 
 def send_email(
@@ -738,7 +739,7 @@ def send_hr_onboarding_submitted_email(
                 <![endif]-->
  
                 <div style="
-                    background:linear-gradient(90deg, #1A4DFF, #1A4DFF, #1A4DFF);
+                    background:linear-gradient(90deg, #0A1A44, #3B0E57, #1A4DFF);
                     height:8px;
                     width:100%;">
                 </div>
@@ -1005,7 +1006,7 @@ def send_candidate_onboarding_submitted_email(
                         <![endif]-->
  
                         <div style="
-                            background:linear-gradient(90deg, #1A4DFF, #1A4DFF, #1A4DFF);
+                            background:linear-gradient(90deg, #0A1A44, #3B0E57, #1A4DFF);
                             height:8px;
                             width:100%;">
                         </div>
