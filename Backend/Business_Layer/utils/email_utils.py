@@ -688,95 +688,189 @@ def send_otp_email(to_email: str, otp: str, subject: str = "Email Verification O
         return f"Failed to send OTP email: {e}"
 
 
-def send_candidate_onboarding_submitted_email(
-    to_email: str,
+def send_hr_onboarding_submitted_email(
+    hr_email: str,
     candidate_name: str,
-    subject: str = "Onboarding Submitted Successfully",
+    candidate_email: str,
+    submitted_at: datetime,
+    subject: str = "Candidate Onboarding Submitted",
 ):
     """
-    Email sent to candidate after final onboarding submit
+    Email sent to HR when candidate submits onboarding.
     """
-    
-    content = f"""
+ 
+    submitted_time = submitted_at.strftime("%d-%m-%Y %H:%M:%S")
+    current_year = datetime.now().year
+ 
+    html_body = f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Onboarding Notification</title>
+    <meta charset="UTF-8">
+    <title>{subject}</title>
 </head>
-
+ 
 <body style="margin:0; padding:0; background:#f3f5f9; font-family:Arial, Helvetica, sans-serif;">
-
-<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0; background:#f3f5f9;">
+ 
+<table width="100%" cellpadding="0" cellspacing="0"
+       style="padding:40px 0; background:#f3f5f9;">
 <tr>
 <td align="center">
-
+ 
     <!-- MAIN CARD -->
     <table width="640" cellpadding="0" cellspacing="0"
            style="background:#ffffff; border-radius:10px; border:1px solid #e0e4ec;">
-
+ 
         <!-- GRADIENT BAR -->
         <tr>
             <td style="height:8px; padding:0; margin:0; line-height:8px;">
+ 
                 <!--[if gte mso 9]>
                 <v:rect xmlns:v="urn:schemas-microsoft-com:vml"
-                        fill="true" stroke="false"
+                        fill="true"
+                        stroke="false"
                         style="width:640px;height:8px;">
-                    <v:fill type="gradient" angle="90"
+                    <v:fill type="gradient"
+                            angle="90"
                             color="#0A1A44"
                             color2="#1A4DFF" />
                 </v:rect>
                 <![endif]-->
-                <div style="background:linear-gradient(90deg, #0A1A44, #3B0E57, #1A4DFF);
-                            height:8px; width:100%;"></div>
+ 
+                <div style="
+                    background:linear-gradient(90deg, #1A4DFF, #1A4DFF, #1A4DFF);
+                    height:8px;
+                    width:100%;">
+                </div>
+ 
             </td>
         </tr>
-
+ 
         <!-- HEADER -->
         <tr>
             <td style="padding:32px 40px 20px;">
-                <h2 style="margin:0; font-size:22px; color:#0A1A44; font-weight:700;">
-                    Onboarding Notification
+ 
+                <h2 style="
+                    margin:0;
+                    font-size:22px;
+                    color:#0A1A44;
+                    font-weight:700;">
+                    Candidate Onboarding Submitted
                 </h2>
-                <p style="margin:8px 0 0; font-size:14px; color:#666;">
-                    Notification from Employee Onboarding System
+ 
+                <p style="
+                    margin:8px 0 0;
+                    font-size:14px;
+                    color:#666;">
+                    Notification From Employee Onboarding System
                 </p>
+ 
             </td>
         </tr>
-
+ 
         <!-- BODY -->
         <tr>
-            <td style="padding:10px 40px 30px; font-size:15px;
-                       color:#444; line-height:1.7;">
-
-                <!-- Greeting -->
+            <td style="
+                padding:10px 40px 30px;
+                font-size:15px;
+                color:#444;
+                line-height:1.7;">
+ 
+                <!-- GREETING -->
                 <p style="margin:0 0 18px;">
-                    Hello {candidate_name},
+                    Dear HR Team,
                 </p>
-
-                <!-- Main message -->
-                <p style="margin:0 0 18px;">
-                    Your onboarding details have been successfully submitted.
-                </p>
-                <p style="margin:0 0 18px;">
-                    Our HR team will review your information and verify the submitted documents.
-                </p>
-                <p style="margin:0 0 18px;">
-                    You will be notified if any additional action is required from your side.
-                </p>
+ 
+                <!-- MAIN MESSAGE -->
                 <p style="margin:0 0 25px;">
-                    Thank you for completing the onboarding process.
+                    A candidate has completed the onboarding submission.
                 </p>
-
-                <!-- Closing message -->
-                <p style="margin:25px 0 10px; color:#555;">
-                    Warm regards,<br>
-                    Employee Onboarding System<br>
-                    Paves Technologies
+ 
+                <!-- DETAILS TITLE -->
+                <div style="margin:0 0 15px;">
+                    <div style="
+                        font-size:15px;
+                        font-weight:700;
+                        color:#0A1A44;
+                        border-left:4px solid #1A4DFF;
+                        padding-left:10px;">
+                        Candidate Details
+                    </div>
+                </div>
+ 
+                <!-- DETAILS BOX -->
+                <table width="100%" cellpadding="0" cellspacing="0"
+                       style="
+                           background:#fafbff;
+                           border:1px solid #e2e6ef;
+                           border-radius:8px;">
+ 
+                    <tr>
+                        <td style="padding:20px 25px;">
+ 
+                            <table width="100%" cellpadding="0" cellspacing="0"
+                                   style="font-size:14px; color:#333;">
+ 
+                                <!-- CANDIDATE NAME -->
+                                <tr>
+                                    <td style="
+                                        padding:8px 0;
+                                        width:150px;
+                                        font-weight:bold;">
+                                        Candidate Name
+                                    </td>
+ 
+                                    <td style="padding:8px 0;">
+                                        {candidate_name}
+                                    </td>
+                                </tr>
+ 
+                                <!-- CANDIDATE EMAIL -->
+                                <tr>
+                                    <td style="
+                                        padding:8px 0;
+                                        width:150px;
+                                        font-weight:bold;">
+                                        Candidate Email
+                                    </td>
+ 
+                                    <td style="padding:8px 0;">
+                                        {candidate_email}
+                                    </td>
+                                </tr>
+ 
+                                <!-- SUBMITTED TIME -->
+                                <tr>
+                                    <td style="
+                                        padding:8px 0;
+                                        width:150px;
+                                        font-weight:bold;">
+                                        Submitted At
+                                    </td>
+ 
+                                    <td style="padding:8px 0;">
+                                        {submitted_time}
+                                    </td>
+                                </tr>
+ 
+                            </table>
+ 
+                        </td>
+                    </tr>
+ 
+                </table>
+ 
+                <!-- CLOSING MESSAGE -->
+                <p style="
+                    margin:25px 0 10px;
+                    color:#555;">
+                    Please review the submitted onboarding information
+                    and proceed with the required verification.
                 </p>
-
+ 
                 <!-- CTA BUTTON -->
                 <div style="text-align:center; margin:32px 0;">
+ 
                     <a href="https://d2id2c6d521acd.cloudfront.net"
                        style="
                            background:#1A4DFF;
@@ -787,88 +881,67 @@ def send_candidate_onboarding_submitted_email(
                            border-radius:6px;
                            text-decoration:none;
                            display:inline-block;
-                           font-family:Arial, Helvetica, sans-serif;
-                       ">
-                        View Onboarding Portal
+                           border:1px solid #1A4DFF;
+                           font-family:Arial, Helvetica, sans-serif;">
+                        View Employee Onboarding System
                     </a>
+ 
                 </div>
-
+ 
             </td>
         </tr>
-
+ 
         <!-- FOOTER -->
         <tr>
-            <td style="background:#f6f7fb; text-align:center;
-                       padding:14px; font-size:12px; color:#888;">
-                © 2026 Paves Global Infotech Private Limited. All rights reserved.
+            <td style="
+                background:#f6f7fb;
+                text-align:center;
+                padding:14px;
+                font-size:12px;
+                color:#888;">
+ 
+                © {current_year} Paves Global Infotech Private Limited.
+                All rights reserved.
+ 
             </td>
         </tr>
-
+ 
     </table>
+ 
 </td>
 </tr>
 </table>
-
+ 
 </body>
 </html>
-
 """
-
-    msg = EmailMessage()
-    msg["Subject"] = subject
-    msg["From"] = EMAIL_USER
-    msg["To"] = to_email
-    msg.set_content("This email requires an HTML-supported client.")
-    msg.add_alternative(content, subtype="html")
-
-
-    try:
-        with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as smtp:
-            smtp.starttls()
-            smtp.login(
-                EMAIL_USER,
-                EMAIL_PASSWORD
-            )
-            smtp.send_message(msg)
-
-        print(f"✅ Candidate onboarding email sent to {to_email}")
-
-    except Exception as e:
-        print(f"❌ Failed to send candidate onboarding email to {to_email}: {e}")
-
-
-def send_hr_onboarding_submitted_email(
-    hr_email: str,
-    candidate_name: str,
-    candidate_email: str,
-    submitted_at: datetime,
-    subject: str = "Candidate Onboarding Submitted",
-):
-    submitted_time = submitted_at.strftime("%d-%m-%Y %H:%M:%S")
-
-    content = f"""
-Hello HR Team,
-
-A candidate has completed the onboarding submission.
-
-Candidate Details:
--------------------
-Candidate Name : {candidate_name}
-Candidate Email : {candidate_email}
-Submitted At   : {submitted_time}
-
-Regards,
-Employee Onboarding System
-Paves Technologies
-"""
-
+ 
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = EMAIL_USER
     msg["To"] = hr_email
-    msg.set_content("This email requires an HTML-supported client.")
-    msg.add_alternative(content, subtype="html")
-
+ 
+    # Plain-text fallback
+    msg.set_content(
+        f"""Dear HR Team,
+ 
+A candidate has completed the onboarding submission.
+ 
+Candidate Name: {candidate_name}
+Candidate Email: {candidate_email}
+Submitted At: {submitted_time}
+ 
+Please review the submitted onboarding information
+and proceed with the required verification.
+ 
+Employee Onboarding System
+Paves Technologies
+"""
+    )
+ 
+    # HTML version
+    msg.add_alternative(html_body, subtype="html")
+ 
     try:
         with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as smtp:
             smtp.starttls()
@@ -877,11 +950,215 @@ Paves Technologies
                 EMAIL_PASSWORD
             )
             smtp.send_message(msg)
-
+ 
         print(f"✅ HR onboarding notification email sent to {hr_email}")
-
+ 
     except Exception as e:
         print(f"❌ Failed to send HR onboarding email to {hr_email}: {e}")
+ 
+def send_candidate_onboarding_submitted_email(
+    to_email: str,
+    candidate_name: str,
+    subject: str = "Onboarding Submitted Successfully",
+    attachment_bytes: bytes | None = None,
+    attachment_filename: str | None = None,
+):
+    """
+    Email sent to candidate after final onboarding submit.
+    """
+ 
+    current_year = datetime.now().year
+ 
+    content = f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>{subject}</title>
+        </head>
+ 
+        <body style="margin:0; padding:0; background:#f3f5f9; font-family:Arial, Helvetica, sans-serif;">
+ 
+        <table width="100%" cellpadding="0" cellspacing="0"
+            style="padding:40px 0; background:#f3f5f9;">
+        <tr>
+        <td align="center">
+ 
+            <!-- MAIN CARD -->
+            <table width="640" cellpadding="0" cellspacing="0"
+                style="background:#ffffff; border-radius:10px; border:1px solid #e0e4ec;">
+ 
+                <!-- GRADIENT BAR -->
+                <tr>
+                    <td style="height:8px; padding:0; margin:0; line-height:8px;">
+ 
+                        <!--[if gte mso 9]>
+                        <v:rect xmlns:v="urn:schemas-microsoft-com:vml"
+                                fill="true"
+                                stroke="false"
+                                style="width:640px;height:8px;">
+                            <v:fill type="gradient"
+                                    angle="90"
+                                    color="#0A1A44"
+                                    color2="#1A4DFF" />
+                        </v:rect>
+                        <![endif]-->
+ 
+                        <div style="
+                            background:linear-gradient(90deg, #1A4DFF, #1A4DFF, #1A4DFF);
+                            height:8px;
+                            width:100%;">
+                        </div>
+ 
+                    </td>
+                </tr>
+ 
+                <!-- HEADER -->
+                <tr>
+                    <td style="padding:32px 40px 20px;">
+ 
+                        <h2 style="
+                            margin:0;
+                            font-size:22px;
+                            color:#0A1A44;
+                            font-weight:700;">
+                            Onboarding Submitted Successfully
+                        </h2>
+ 
+                        <p style="
+                            margin:8px 0 0;
+                            font-size:14px;
+                            color:#666;">
+                            Notification From Employee Onboarding System
+                        </p>
+ 
+                    </td>
+                </tr>
+ 
+                <!-- BODY -->
+                <tr>
+                    <td style="
+                        padding:10px 40px 30px;
+                        font-size:15px;
+                        color:#444;
+                        line-height:1.7;">
+ 
+                        <!-- GREETING -->
+                        <p style="margin:0 0 18px;">
+                            Dear {candidate_name},
+                        </p>
+ 
+                        <!-- MAIN MESSAGE -->
+                        <p style="margin:0 0 25px;">
+                            Your onboarding details have been successfully submitted.
+                        </p>
+ 
+                        <p style="margin:0 0 25px;">
+                            Our HR team will review your information and verify the
+                            submitted documents. You will be notified if any additional
+                            action is required from your side.
+                        </p>
+ 
+                        <!-- DETAILS TITLE -->
+                        <div style="margin:0 0 15px;">
+                            <div style="
+                                font-size:15px;
+                                font-weight:700;
+                                color:#0A1A44;
+                                border-left:4px solid #1A4DFF;
+                                padding-left:10px;">
+                                Submission Details
+                            </div>
+                        </div>
+ 
+                        <!-- DETAILS BOX -->
+                        <table width="100%" cellpadding="0" cellspacing="0"
+                            style="
+                                background:#fafbff;
+                                border:1px solid #e2e6ef;
+                                border-radius:8px;">
+ 
+                            <tr>
+                                <td style="padding:20px 25px;">
+ 
+                                    <table width="100%" cellpadding="0" cellspacing="0"
+                                        style="font-size:14px; color:#333;">
+ 
+                                        <tr>
+                                            <td style="
+                                                padding:8px 0;
+                                                width:150px;
+                                                font-weight:bold;">
+                                                Status
+                                            </td>
+ 
+                                            <td style="padding:8px 0;">
+                                                Submitted Successfully
+                                            </td>
+                                        </tr>
+ 
+                                    </table>
+ 
+                                </td>
+                            </tr>
+ 
+                        </table>
+ 
+                        <!-- CLOSING MESSAGE -->
+                        <p style="
+                            margin:25px 0 10px;
+                            color:#555;">
+                            Thank you for completing the onboarding process.
+                        </p>
+ 
+                        <!-- CTA BUTTON -->
+                        <div style="text-align:center; margin:32px 0;">
+ 
+                            <a href="{ONBOARDING_LINK_BASE_URL}"
+                            style="
+                                background:#1A4DFF;
+                                padding:12px 32px;
+                                color:#ffffff !important;
+                                font-weight:600;
+                                font-size:15px;
+                                border-radius:6px;
+                                text-decoration:none;
+                                display:inline-block;
+                                border:1px solid #1A4DFF;
+                                font-family:Arial, Helvetica, sans-serif;">
+                                View Employee Onboarding System
+                            </a>
+ 
+                        </div>
+ 
+                    </td>
+                </tr>
+ 
+                <!-- FOOTER -->
+                <tr>
+                    <td style="
+                        background:#f6f7fb;
+                        text-align:center;
+                        padding:14px;
+                        font-size:12px;
+                        color:#888;">
+ 
+                        © {current_year} Paves Global Infotech Private Limited.
+                        All rights reserved.
+ 
+                    </td>
+                </tr>
+ 
+            </table>
+ 
+        </td>
+        </tr>
+        </table>
+ 
+        </body>
+        </html>
+        """
+ 
 
 
 def send_joining_email(
