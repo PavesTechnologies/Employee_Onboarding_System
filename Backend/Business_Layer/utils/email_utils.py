@@ -148,15 +148,14 @@ def send_offer_accepted_email(
                 <div style="text-align:center; margin:20px 0;">
                     <a href="{onboarding_url}"
                        style="
-                           background:#0A1A44;
+                           background:#1A4DFF;
                            padding:12px 32px;
                            color:#ffffff !important;
                            font-weight:600;
                            font-size:15px;
                            border-radius:6px;
                            text-decoration:none;
-                           display:inline-block;
-                           border:1px solid #1A4DFF;
+                           display:inline-block;                          
                            font-family:Arial, Helvetica, sans-serif;
                        ">
                         🔗 Upload Documents
@@ -225,7 +224,7 @@ def send_offer_accepted_email(
     # ----------------------------
 
 
-def send_otp_email(to_email: str, otp: str, subject: str = "Email Verification OTP"):
+def send_otp_email(to_email: str, otp: str, subject: str = "Email Verification OTP",name: str = "User"):
     """
     Sends a professional OTP verification email.
     """
@@ -284,7 +283,7 @@ def send_otp_email(to_email: str, otp: str, subject: str = "Email Verification O
 
                 <!-- Greeting -->
                 <p style="margin:0 0 18px;">
-                    Hello {to_email},
+                    Hello {name},
                 </p>
 
                 <!-- Main message -->
@@ -448,7 +447,7 @@ def send_candidate_onboarding_submitted_email(
                 <div style="text-align:center; margin:32px 0;">
                     <a href="https://d2id2c6d521acd.cloudfront.net"
                        style="
-                           background:#0A1A44;
+                           background:#1A4DFF;
                            padding:12px 32px;
                            color:#ffffff !important;
                            font-weight:600;
@@ -456,7 +455,6 @@ def send_candidate_onboarding_submitted_email(
                            border-radius:6px;
                            text-decoration:none;
                            display:inline-block;
-                           border:1px solid #1A4DFF;
                            font-family:Arial, Helvetica, sans-serif;
                        ">
                         View Onboarding Portal
