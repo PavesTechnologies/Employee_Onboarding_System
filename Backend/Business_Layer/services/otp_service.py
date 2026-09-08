@@ -42,7 +42,7 @@ class OtpResponseService:
             )
 
         # 4️⃣ Send OTP email
-        email_utils.send_otp_email(to_email=email, otp=otp,name="User")
+        email_utils.send_otp_email(to_email=email, otp=otp,)
 
         return OtpResponseStatus(
             status="success", message="OTP sent successfully to your email."

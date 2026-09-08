@@ -23,7 +23,6 @@ EMAIL_PORT = int(get_env_var("EMAIL_PORT"))
 FRONTEND_URL = get_env_var("FRONTEND_URL")
 ONBOARDING_LINK_BASE_URL = get_env_var("ONBOARDING_LINK_BASE_URL")
 
-
 def send_email(
     to_email: str,
     subject: str,
@@ -388,7 +387,7 @@ def send_offer_accepted_email(
     cc_emails: list[str] | None = None,
 ):
     if not onboarding_url:
-        onboarding_url = FRONTEND_URL
+        onboarding_url = ONBOARDING_LINK_BASE_URL
 
     """
     Sends a professional offer acceptance email to the candidate.
@@ -611,8 +610,7 @@ def send_otp_email(to_email: str, otp: str, subject: str = "Email Verification O
 
                 <!-- Greeting -->
                 <p style="margin:0 0 18px;">
-                    Hello {name},
-                </p>
+                    Hello                </p>
 
                 <!-- Main message -->
                 <p style="margin:0 0 18px;">
