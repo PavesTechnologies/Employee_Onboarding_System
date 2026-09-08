@@ -271,7 +271,7 @@ def send_otp_email(to_email: str, otp: str, subject: str = "Email Verification O
                     Email Verification
                 </h2>
                 <p style="margin:8px 0 0; font-size:14px; color:#666;">
-                    Part of Employee Onboarding Process
+                    Notification from Employee Onboarding System
                 </p>
             </td>
         </tr>
