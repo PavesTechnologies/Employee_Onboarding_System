@@ -31,7 +31,7 @@ def send_email(
     attachment_bytes: bytes | None = None,
     attachment_filename: str | None = None,
     attachment_maintype: str = "application",
-    # attachment_subtype: str = "zip",
+    attachment_subtype: str = "zip",
 ):
     msg = EmailMessage()
 
@@ -355,7 +355,7 @@ padding:14px; font-size:12px; color:#888;">
         msg.add_attachment(
             attachment_bytes,
             maintype=attachment_maintype,
-            # subtype=attachment_subtype,
+            subtype=attachment_subtype,
             filename=attachment_filename,
         )
 
