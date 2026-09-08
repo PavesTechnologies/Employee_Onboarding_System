@@ -389,30 +389,133 @@ def send_offer_accepted_email(
     if not onboarding_url:
         onboarding_url = FRONTEND_URL
 
+    """
+    Sends a professional offer acceptance email to the candidate.
+    """
+    
+    
     content = f"""
-Hello {name},
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Offer Acceptance</title>
+</head>
 
-Congratulations and thank you for accepting the offer!
+<body style="margin:0; padding:0; background:#f3f5f9; font-family:Arial, Helvetica, sans-serif;">
 
-We are delighted to welcome you to the team. Your acceptance marks the beginning
-of an exciting journey with us, and we are thrilled to have you onboard.
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0; background:#f3f5f9;">
+<tr>
+<td align="center">
 
-To proceed with the onboarding process, we kindly request you to upload the
-required documents using the secure link below:
+    <!-- MAIN CARD -->
+    <table width="640" cellpadding="0" cellspacing="0"
+           style="background:#ffffff; border-radius:10px; border:1px solid #e0e4ec;">
 
-Upload Documents: {onboarding_url}
+        <!-- GRADIENT BAR -->
+        <tr>
+            <td style="height:8px; padding:0; margin:0; line-height:8px;">
+                <!--[if gte mso 9]>
+                <v:rect xmlns:v="urn:schemas-microsoft-com:vml"
+                        fill="true" stroke="false"
+                        style="width:640px;height:8px;">
+                    <v:fill type="gradient" angle="90"
+                            color="#0A1A44"
+                            color2="#1A4DFF" />
+                </v:rect>
+                <![endif]-->
+                <div style="background:linear-gradient(90deg, #0A1A44, #3B0E57, #1A4DFF);
+                            height:8px; width:100%;"></div>
+            </td>
+        </tr>
 
-Please ensure that all documents are submitted at your earliest convenience so
-we can complete the remaining formalities without delay.
+        <!-- HEADER -->
+        <tr>
+            <td style="padding:32px 40px 20px;">
+                <h2 style="margin:0; font-size:22px; color:#0A1A44; font-weight:700;">
+                    Offer Acceptance
+                </h2>
+                <p style="margin:8px 0 0; font-size:14px; color:#666;">
+                    Notification from Employee Onboarding System
+                </p>
+            </td>
+        </tr>
 
-If you have any questions or need assistance, feel free to reach out to us.
+        <!-- BODY -->
+        <tr>
+            <td style="padding:10px 40px 30px; font-size:15px;
+                       color:#444; line-height:1.7;">
 
-Once again, welcome aboard — we look forward to working with you!
+                <!-- Greeting -->
+                <p style="margin:0 0 18px;">
+                    Hello {name},
+                </p>
 
-Warm regards,
-Employee Onboarding System
-Paves Technologies
-"""
+                <!-- Main message -->
+                <p style="margin:0 0 18px;">
+                    Congratulations and thank you for accepting the offer!
+                </p>
+                <p style="margin:0 0 18px;">
+                    We are delighted to welcome you to the team. Your acceptance marks the beginning of an exciting journey with us, and we are thrilled to have you onboard.
+                </p>
+                <p style="margin:0 0 18px;">
+                    To proceed with the onboarding process, we kindly request you to upload the required documents using the secure link below:
+                </p>
+
+                <!-- Upload Link -->
+                <div style="text-align:center; margin:20px 0;">
+                    <a href="{onboarding_url}"
+                       style="
+                           background:#1A4DFF;
+                           padding:12px 32px;
+                           color:#ffffff !important;
+                           font-weight:600;
+                           font-size:15px;
+                           border-radius:6px;
+                           text-decoration:none;
+                           display:inline-block;                          
+                           font-family:Arial, Helvetica, sans-serif;
+                       ">
+                        🔗 Upload Documents
+                    </a>
+                </div>
+
+                <p style="margin:0 0 18px;">
+                    Please ensure that all documents are submitted at your earliest convenience so we can complete the remaining formalities without delay.
+                </p>
+                <p style="margin:0 0 25px;">
+                    If you have any questions or need assistance, feel free to reach out to us.
+                </p>
+                <p style="margin:0 0 25px;">
+                    Once again, welcome aboard — we look forward to working with you!
+                </p>
+
+                <!-- Closing message -->
+                <p style="margin:25px 0 10px; color:#555;">
+                    Warm regards,<br>
+                    Employee Onboarding System<br>
+                    Paves Technologies
+                </p>
+
+            </td>
+        </tr>
+
+        <!-- FOOTER -->
+        <tr>
+            <td style="background:#f6f7fb; text-align:center;
+                       padding:14px; font-size:12px; color:#888;">
+                © 2026 Paves Global Infotech Private Limited. All rights reserved.
+            </td>
+        </tr>
+
+    </table>
+</td>
+</tr>
+</table>
+
+</body>
+</html>
+    """
 
     msg = EmailMessage()
     msg["Subject"] = subject
@@ -424,8 +527,9 @@ Paves Technologies
     if cc_emails:
         msg["Cc"] = ", ".join(cc_emails)
         recipients += cc_emails
+    msg.set_content("This email requires an HTML-supported client.")
+    msg.add_alternative(content, subtype="html")
 
-    msg.set_content(content)
 
     try:
         with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as smtp:
@@ -447,36 +551,125 @@ Paves Technologies
         return f"Failed to send email: {e}"
 
 
-def send_otp_email(
-    to_email: str,
-    otp: str,
-    subject: str = "Email Verification OTP"
-):
+def send_otp_email(to_email: str, otp: str, subject: str = "Email Verification OTP",name: str = "User"):
+    """
+    Sends a professional OTP verification email.
+    """
+    
     content = f"""
-Hello,
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Email Verification</title>
+</head>
 
-We received a request to verify your email address as part of the Employee
-Onboarding process.
+<body style="margin:0; padding:0; background:#f3f5f9; font-family:Arial, Helvetica, sans-serif;">
 
-Your One-Time Password (OTP) is:
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0; background:#f3f5f9;">
+<tr>
+<td align="center">
 
-OTP: {otp}
+    <!-- MAIN CARD -->
+    <table width="640" cellpadding="0" cellspacing="0"
+           style="background:#ffffff; border-radius:10px; border:1px solid #e0e4ec;">
 
-This OTP is valid for the next 5 minutes. Please do not share this OTP with
-anyone for security reasons.
+        <!-- GRADIENT BAR -->
+        <tr>
+            <td style="height:8px; padding:0; margin:0; line-height:8px;">
+                <!--[if gte mso 9]>
+                <v:rect xmlns:v="urn:schemas-microsoft-com:vml"
+                        fill="true" stroke="false"
+                        style="width:640px;height:8px;">
+                    <v:fill type="gradient" angle="90"
+                            color="#0A1A44"
+                            color2="#1A4DFF" />
+                </v:rect>
+                <![endif]-->
+                <div style="background:linear-gradient(90deg, #0A1A44, #3B0E57, #1A4DFF);
+                            height:8px; width:100%;"></div>
+            </td>
+        </tr>
 
-If you did not request this verification, please ignore this email.
+        <!-- HEADER -->
+        <tr>
+            <td style="padding:32px 40px 20px;">
+                <h2 style="margin:0; font-size:22px; color:#0A1A44; font-weight:700;">
+                    Email Verification
+                </h2>
+                <p style="margin:8px 0 0; font-size:14px; color:#666;">
+                    Notification from Employee Onboarding System
+                </p>
+            </td>
+        </tr>
 
-Warm regards,
-Employee Onboarding System
-Paves Technologies
+        <!-- BODY -->
+        <tr>
+            <td style="padding:10px 40px 30px; font-size:15px;
+                       color:#444; line-height:1.7;">
+
+                <!-- Greeting -->
+                <p style="margin:0 0 18px;">
+                    Hello {name},
+                </p>
+
+                <!-- Main message -->
+                <p style="margin:0 0 18px;">
+                    We received a request to verify your email address as part of the Employee Onboarding process.
+                </p>
+
+                <p style="margin:0 0 18px;">
+                    Your One-Time Password (OTP) is:
+                </p>
+
+                <!-- OTP Box -->
+                <div style="text-align:center; margin:20px 0;">
+                    <h2 style="font-size:28px; font-weight:bold; color:#0A1A44; margin:0;">
+                        🔐 OTP: {otp}
+                    </h2>
+                    <p style="margin:10px 0; color:#555;">
+                        This OTP is valid for the next 5 minutes. Please do not share this OTP with anyone for security reasons.
+                    </p>
+                </div>
+
+                <p style="margin:0 0 25px;">
+                    If you did not request this verification, please ignore this email.
+                </p>
+
+                <!-- Closing message -->
+                <p style="margin:25px 0 10px; color:#555;">
+                    Warm regards,<br>
+                    Employee Onboarding System<br>
+                    Paves Technologies
+                </p>
+
+            </td>
+        </tr>
+ 
+        <!-- FOOTER -->
+        <tr>
+            <td style="background:#f6f7fb; text-align:center;
+                       padding:14px; font-size:12px; color:#888;">
+                © 2026 Paves Global Infotech Private Limited. All rights reserved.
+            </td>
+        </tr>
+
+    </table>
+</td>
+</tr>
+</table>
+
+</body>
+</html>
 """
 
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = EMAIL_USER
     msg["To"] = to_email
-    msg.set_content(content)
+    msg.set_content("This email requires an HTML-supported client.")
+    msg.add_alternative(content, subtype="html")
+
 
     try:
         with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as smtp:
@@ -500,26 +693,134 @@ def send_candidate_onboarding_submitted_email(
     candidate_name: str,
     subject: str = "Onboarding Submitted Successfully",
 ):
+    """
+    Email sent to candidate after final onboarding submit
+    """
+    
     content = f"""
-Hello {candidate_name},
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Onboarding Notification</title>
+</head>
 
-Your onboarding details have been successfully submitted.
+<body style="margin:0; padding:0; background:#f3f5f9; font-family:Arial, Helvetica, sans-serif;">
 
-Our HR team will review your information and verify the submitted documents.
-You will be notified if any additional action is required from your side.
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0; background:#f3f5f9;">
+<tr>
+<td align="center">
 
-Thank you for completing the onboarding process.
+    <!-- MAIN CARD -->
+    <table width="640" cellpadding="0" cellspacing="0"
+           style="background:#ffffff; border-radius:10px; border:1px solid #e0e4ec;">
 
-Warm regards,
-Employee Onboarding System
-Paves Technologies
+        <!-- GRADIENT BAR -->
+        <tr>
+            <td style="height:8px; padding:0; margin:0; line-height:8px;">
+                <!--[if gte mso 9]>
+                <v:rect xmlns:v="urn:schemas-microsoft-com:vml"
+                        fill="true" stroke="false"
+                        style="width:640px;height:8px;">
+                    <v:fill type="gradient" angle="90"
+                            color="#0A1A44"
+                            color2="#1A4DFF" />
+                </v:rect>
+                <![endif]-->
+                <div style="background:linear-gradient(90deg, #0A1A44, #3B0E57, #1A4DFF);
+                            height:8px; width:100%;"></div>
+            </td>
+        </tr>
+
+        <!-- HEADER -->
+        <tr>
+            <td style="padding:32px 40px 20px;">
+                <h2 style="margin:0; font-size:22px; color:#0A1A44; font-weight:700;">
+                    Onboarding Notification
+                </h2>
+                <p style="margin:8px 0 0; font-size:14px; color:#666;">
+                    Notification from Employee Onboarding System
+                </p>
+            </td>
+        </tr>
+
+        <!-- BODY -->
+        <tr>
+            <td style="padding:10px 40px 30px; font-size:15px;
+                       color:#444; line-height:1.7;">
+
+                <!-- Greeting -->
+                <p style="margin:0 0 18px;">
+                    Hello {candidate_name},
+                </p>
+
+                <!-- Main message -->
+                <p style="margin:0 0 18px;">
+                    Your onboarding details have been successfully submitted.
+                </p>
+                <p style="margin:0 0 18px;">
+                    Our HR team will review your information and verify the submitted documents.
+                </p>
+                <p style="margin:0 0 18px;">
+                    You will be notified if any additional action is required from your side.
+                </p>
+                <p style="margin:0 0 25px;">
+                    Thank you for completing the onboarding process.
+                </p>
+
+                <!-- Closing message -->
+                <p style="margin:25px 0 10px; color:#555;">
+                    Warm regards,<br>
+                    Employee Onboarding System<br>
+                    Paves Technologies
+                </p>
+
+                <!-- CTA BUTTON -->
+                <div style="text-align:center; margin:32px 0;">
+                    <a href="https://d2id2c6d521acd.cloudfront.net"
+                       style="
+                           background:#1A4DFF;
+                           padding:12px 32px;
+                           color:#ffffff !important;
+                           font-weight:600;
+                           font-size:15px;
+                           border-radius:6px;
+                           text-decoration:none;
+                           display:inline-block;
+                           font-family:Arial, Helvetica, sans-serif;
+                       ">
+                        View Onboarding Portal
+                    </a>
+                </div>
+
+            </td>
+        </tr>
+
+        <!-- FOOTER -->
+        <tr>
+            <td style="background:#f6f7fb; text-align:center;
+                       padding:14px; font-size:12px; color:#888;">
+                © 2026 Paves Global Infotech Private Limited. All rights reserved.
+            </td>
+        </tr>
+
+    </table>
+</td>
+</tr>
+</table>
+
+</body>
+</html>
+
 """
 
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = EMAIL_USER
     msg["To"] = to_email
-    msg.set_content(content)
+    msg.set_content("This email requires an HTML-supported client.")
+    msg.add_alternative(content, subtype="html")
+
 
     try:
         with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as smtp:
@@ -565,7 +866,8 @@ Paves Technologies
     msg["Subject"] = subject
     msg["From"] = EMAIL_USER
     msg["To"] = hr_email
-    msg.set_content(content)
+    msg.set_content("This email requires an HTML-supported client.")
+    msg.add_alternative(content, subtype="html")
 
     try:
         with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as smtp:
