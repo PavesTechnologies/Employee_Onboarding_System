@@ -139,7 +139,7 @@ async def patch_employee(
             request,
             authorization,
             current_user_id,
-            is_admin_user(http_request),
+            is_hr_user(http_request),
         )
 
     except PermissionDeniedError as e:
@@ -203,6 +203,13 @@ def is_admin_user(request: Request) -> bool:
     roles = [str(role).upper() for role in user.get("roles", [])]
 
     return "ADMIN" in roles
+
+def is_hr_user(request: Request) -> bool:
+    user = getattr(request.state, "user", None) or {}
+
+    roles = [str(role).upper() for role in user.get("roles", [])]
+
+    return "HR" in roles
 
 
 # =========================================================
